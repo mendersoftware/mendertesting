@@ -1,15 +1,26 @@
 #!/bin/bash
 
-if [ -n "$TRAVIS_COMMIT_RANGE" ]
+case "$1" in
+    -h|--help)
+        echo "usage: $(basename $0) <git-range>"
+        exit 1
+        ;;
+esac
+
+if [ -n "$1" ]
+then
+    COMMIT_RANGE="$1"
+elif [ -n "$TRAVIS_COMMIT_RANGE" ]
 then
     COMMIT_RANGE="$TRAVIS_COMMIT_RANGE"
 else
-    # Just check previous commit if we are not in Travis.
+    # Just check previous commit if nothing else is specified.
     COMMIT_RANGE=HEAD~1..HEAD
 fi
 
 echo "Checking range: ${COMMIT_RANGE}"
 
+notsigned=
 for i in $( (git rev-list --no-merges "$COMMIT_RANGE") )
 do
     COMMIT_MSG="$(git show -s --format=%B "$i")"
@@ -18,7 +29,12 @@ do
 
     if [ $? -ne 0 ]; then
         echo >&2 "Commit ${i} is not signed off! Use --signoff with your commit."
-        exit 1
+        notsigned="$notsigned $i"
     fi
 
 done
+
+if [ -n "$notsigned" ]
+then
+    exit 1
+fi
