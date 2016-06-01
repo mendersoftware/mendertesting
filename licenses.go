@@ -21,7 +21,7 @@ import "os"
 import "path"
 import "strings"
 
-const packageLocation string = "src/github.com/mendersoftware/mendertesting"
+const packageLocation string = "github.com/mendersoftware/mendertesting"
 
 type TSubset interface {
 	// What we want is actually a subclass of testing.T, with Fatal
@@ -57,14 +57,22 @@ func CheckLicenses(t TSubset) {
 }
 
 func locatePackage() (string, error) {
+	finalpath := path.Join("vendor", packageLocation)
+	_, err := os.Stat(finalpath)
+	if err == nil {
+		return finalpath, nil
+	}
+
 	gopath := os.Getenv("GOPATH")
 	if gopath == "" {
-		return "", errors.New("Cannot check for licenses without GOPATH being set.")
+		return "", errors.New("Cannot check for licenses if " +
+			"mendertesting is not vendored and GOPATH is unset.")
 	}
 
 	paths := strings.Split(gopath, ":")
 	for i := 0; i < len(paths); i++ {
-		finalpath := path.Join(paths[i], packageLocation)
+		finalpath = path.Join(paths[i], "src", packageLocation)
+		print(finalpath, "\n")
 		_, err := os.Stat(finalpath)
 		if err == nil {
 			return finalpath, nil
