@@ -72,7 +72,6 @@ func locatePackage() (string, error) {
 	paths := strings.Split(gopath, ":")
 	for i := 0; i < len(paths); i++ {
 		finalpath = path.Join(paths[i], "src", packageLocation)
-		print(finalpath, "\n")
 		_, err := os.Stat(finalpath)
 		if err == nil {
 			return finalpath, nil
