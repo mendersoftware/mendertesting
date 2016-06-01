@@ -41,7 +41,7 @@ func expectFailure(t *testing.T) {
 }
 
 func TestLicenses(t *testing.T) {
-	hierarchy := path.Join("tmp", packageLocation)
+	hierarchy := path.Join("tmp/src", packageLocation)
 
 	// Create whole src structure. This is just in case this is tested out-
 	// of-tree.
