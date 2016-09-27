@@ -14,7 +14,7 @@ then
     COMMIT_RANGE="$1"
 elif [ -n "$TRAVIS_BRANCH" ]
 then
-    COMMIT_RANGE="$TRAVIS_BRANCH..FETCH_HEAD"
+    COMMIT_RANGE="$TRAVIS_BRANCH..HEAD"
 else
     # Just check previous commit if nothing else is specified.
     COMMIT_RANGE=HEAD~1..HEAD
