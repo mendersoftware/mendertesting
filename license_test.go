@@ -40,7 +40,7 @@ func expectFailure(t *testing.T) {
 	}
 }
 
-func TestLicenses(t *testing.T) {
+func TestMockLicenses(t *testing.T) {
 	hierarchy := path.Join("tmp/src", packageLocation)
 
 	// Create whole src structure. This is just in case this is tested out-
@@ -108,4 +108,8 @@ func TestLicenses(t *testing.T) {
 		var mock mockT = mockT{t}
 		CheckLicenses(&mock)
 	}()
+}
+
+func TestLicenses(t *testing.T) {
+	CheckLicenses(t)
 }
