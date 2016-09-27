@@ -20,7 +20,8 @@ else
     COMMIT_RANGE=HEAD~1..HEAD
 fi
 
-echo "Checking range: ${COMMIT_RANGE}"
+echo "Checking range: ${COMMIT_RANGE}:"
+git log "$COMMIT_RANGE"
 
 commits="$(git rev-list --no-merges "$COMMIT_RANGE")"
 notsigned=
