@@ -9,10 +9,7 @@ case "$1" in
         ;;
 esac
 
-if [ -n "$1" ]
-then
-    COMMIT_RANGE="$1"
-elif [ -n "$TRAVIS_BRANCH" ]
+if [ -n "$TRAVIS_BRANCH" ]
 then
     COMMIT_RANGE="$TRAVIS_BRANCH..HEAD"
 else
@@ -20,10 +17,16 @@ else
     COMMIT_RANGE=HEAD~1..HEAD
 fi
 
-echo "Checking range: ${COMMIT_RANGE}:"
-git log "$COMMIT_RANGE"
-
-commits="$(git rev-list --no-merges "$COMMIT_RANGE")"
+if [ -n "$1" ]
+then
+    echo "Checking range: $@:"
+    git log "$@"
+    commits="$(git rev-list --no-merges "$@")"
+else
+    echo "Checking range: ${COMMIT_RANGE}:"
+    git log "$COMMIT_RANGE"
+    commits="$(git rev-list --no-merges "$COMMIT_RANGE")"
+fi
 notvalid=
 for i in $commits
 do
