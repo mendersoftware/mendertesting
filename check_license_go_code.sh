@@ -15,7 +15,7 @@ cat > license.tmp <<EOF
 EOF
 lines=$(cat license.tmp | wc -l)
 # we need to add two extra lines missing from the license preamble
-# // Copyright <copyrigt_year> Northern.tech AS
+# // Copyright <copyright_year> Northern.tech AS
 # //
 lines=$(($lines + 2))
 
