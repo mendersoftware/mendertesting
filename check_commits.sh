@@ -9,13 +9,32 @@ case "$1" in
         ;;
 esac
 
-if [ -n "$CI_COMMIT_BEFORE_SHA" ]
+if [ -z "$COMMIT_RANGE" ] && [ -n "$CI_COMMIT_REF_NAME" ]
 then
-    COMMIT_RANGE="$CI_COMMIT_BEFORE_SHA..HEAD"
-elif [ -n "$TRAVIS_BRANCH" ]
+    # Gitlab unfortunately doesn't record base branches of commits when the PR
+    # comes from Github, so we need to detect branch names of PRs manually, and
+    # then reconstruct the correct range from that, by excluding all other
+    # branches.
+    case "$CI_COMMIT_REF_NAME" in
+        pr_[0-9]*)
+            EXCLUDE_LIST=$(mktemp)
+            EXCLUDE_LIST_REMOVE=$(mktemp)
+            git for-each-ref --format='%(refname)' | sort > $EXCLUDE_LIST
+            git for-each-ref --format='%(refname)' --points-at $CI_COMMIT_REF_NAME | sort > $EXCLUDE_LIST_REMOVE
+            TO_EXCLUDE="$(comm -23 $EXCLUDE_LIST $EXCLUDE_LIST_REMOVE | tr '\n' ' ')"
+            COMMIT_RANGE="$CI_COMMIT_REF_NAME --not $TO_EXCLUDE"
+            rm -f $EXCLUDE_LIST $EXCLUDE_LIST_REMOVE
+            ;;
+    esac
+fi
+
+if [ -z "$COMMIT_RANGE" ] && [ -n "$TRAVIS_BRANCH" ]
 then
     COMMIT_RANGE="$TRAVIS_BRANCH..HEAD"
-else
+fi
+
+if [ -z "$COMMIT_RANGE" ]
+then
     # Just check previous commit if nothing else is specified.
     COMMIT_RANGE=HEAD~1..HEAD
 fi
@@ -27,8 +46,8 @@ then
     commits="$(git rev-list --no-merges "$@")"
 else
     echo "Checking range: ${COMMIT_RANGE}:"
-    git --no-pager log "$COMMIT_RANGE"
-    commits="$(git rev-list --no-merges "$COMMIT_RANGE")"
+    git --no-pager log $COMMIT_RANGE
+    commits="$(git rev-list --no-merges $COMMIT_RANGE)"
 fi
 notvalid=
 for i in $commits
