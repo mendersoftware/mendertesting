@@ -9,7 +9,10 @@ case "$1" in
         ;;
 esac
 
-if [ -n "$TRAVIS_BRANCH" ]
+if [ -n "$CI_COMMIT_BEFORE_SHA" ]
+then
+    COMMIT_RANGE="$CI_COMMIT_BEFORE_SHA..HEAD"
+elif [ -n "$TRAVIS_BRANCH" ]
 then
     COMMIT_RANGE="$TRAVIS_BRANCH..HEAD"
 else
