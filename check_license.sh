@@ -21,7 +21,7 @@ fi
 # Check license of dependencies.
 ################################################################################
 
-CHKSUM_FILE=LIC_FILES_CHKSUM.sha256
+CHKSUM_FILE=${CHKSUM_FILE:-LIC_FILES_CHKSUM.sha256}
 
 while [ -n "$1" ]; do
     case "$1" in
