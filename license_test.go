@@ -14,10 +14,14 @@
 
 package mendertesting
 
-import "fmt"
-import "os"
-import "path"
-import "testing"
+import (
+	"fmt"
+	"os"
+	"path"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 type mockT struct {
 	*testing.T
@@ -50,18 +54,18 @@ func TestMockLicenses(t *testing.T) {
 
 	// Create whole src structure. This is just in case this is tested out-
 	// of-tree.
-	AssertTrue(t, os.MkdirAll(hierarchy, 0755) == nil)
+	require.True(t, os.MkdirAll(hierarchy, 0755) == nil)
 	// Remove final component.
-	AssertTrue(t, os.Remove(hierarchy) == nil)
+	require.True(t, os.Remove(hierarchy) == nil)
 	// And replace with symlink to here.
 	here, err := os.Getwd()
-	AssertTrue(t, err == nil)
-	AssertTrue(t, os.Symlink(here, hierarchy) == nil)
+	require.True(t, err == nil)
+	require.True(t, os.Symlink(here, hierarchy) == nil)
 	defer os.RemoveAll("tmp")
 
 	// Update GOPATH.
 	oldGopath := os.Getenv("GOPATH")
-	AssertTrue(t, os.Setenv("GOPATH", path.Join(here, "tmp")) == nil)
+	require.True(t, os.Setenv("GOPATH", path.Join(here, "tmp")) == nil)
 	defer os.Setenv("GOPATH", oldGopath)
 
 	CheckLicenses(t)
@@ -69,7 +73,7 @@ func TestMockLicenses(t *testing.T) {
 	// Now try an unexpected license.
 	func() {
 		fd, err := os.Create("LICENSE.unexpected")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 		defer os.RemoveAll("LICENSE.unexpected")
 		defer expectFailure(t)
@@ -80,9 +84,9 @@ func TestMockLicenses(t *testing.T) {
 
 	// Now try a Godep without license.
 	func() {
-		AssertTrue(t, os.MkdirAll("vendor/dummy-site.org/test-repo", 0755) == nil)
+		require.True(t, os.MkdirAll("vendor/dummy-site.org/test-repo", 0755) == nil)
 		fd, err := os.Create("vendor/dummy-site.org/test-repo/test.go")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 
 		// LIFO order, we want to remove vendor/dummy-site.org first,
@@ -98,12 +102,12 @@ func TestMockLicenses(t *testing.T) {
 
 	// Now try a Godep without license, but with README.md.
 	func() {
-		AssertTrue(t, os.MkdirAll("vendor/dummy-site.org/test-repo", 0755) == nil)
+		require.True(t, os.MkdirAll("vendor/dummy-site.org/test-repo", 0755) == nil)
 		fd, err := os.Create("vendor/dummy-site.org/test-repo/test.go")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 		fd, err = os.Create("vendor/dummy-site.org/test-repo/README.md")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 
 		// LIFO order, we want to remove vendor/dummy-site.org first,
@@ -119,14 +123,14 @@ func TestMockLicenses(t *testing.T) {
 
 	// Now try a Godep with license in README.md, but no checksum.
 	func() {
-		AssertTrue(t, os.MkdirAll("tmp/vendor/dummy-site.org/test-repo", 0755) == nil)
-		AssertNoError(t, os.Chdir("tmp"))
+		require.True(t, os.MkdirAll("tmp/vendor/dummy-site.org/test-repo", 0755) == nil)
+		require.NoError(t, os.Chdir("tmp"))
 		defer os.Chdir("..")
 		fd, err := os.Create("vendor/dummy-site.org/test-repo/test.go")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 		fd, err = os.Create("vendor/dummy-site.org/test-repo/README.md")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 
 		SetLicenseFileForDependency("vendor/dummy-site.org/test-repo/README.md")
@@ -144,24 +148,24 @@ func TestMockLicenses(t *testing.T) {
 	func() {
 		// We need a custom LIC_FILES_CHKSUM.sha256, so use a temp dir
 		// for this one.
-		AssertTrue(t, os.MkdirAll("tmp/vendor/dummy-site.org/test-repo", 0755) == nil)
-		AssertNoError(t, os.Chdir("tmp"))
+		require.True(t, os.MkdirAll("tmp/vendor/dummy-site.org/test-repo", 0755) == nil)
+		require.NoError(t, os.Chdir("tmp"))
 		defer os.Chdir("..")
 		fd, err := os.Create("vendor/dummy-site.org/test-repo/test.go")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 		fd, err = os.Create("vendor/dummy-site.org/test-repo/README.md")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 		fd, err = os.Create("LICENSE")
 		fmt.Fprintln(fd, "Copyright 2019 Northern.tech")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 
 		fd, err = os.Create("LIC_FILES_CHKSUM.sha256")
 		fmt.Fprintln(fd, "4412435dcd54a30de719b5d4d1cd6e7df785d3740fffe010f4a169d82fe95e7f  LICENSE")
 		fmt.Fprintln(fd, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  vendor/dummy-site.org/test-repo/README.md")
-		AssertTrue(t, err == nil)
+		require.True(t, err == nil)
 		fd.Close()
 
 		SetLicenseFileForDependency("vendor/dummy-site.org/test-repo/README.md")
@@ -174,7 +178,7 @@ func TestMockLicenses(t *testing.T) {
 
 	// Now try an invalid GOPATH.
 	func() {
-		AssertTrue(t, os.Setenv("GOPATH", "/invalid") == nil)
+		require.True(t, os.Setenv("GOPATH", "/invalid") == nil)
 		defer expectFailure(t)
 
 		var mock mockT = mockT{t}
@@ -183,7 +187,7 @@ func TestMockLicenses(t *testing.T) {
 
 	// Now try an unset GOPATH.
 	func() {
-		AssertTrue(t, os.Unsetenv("GOPATH") == nil)
+		require.True(t, os.Unsetenv("GOPATH") == nil)
 		defer expectFailure(t)
 
 		var mock mockT = mockT{t}
