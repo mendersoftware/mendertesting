@@ -16,10 +16,14 @@ package mendertesting
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
+	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -197,4 +201,25 @@ func TestMockLicenses(t *testing.T) {
 
 func TestLicenses(t *testing.T) {
 	CheckLicenses(t)
+}
+
+func TestLicensesWithEnterprise(t *testing.T) {
+	// Should produce the same result as nothing.
+	SetFirstEnterpriseCommit("HEAD")
+	defer SetFirstEnterpriseCommit("")
+	CheckLicenses(t)
+}
+
+func TestCommercialLicense(t *testing.T) {
+	// Test a commercial license in a temporary folder.
+	tmpdir, err := ioutil.TempDir("", "")
+	require.NoError(t, err)
+	defer os.RemoveAll(tmpdir)
+
+	abspath, err := filepath.Abs("./test_commercial_license.sh")
+	require.NoError(t, err)
+	cmd := exec.Command(abspath, abspath)
+	cmd.Dir = tmpdir
+	err = cmd.Run()
+	assert.NoError(t, err)
 }
