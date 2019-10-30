@@ -50,7 +50,7 @@ func SetFirstEnterpriseCommit(sha string) {
 	firstEnterpriseCommit = sha
 }
 
-func CheckLicenses(t TSubset) {
+func CheckMenderCompliance(t TSubset) {
 	pathToTool, err := locatePackage()
 	if err != nil {
 		t.Fatal(err.Error())

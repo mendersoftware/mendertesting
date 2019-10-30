@@ -72,7 +72,7 @@ func TestMockLicenses(t *testing.T) {
 	require.True(t, os.Setenv("GOPATH", path.Join(here, "tmp")) == nil)
 	defer os.Setenv("GOPATH", oldGopath)
 
-	CheckLicenses(t)
+	CheckMenderCompliance(t)
 
 	// Now try an unexpected license.
 	func() {
@@ -83,7 +83,7 @@ func TestMockLicenses(t *testing.T) {
 		defer expectFailure(t)
 
 		var mock mockT = mockT{t}
-		CheckLicenses(&mock)
+		CheckMenderCompliance(&mock)
 	}()
 
 	// Now try a Godep without license.
@@ -101,7 +101,7 @@ func TestMockLicenses(t *testing.T) {
 		defer expectFailure(t)
 
 		var mock mockT = mockT{t}
-		CheckLicenses(&mock)
+		CheckMenderCompliance(&mock)
 	}()
 
 	// Now try a Godep without license, but with README.md.
@@ -122,7 +122,7 @@ func TestMockLicenses(t *testing.T) {
 		defer expectFailure(t)
 
 		var mock mockT = mockT{t}
-		CheckLicenses(&mock)
+		CheckMenderCompliance(&mock)
 	}()
 
 	// Now try a Godep with license in README.md, but no checksum.
@@ -145,7 +145,7 @@ func TestMockLicenses(t *testing.T) {
 		defer expectFailure(t)
 
 		var mock mockT = mockT{t}
-		CheckLicenses(&mock)
+		CheckMenderCompliance(&mock)
 	}()
 
 	// Now try a Godep with license in README.md, with checksum.
@@ -177,7 +177,7 @@ func TestMockLicenses(t *testing.T) {
 
 		defer os.Remove("tmp")
 
-		CheckLicenses(t)
+		CheckMenderCompliance(t)
 	}()
 
 	// Now try an invalid GOPATH.
@@ -186,7 +186,7 @@ func TestMockLicenses(t *testing.T) {
 		defer expectFailure(t)
 
 		var mock mockT = mockT{t}
-		CheckLicenses(&mock)
+		CheckMenderCompliance(&mock)
 	}()
 
 	// Now try an unset GOPATH.
@@ -195,19 +195,19 @@ func TestMockLicenses(t *testing.T) {
 		defer expectFailure(t)
 
 		var mock mockT = mockT{t}
-		CheckLicenses(&mock)
+		CheckMenderCompliance(&mock)
 	}()
 }
 
 func TestLicenses(t *testing.T) {
-	CheckLicenses(t)
+	CheckMenderCompliance(t)
 }
 
 func TestLicensesWithEnterprise(t *testing.T) {
 	// Should produce the same result as nothing.
 	SetFirstEnterpriseCommit("HEAD")
 	defer SetFirstEnterpriseCommit("")
-	CheckLicenses(t)
+	CheckMenderCompliance(t)
 }
 
 func TestCommercialLicense(t *testing.T) {
