@@ -111,7 +111,7 @@ do
         fi
         COMMIT_PYTHON_FILES=""
     done
-    if [ -n $COMMIT_FAILED ]; then
+    if [ -n "$COMMIT_FAILED" ]; then
         echo >&2 "The Python code in commit $commit"
         echo >&2 "is not formatted correctly, according to Black."
         echo >&2 "Please format the code correctly, and commit anew."
@@ -127,7 +127,7 @@ do
     fi
 done
 
-if [ -n $FAILED ]; then
+if [ -n "$FAILED" ]; then
     echo >&2 ""
     echo >&2 "Please fix your code locally with: black <filename>."
     echo >&2 "This will automatically format the code as needed."
