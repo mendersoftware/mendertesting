@@ -5,7 +5,7 @@
 # not formatted according to standard Black formatting rules.
 #
 # Add it to the project in hand through Gitlab's include functionality
-# 
+#
 # include:
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-python3-format.yml'
