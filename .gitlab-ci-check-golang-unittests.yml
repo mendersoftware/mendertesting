@@ -9,6 +9,10 @@
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-golang-unittests.yml'
 #
+# The template uses latest Mender supported golang version.
+# To override the version to use, append to your .gitlab-ci.yml:
+#   image: golang:1.11.4
+#
 # Requires the following variables set in the project CI/CD settings:
 # CODECOV_TOKEN: Token from codecov.io for this repository
 #
@@ -20,10 +24,18 @@ stages:
 test:unit:
   stage: test
   image: golang:1.13
+  services:
+    - mongo
   before_script:
     # Install code coverage tooling
     - go get -u github.com/axw/gocov/gocov
     - go get -u golang.org/x/tools/cmd/cover
+
+    # Install mongodb for the tests that use it locally
+    - apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
+    - echo "deb http://repo.mongodb.org/apt/debian stretch/mongodb-org/3.6 main" | tee /etc/apt/sources.list.d/mongodb-org-3.6.list
+    - apt-get -qq update
+    - apt-get install -qy --allow-unauthenticated mongodb-org-server=3.6.11
 
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
@@ -48,7 +60,7 @@ test:unit:
     paths:
       - unit-coverage.tar
 
-publish:tests:
+publish:unittests:
   stage: publish
   image: alpine
   dependencies:
@@ -57,4 +69,4 @@ publish:tests:
     - apk add --no-cache bash curl findutils git
   script:
     - tar -xvf unit-coverage.tar
-    - bash -c "bash <(curl -s https://codecov.io/bash) -Z -s ./tests/unit-coverage"
+    - bash -c "bash <(curl -s https://codecov.io/bash) -Z -F unittests -s ./tests/unit-coverage"

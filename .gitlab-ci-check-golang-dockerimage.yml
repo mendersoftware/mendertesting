@@ -3,6 +3,8 @@
 # This gitlab-ci template builds a Docker image assuming a single Dockerfile
 # and publish it on Docker Hub
 #
+# It assumes a Dockerfile in the root of the repository.
+#
 # Add it to the project in hand through Gitlab's include functionality
 #
 # include:
@@ -28,8 +30,8 @@ build:
   before_script:
     - export DOCKER_REPOSITORY="mendersoftware/${CI_PROJECT_NAME}"
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE=$DOCKER_REPOSITORY:$DOCKER_TAG
-    - export COMMIT_TAG="$CI_COMMIT_REF_SLUG"_"$CI_COMMIT_SHA"
+    - export SERVICE_IMAGE="$DOCKER_REPOSITORY:$DOCKER_TAG"
+    - export COMMIT_TAG="$CI_COMMIT_REF_SLUG_$CI_COMMIT_SHA"
   script:
     - echo "building ${CI_PROJECT_NAME} for ${SERVICE_IMAGE}"
     - docker build -t $SERVICE_IMAGE .
@@ -53,8 +55,8 @@ publish:image:
   before_script:
     - export DOCKER_REPOSITORY="mendersoftware/${CI_PROJECT_NAME}"
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE=$DOCKER_REPOSITORY:$DOCKER_TAG
-    - export COMMIT_TAG="$CI_COMMIT_REF_SLUG"_"$CI_COMMIT_SHA"
+    - export SERVICE_IMAGE="$DOCKER_REPOSITORY:$DOCKER_TAG"
+    - export COMMIT_TAG="$CI_COMMIT_REF_SLUG_$CI_COMMIT_SHA"
   script:
     - docker load -i image.tar
     - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$COMMIT_TAG
