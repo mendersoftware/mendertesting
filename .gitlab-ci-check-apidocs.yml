@@ -1,7 +1,8 @@
 # .gitlab-ci-check-apidocs.yml
 #
-# This gitlab-ci template validates Swagger API specification assuming they
-# are in a docs/ folder
+# This gitlab-ci template validates Swagger API specification
+#
+# It assumes the documentation is in a docs/ folder.
 #
 # Add it to the project in hand through Gitlab's include functionality
 #
