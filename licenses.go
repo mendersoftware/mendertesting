@@ -1,4 +1,4 @@
-// Copyright 2019 Northern.tech AS
+// Copyright 2020 Northern.tech AS
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -20,18 +20,9 @@ import "fmt"
 import "os"
 import "path"
 import "strings"
+import "testing"
 
 const packageLocation string = "github.com/mendersoftware/mendertesting"
-
-type TSubset interface {
-	// What we want is actually a subclass of testing.T, with Fatal
-	// overriden, but Go doesn't like that, so make this small interface
-	// instead. More methods may need to be added here if we expect to use
-	// more of them.
-
-	Fatal(args ...interface{})
-	Log(args ...interface{})
-}
 
 var known_license_files []string = []string{}
 
@@ -50,10 +41,10 @@ func SetFirstEnterpriseCommit(sha string) {
 	firstEnterpriseCommit = sha
 }
 
-func CheckMenderCompliance(t TSubset) {
+func CheckMenderCompliance(t *testing.T) error {
 	pathToTool, err := locatePackage()
 	if err != nil {
-		t.Fatal(err.Error())
+		return err
 	}
 
 	cmdString := []string{path.Join(pathToTool, "check_license_go_code.sh")}
@@ -64,7 +55,8 @@ func CheckMenderCompliance(t TSubset) {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Log(err.Error())
-		t.Fatal(string(output[:]))
+		t.Logf("Output: %s", output)
+		return err
 	}
 
 	cmdString = []string{path.Join(pathToTool, "check_commits.sh")}
@@ -72,7 +64,8 @@ func CheckMenderCompliance(t TSubset) {
 	output, err = cmd.CombinedOutput()
 	if err != nil {
 		t.Log(err.Error())
-		t.Fatal(string(output[:]))
+		t.Logf("Output: %s", output)
+		return err
 	}
 
 	cmdString = []string{path.Join(pathToTool, "check_license.sh")}
@@ -81,8 +74,10 @@ func CheckMenderCompliance(t TSubset) {
 	output, err = cmd.CombinedOutput()
 	if err != nil {
 		t.Log(err.Error())
-		t.Fatal(string(output[:]))
+		t.Logf("Output: %s", output)
+		return err
 	}
+	return nil
 }
 
 func locatePackage() (string, error) {
