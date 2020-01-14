@@ -1,16 +1,14 @@
 #! /bin/bash
 
 #
-# A simple script for verifying that all the commits in the PR-range has
-# the Python code correctly formatted with the Black code formatter.
+# A simple script for verifying that all the the Python code correctly formatted
+# with the Black code formatter.
 #
 # Usage:
 #   see --help
 #
 #
 set -e
-
-CODE_DIRECTORIES=${FORMAT_PYTHON3_DIRECTORIES:-"./"}
 
 while [[ $# -gt 0 ]]
 do
@@ -19,27 +17,16 @@ do
             echo "Usage: $(basename $0) [OPTIONS] <git-range>"
             echo ""
             echo "This script runs the Black formatter on all the Python code"
-            echo "it can find in each commit listed in the $COMMIT_RANGE,"
-            echo "and exits with exit-code 1 if any of the commits contain"
-            echo "code which is not formatted in accordance with Black's rules."
-            echo ""
-            echo "-d|--directory"
-            echo "  Adds the directory to the directories checked by Black"
+            echo "in the current repository."
+            echo "The files formatted are controlled by the local pyproject.toml file's"
+            echo "include and exclude regexes."
+            echo "and exits with exit-code 1 if any python code found is not formatted"
             echo ""
             echo "Recognized environment variables:"
             echo ""
-            echo "  CODE_DIRECTORIES:"
-            echo "    Filters the file to format based on the given whitespace"
-            echo "    separated directories listed."
-            echo "    Note that this is relative to the root of the project directory"
-            echo "  COMMIT_RANGE:"
-            echo "    The range of commits to check. By default this is HEAD~1..HEAD."
+            echo "BLACK_FORMATTER_VERSION:"
+            echo "The version of the black formatter used"
             exit 0
-            ;;
-        -d|--directory)
-            echo "Adding directory to be verified: $2"
-            CODE_DIRECTORIES="${CODE_DIRECTORIES} $2"
-            shift 2
             ;;
         *)
             break
@@ -47,91 +34,12 @@ do
     esac
 done
 
-if [ -z "$COMMIT_RANGE" ] && [ -n "$CI_COMMIT_REF_NAME" ]
-then
-    # Gitlab unfortunately doesn't record base branches of commits when the PR
-    # comes from Github, so we need to detect branch names of PRs manually, and
-    # then reconstruct the correct range from that, by excluding all other
-    # branches.
-    case "$CI_COMMIT_REF_NAME" in
-        pr_[0-9]*)
-            EXCLUDE_LIST=$(mktemp)
-            EXCLUDE_LIST_REMOVE=$(mktemp)
-            git for-each-ref --format='%(refname)' | sort > $EXCLUDE_LIST
-            git for-each-ref --format='%(refname)' --points-at $CI_COMMIT_REF_NAME | sort > $EXCLUDE_LIST_REMOVE
-            TO_EXCLUDE="$(comm -23 $EXCLUDE_LIST $EXCLUDE_LIST_REMOVE | tr '\n' ' ')"
-            COMMIT_RANGE="$CI_COMMIT_REF_NAME --not $TO_EXCLUDE"
-            rm -f $EXCLUDE_LIST $EXCLUDE_LIST_REMOVE
-            ;;
-    esac
-fi
-
-if [ -z "$COMMIT_RANGE" ] && [ -n "$TRAVIS_BRANCH" ]
-then
-    COMMIT_RANGE="$TRAVIS_BRANCH..HEAD"
-fi
-
-if [ -z "$COMMIT_RANGE" ]
-then
-    # Just check previous commit if nothing else is specified.
-    COMMIT_RANGE=HEAD~1..HEAD
-fi
-
-if [ -n "$1" ]
-then
-    echo "Checking range: $*:"
-    git --no-pager log "$@"
-    commits="$(git rev-list --no-merges "$@")"
-else
-    echo "Checking range: ${COMMIT_RANGE}:"
-    git --no-pager log $COMMIT_RANGE
-    commits="$(git rev-list --no-merges $COMMIT_RANGE)"
-fi
-for commit in $commits
-do
-    COMMIT_MSG="$(git show -s --format=%B "$commit")"
-
-    echo >&2 "" # Give each commit some air
-
-    git checkout -q "$commit" || { echo >&2 "Fatal error! Failed to checkout the commit $commit"; exit 1 ;}
-
-    for dir in $CODE_DIRECTORIES; do
-        # Filter the Python files to check pending on the specified directory
-        COMMIT_PYTHON_FILES=$(git diff-tree --no-commit-id --name-only -r "$commit" -- "$dir*.py")
-        if [ -n "$COMMIT_PYTHON_FILES" ]; then
-            echo >&2 "Verifying that the Python code in $commit"
-            echo >&2 "and directory $dir is formatted correctly..."
-            for file in $COMMIT_PYTHON_FILES; do
-                if  ! black --check --verbose  "$file" >&2 ; then
-                    FAILED=True
-                    COMMIT_FAILED=True
-                    FAILED_FILES="$FAILED_FILES\n$file"
-                fi
-            done
-        fi
-        COMMIT_PYTHON_FILES=""
-    done
-    if [ -n "$COMMIT_FAILED" ]; then
-        echo >&2 "The Python code in commit $commit"
-        echo >&2 "is not formatted correctly, according to Black."
-        echo >&2 "Please format the code correctly, and commit anew."
-        echo >&2 ""
-        echo >&2 "Commit:"
-        echo >&2 "------------------------------------------------------------------------------"
-        echo >&2 "$COMMIT_MSG"
-        echo >&2 "------------------------------------------------------------------------------"
-        printf >&2 "Culprit(s): %b" "$FAILED_FILES"
-        echo >&2 ""
-        FAILED_FILES=
-        COMMIT_FAILED=
-    fi
-done
-
-if [ -n "$FAILED" ]; then
+if  ! black --check --verbose .; then
     echo >&2 ""
-    echo >&2 "Please fix your code locally with: black <filename>."
+    echo >&2 "Please fix your code locally with: black ."
     echo >&2 "This will automatically format the code as needed."
-    echo >&2 "Then commit, and push as per usual"
     echo >&2 "Note that the Black version used is: " "$BLACK_FORMATTER_VERSION."
     exit 1
 fi
+
+exit 0

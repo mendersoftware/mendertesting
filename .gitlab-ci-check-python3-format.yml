@@ -2,7 +2,7 @@
 #
 # This gitlab-ci file runs the Black code formatter https://github.com/psf/black
 # on the Python3 code in the repository, and fails the pipeline if the code is
-# not formatted according to standard Black formatting rules.
+# not formatted according to standard Black's formatting rules.
 #
 # Add it to the project in hand through Gitlab's include functionality
 #
@@ -10,30 +10,38 @@
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-python3-format.yml'
 #
-# The formatter can be specified to only format Python code from specific
-# directories. This is done through adding the directories to the
-# 'FORMAT_DIRECTORIES' variable in a Gitlab file, whitespace separated if
-# multiple. If left empty, no filter will be applied.
-#
-# Example 'gitlab-ci.yml' addition:
-# variables:
-#    FORMAT_PYTHON3_DIRECTORIES: "some/project/repository/to/be/formatted/"
-#
 # Some things to consider before including this file. The Black code formatter
 # accepts a project-local configuration file
 # (https://github.com/psf/black#pyprojecttoml). This enables project specific
-# configuration of the Black tool.
-#
-# The only recommended parameter to specify is:
-# * The Python version
+# configuration of the Black tool. This is especially handy for ignoring, and/or
+# excluding specific directories from being evaluated.
 #
 # The configuration parameters available match the command-line paramaters as listed here:
 #    https://github.com/psf/black#command-line-options
 #
 # Example 'pyproject.toml' file:
 #
-#[tool.black]
-# target-version = ['py38'] # If the project is using Python version 3.8
+# [tool.black]
+# target-version = ['py37']
+# include = '\.py$'
+# exclude = '''
+
+# (
+#   /(
+#       \.eggs         # exclude a few common directories
+#     | \.git
+#     | \.hg
+#     | \.mypy_cache
+#     | \.tox
+#     | \.venv
+#     | _build
+#     | buck-out
+#     | build
+#     | dist
+#   )/
+#   | foo.py           # also separately exclude a file named foo.py in
+#                      # the root of the project
+# )
 # '''
 #
 
@@ -59,7 +67,7 @@ test:check-python3-formatting:
     - git fetch origin 'refs/heads/*:refs/heads/*'
     # Get last remaining tags, if any.
     - git fetch --tags origin
-    - git clone http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - git clone --depth 1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
   script:
-    # Check that the Python code is formattet
+    # Check that the Python code is correctly formatted
     - env /tmp/mendertesting/check_python_code_format
