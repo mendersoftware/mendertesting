@@ -36,7 +36,7 @@ test:build_acceptance:
     - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
     - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
   script:
-    - CGO_ENABLED=0 go test -c -o ${CI_PROJECT_NAME}-test -coverpkg $(go list ./... | grep -v vendor | grep -v mock | grep -v test | tr  '\n' ,);
+    - CGO_ENABLED=0 go test -c -o ${CI_PROJECT_NAME}-test -coverpkg $(go list ./... | grep -v vendor | grep -v mock | grep -v test | tr  '\n' ,)
     - cp ${CI_PROJECT_NAME}-test ${CI_PROJECT_DIR}
   artifacts:
     untracked: true
@@ -47,7 +47,7 @@ test:prepare_acceptance:
   stage: test_prep
   image: docker
   services:
-    - docker:dind
+    - docker:19.03.5-dind
   dependencies:
     - test:build_acceptance
   before_script:
@@ -56,7 +56,7 @@ test:prepare_acceptance:
     - export SERVICE_IMAGE="$DOCKER_REPOSITORY:$DOCKER_TAG"
     - export COMMIT_TAG="$CI_COMMIT_REF_SLUG_$CI_COMMIT_SHA"
   script:
-    - docker build -f Dockerfile.acceptance-testing -t $DOCKER_REPOSITORY:prtest .;
+    - docker build -f Dockerfile.acceptance-testing -t $DOCKER_REPOSITORY:prtest .
     - docker save $DOCKER_REPOSITORY:prtest > tests_image.tar
     - docker build -t $DOCKER_REPOSITORY:pr .
     - docker run --rm --entrypoint "/bin/sh" -v $(pwd):/binary $DOCKER_REPOSITORY:pr -c "cp /usr/bin/${CI_PROJECT_NAME} /binary"
@@ -80,7 +80,7 @@ test:acceptance_tests:
     - docker
   image: tiangolo/docker-with-compose
   services:
-    - docker:dind
+    - docker:19.03.5-dind
   dependencies:
     - test:build_acceptance
     - test:prepare_acceptance
@@ -93,7 +93,7 @@ test:acceptance_tests:
     - docker load -i tests_image.tar
     - docker load -i acceptance_testing_image.tar
   script:
-    - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/integration $(pwd)/tests/docker-compose.yml ;
+    - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/integration $(pwd)/tests/docker-compose.yml
   artifacts:
     expire_in: 2w
     paths:
