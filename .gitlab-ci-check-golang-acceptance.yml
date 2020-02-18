@@ -47,7 +47,7 @@ test:prepare_acceptance:
   stage: test_prep
   image: docker
   services:
-    - docker:dind
+    - docker:19.03.5-dind
   dependencies:
     - test:build_acceptance
   before_script:
@@ -80,7 +80,7 @@ test:acceptance_tests:
     - docker
   image: tiangolo/docker-with-compose
   services:
-    - docker:dind
+    - docker:19.03.5-dind
   dependencies:
     - test:build_acceptance
     - test:prepare_acceptance
