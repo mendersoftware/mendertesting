@@ -1,4 +1,4 @@
-# .gitlab-ci-check-golang-dockerimage.yml
+# .gitlab-ci-check-docker-build.yml
 #
 # This gitlab-ci template builds a Docker image assuming a single Dockerfile
 # and publish it on Docker Hub
@@ -9,7 +9,7 @@
 #
 # include:
 #   - project: 'Northern.tech/Mender/mendertesting'
-#     file: '.gitlab-ci-check-golang-dockerimage.yml'
+#     file: '.gitlab-ci-check-docker-build.yml'
 #
 # Requires the following variables set in the project CI/CD settings:
 # DOCKER_HUB_USERNAME: Username for docker.io
