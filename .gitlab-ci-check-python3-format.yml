@@ -67,7 +67,7 @@ test:check-python3-formatting:
     - git fetch origin 'refs/heads/*:refs/heads/*'
     # Get last remaining tags, if any.
     - git fetch --tags origin
-    - git clone --depth 1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - git clone --depth=1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
   script:
     # Check that the Python code is correctly formatted
     - env /tmp/mendertesting/check_python_code_format
