@@ -1,19 +1,26 @@
 # .gitlab-ci-check-docker-build.yml
 #
-# This gitlab-ci template builds a Docker image assuming a single Dockerfile
-# and publish it on Docker Hub
+# This gitlab-ci template builds a Docker image and publishes it
+# on Docker Hub or Mender Registry
 #
 # It assumes a Dockerfile in the root of the repository.
 #
+# Requires DOCKER_REPOSITORY variable to be set in the calling Pipeline.
 # Add it to the project in hand through Gitlab's include functionality
 #
+# variables:
+#   DOCKER_REPOSITORY: <Image FQN, i.e mendersoftware/reponame>
 # include:
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-docker-build.yml'
 #
-# Requires the following variables set in the project CI/CD settings:
-# DOCKER_HUB_USERNAME: Username for docker.io
-# DOCKER_HUB_PASSWORD: Password for docker.io
+# Requires credentials for the registry where to push the image.
+# Set in the project CI/CD settings either Docker Hub credentials:
+#   DOCKER_HUB_USERNAME: Username for docker.io
+#   DOCKER_HUB_PASSWORD: Password for docker.io
+# or Mender Registry ones:
+#   REGISTRY_MENDER_IO_USERNAME: Username for registry.mender.io
+#   REGISTRY_MENDER_IO_PASSWORD: Password for registry.mender.io
 #
 
 stages:
@@ -28,7 +35,6 @@ build:
   services:
     - docker:19.03.5-dind
   before_script:
-    - export DOCKER_REPOSITORY="mendersoftware/${CI_PROJECT_NAME}"
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
     - export SERVICE_IMAGE="$DOCKER_REPOSITORY:$DOCKER_TAG"
     - export COMMIT_TAG="$CI_COMMIT_REF_SLUG_$CI_COMMIT_SHA"
@@ -53,7 +59,6 @@ publish:image:
   dependencies:
     - build
   before_script:
-    - export DOCKER_REPOSITORY="mendersoftware/${CI_PROJECT_NAME}"
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
     - export SERVICE_IMAGE="$DOCKER_REPOSITORY:$DOCKER_TAG"
     - export COMMIT_TAG="$CI_COMMIT_REF_SLUG_$CI_COMMIT_SHA"
@@ -61,6 +66,10 @@ publish:image:
     - docker load -i image.tar
     - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$COMMIT_TAG
     - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$CI_COMMIT_REF_SLUG
-    - echo -n $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin
+    - if [ -n "$REGISTRY_MENDER_IO_USERNAME" ]; then
+        echo -n $REGISTRY_MENDER_IO_PASSWORD | docker login -u $REGISTRY_MENDER_IO_USERNAME --password-stdin registry.mender.io;
+      else
+        echo -n $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin;
+      fi
     - docker push $DOCKER_REPOSITORY:$COMMIT_TAG
     - docker push $SERVICE_IMAGE

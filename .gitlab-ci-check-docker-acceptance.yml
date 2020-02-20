@@ -7,14 +7,17 @@
 # and a Dockerfile.acceptance-testing with the recipe to build the binary
 # with test coverage and serve the API.
 #
+# Requires DOCKER_REPOSITORY variable to be set in the calling Pipeline.
 # Add it to the project in hand through Gitlab's include functionality
 #
+# variables:
+#   DOCKER_REPOSITORY: <Image FQN, i.e mendersoftware/reponame>
 # include:
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-docker-acceptance.yml'
 #
 # Requires the following variables set in the project CI/CD settings:
-# CODECOV_TOKEN: Token from codecov.io for this repository
+#   CODECOV_TOKEN: Token from codecov.io for this repository
 #
 
 stages:
@@ -28,7 +31,6 @@ test:prepare_acceptance:
   services:
     - docker:19.03.5-dind
   before_script:
-    - export DOCKER_REPOSITORY="mendersoftware/${CI_PROJECT_NAME}"
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
     - export SERVICE_IMAGE="$DOCKER_REPOSITORY:$DOCKER_TAG"
     - export COMMIT_TAG="$CI_COMMIT_REF_SLUG_$CI_COMMIT_SHA"

@@ -14,7 +14,7 @@
 #   image: golang:1.11.4
 #
 # Requires the following variables set in the project CI/CD settings:
-# CODECOV_TOKEN: Token from codecov.io for this repository
+#   CODECOV_TOKEN: Token from codecov.io for this repository
 #
 
 stages:
