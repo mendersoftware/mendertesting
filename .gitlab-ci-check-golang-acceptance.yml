@@ -4,7 +4,8 @@
 # tests from a Go repository.
 #
 # It assumes a tests/ folder with a Dockerfile for the Python test runner,
-# and a Dockerfile.acceptance-testing for the Go test binary.
+# and a Dockerfile.acceptance-testing with the recipe to build the binary
+# with test coverage and serve the API.
 #
 # Add it to the project in hand through Gitlab's include functionality
 #
@@ -12,44 +13,20 @@
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-golang-acceptance.yml'
 #
-# The template uses latest Mender supported golang version.
-# To override the version to use, append to your .gitlab-ci.yml:
-# test:build_acceptance:
-#   image: golang:1.11
-#
 # Requires the following variables set in the project CI/CD settings:
 # CODECOV_TOKEN: Token from codecov.io for this repository
 #
 
 stages:
-  - test_prep_build
   - test_prep
   - test
   - publish
-
-test:build_acceptance:
-  stage: test_prep_build
-  image: golang:1.13
-  before_script:
-    # Prepare GOPATH for the build
-    - mkdir -p /go/src/github.com/mendersoftware
-    - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
-    - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
-  script:
-    - CGO_ENABLED=0 go test -c -o ${CI_PROJECT_NAME}-test -coverpkg $(go list ./... | grep -v vendor | grep -v mock | grep -v test | tr  '\n' ,)
-    - cp ${CI_PROJECT_NAME}-test ${CI_PROJECT_DIR}
-  artifacts:
-    untracked: true
-    paths:
-      - ${CI_PROJECT_NAME}-test
 
 test:prepare_acceptance:
   stage: test_prep
   image: docker
   services:
     - docker:19.03.5-dind
-  dependencies:
-    - test:build_acceptance
   before_script:
     - export DOCKER_REPOSITORY="mendersoftware/${CI_PROJECT_NAME}"
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
@@ -82,7 +59,6 @@ test:acceptance_tests:
   services:
     - docker:19.03.5-dind
   dependencies:
-    - test:build_acceptance
     - test:prepare_acceptance
   before_script:
     - apk add git bash
