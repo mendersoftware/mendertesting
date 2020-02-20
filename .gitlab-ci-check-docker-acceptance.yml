@@ -1,7 +1,7 @@
-# .gitlab-ci-check-golang-acceptance.yml
+# .gitlab-ci-check-docker-acceptance.yml
 #
 # This gitlab-ci template builds, runs and publishes into codecov acceptance
-# tests from a Go repository.
+# tests from a Docker based repository.
 #
 # It assumes a tests/ folder with a Dockerfile for the Python test runner,
 # and a Dockerfile.acceptance-testing with the recipe to build the binary
@@ -11,7 +11,7 @@
 #
 # include:
 #   - project: 'Northern.tech/Mender/mendertesting'
-#     file: '.gitlab-ci-check-golang-acceptance.yml'
+#     file: '.gitlab-ci-check-docker-acceptance.yml'
 #
 # Requires the following variables set in the project CI/CD settings:
 # CODECOV_TOKEN: Token from codecov.io for this repository
@@ -39,11 +39,6 @@ test:prepare_acceptance:
     - docker run --rm --entrypoint "/bin/sh" -v $(pwd):/binary $DOCKER_REPOSITORY:pr -c "cp /usr/bin/${CI_PROJECT_NAME} /binary"
     - docker build -t testing -f tests/Dockerfile tests
     - docker save testing > acceptance_testing_image.tar
-  cache:
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}/${CI_PROJECT_NAME}-test
-    policy: pull
   artifacts:
     expire_in: 2w
     paths:
