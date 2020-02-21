@@ -86,7 +86,7 @@ test:acceptance_tests:
     - test:prepare_acceptance
   before_script:
     - apk add git bash
-    - git clone https://github.com/mendersoftware/integration.git
+    - git clone --depth=1 https://github.com/mendersoftware/integration.git
     - mv integration/extra/travis-testing/* tests/
     - mv docs/* tests/
     - mv ${CI_PROJECT_NAME} tests/

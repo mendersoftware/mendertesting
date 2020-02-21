@@ -17,7 +17,7 @@ test:check-license:
     - git fetch origin 'refs/heads/*:refs/heads/*'
     # Get last remaining tags, if any.
     - git fetch --tags origin
-    - git clone http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - git clone --depth=1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
   script:
     # Check licenses
     - /tmp/mendertesting/check_license.sh
