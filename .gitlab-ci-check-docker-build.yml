@@ -36,8 +36,8 @@ build:
     - docker:19.03.5-dind
   before_script:
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE="$DOCKER_REPOSITORY:$DOCKER_TAG"
-    - export COMMIT_TAG="$CI_COMMIT_REF_SLUG_$CI_COMMIT_SHA"
+    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
+    - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
   script:
     - echo "building ${CI_PROJECT_NAME} for ${SERVICE_IMAGE}"
     - docker build -t $SERVICE_IMAGE .
@@ -60,8 +60,8 @@ publish:image:
     - build
   before_script:
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE="$DOCKER_REPOSITORY:$DOCKER_TAG"
-    - export COMMIT_TAG="$CI_COMMIT_REF_SLUG_$CI_COMMIT_SHA"
+    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
+    - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
   script:
     - docker load -i image.tar
     - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$COMMIT_TAG

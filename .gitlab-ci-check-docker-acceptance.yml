@@ -32,8 +32,8 @@ test:prepare_acceptance:
     - docker:19.03.5-dind
   before_script:
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE="$DOCKER_REPOSITORY:$DOCKER_TAG"
-    - export COMMIT_TAG="$CI_COMMIT_REF_SLUG_$CI_COMMIT_SHA"
+    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
+    - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
   script:
     - docker build -f Dockerfile.acceptance-testing -t $DOCKER_REPOSITORY:prtest .
     - docker save $DOCKER_REPOSITORY:prtest > tests_image.tar
