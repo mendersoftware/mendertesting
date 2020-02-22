@@ -48,12 +48,15 @@ test:prepare_acceptance:
     - docker run --rm --entrypoint "/bin/sh" -v $(pwd):/binary $DOCKER_REPOSITORY:pr -c "cp /usr/bin/${CI_PROJECT_NAME} /binary"
     - docker build -t testing -f tests/Dockerfile tests
     - docker save testing > acceptance_testing_image.tar
+    - wget https://d1b0l86ne08fsf.cloudfront.net/mender-artifact/master/mender-artifact
+    - chmod +x mender-artifact
   artifacts:
     expire_in: 2w
     paths:
       - tests_image.tar
       - acceptance_testing_image.tar
       - ${CI_PROJECT_NAME}
+      - mender-artifact
 
 test:acceptance_tests:
   stage: test
@@ -70,6 +73,7 @@ test:acceptance_tests:
     - mv mender-integration/extra/travis-testing/* tests/
     - mv docs/* tests/
     - mv ${CI_PROJECT_NAME} tests/
+    - mv mender-artifact tests/
     - if [ -f keys/private.pem ]; then
         mv keys/private.pem tests/;
       fi
