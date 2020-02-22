@@ -66,8 +66,8 @@ test:acceptance_tests:
     - test:prepare_acceptance
   before_script:
     - apk add git bash
-    - git clone --depth=1 https://github.com/mendersoftware/integration.git
-    - mv integration/extra/travis-testing/* tests/
+    - git clone --depth=1 https://github.com/mendersoftware/integration.git mender-integration
+    - mv mender-integration/extra/travis-testing/* tests/
     - mv docs/* tests/
     - mv ${CI_PROJECT_NAME} tests/
     - if [ -f keys/private.pem ]; then
@@ -79,9 +79,9 @@ test:acceptance_tests:
         echo -n $REGISTRY_MENDER_IO_PASSWORD | docker login -u $REGISTRY_MENDER_IO_USERNAME --password-stdin registry.mender.io;
       fi
   script:
-    - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/integration $(pwd)/tests/docker-compose-acceptance.yml
+    - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance.yml
     - if [ -f $(pwd)/tests/docker-compose-acceptance-enterprise.yml ]; then
-        TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/integration $(pwd)/tests/docker-compose-acceptance-enterprise.yml;
+        TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance-enterprise.yml;
       fi
   artifacts:
     expire_in: 2w
