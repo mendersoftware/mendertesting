@@ -3,9 +3,11 @@
 # This gitlab-ci template builds, runs and publishes into codecov acceptance
 # tests from a Docker based repository.
 #
-# It assumes a tests/ folder with a Dockerfile for the Python test runner,
-# and a Dockerfile.acceptance-testing with the recipe to build the binary
-# with test coverage and serve the API.
+# It assumes the following files:
+# * Dockerfile.acceptance-testing: to build the the binary with test coverage.
+# * tests/Dockerfile to build the Python test runner.
+# * tests/docker-compose-acceptance.yml for the tests composition runtime.
+# * tests/docker-compose-acceptance-enterprise.yml (optional) for Enteprise tests.
 #
 # Requires DOCKER_REPOSITORY variable to be set in the calling Pipeline.
 # Add it to the project in hand through Gitlab's include functionality
@@ -18,6 +20,11 @@
 #
 # Requires the following variables set in the project CI/CD settings:
 #   CODECOV_TOKEN: Token from codecov.io for this repository
+#
+# If the tests require access to Mender Registry hosted images, it
+# will require also the following vabiables:
+#   REGISTRY_MENDER_IO_USERNAME: Username for registry.mender.io
+#   REGISTRY_MENDER_IO_PASSWORD: Password for registry.mender.io
 #
 
 stages:
@@ -63,10 +70,19 @@ test:acceptance_tests:
     - mv integration/extra/travis-testing/* tests/
     - mv docs/* tests/
     - mv ${CI_PROJECT_NAME} tests/
+    - if [ -f keys/private.pem ]; then
+        mv keys/private.pem tests/;
+      fi
     - docker load -i tests_image.tar
     - docker load -i acceptance_testing_image.tar
+    - if [ -n "$REGISTRY_MENDER_IO_USERNAME" ]; then
+        echo -n $REGISTRY_MENDER_IO_PASSWORD | docker login -u $REGISTRY_MENDER_IO_USERNAME --password-stdin registry.mender.io;
+      fi
   script:
-    - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/integration $(pwd)/tests/docker-compose.yml
+    - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/integration $(pwd)/tests/docker-compose-acceptance.yml
+    - if [ -f $(pwd)/tests/docker-compose-acceptance-enterprise.yml ]; then
+        TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/integration $(pwd)/tests/docker-compose-acceptance-enterprise.yml;
+      fi
   artifacts:
     expire_in: 2w
     paths:
