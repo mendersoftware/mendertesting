@@ -9,12 +9,15 @@
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-golang-unittests.yml'
 #
+# If the repo has some compile time dependencies, the template expect to
+# exist a deb-requirements.txt file with the Debian OS required packages
+#
 # The template uses latest Mender supported golang version.
 # To override the version to use, append to your .gitlab-ci.yml:
 #   image: golang:1.11.4
 #
 # Requires the following variables set in the project CI/CD settings:
-# CODECOV_TOKEN: Token from codecov.io for this repository
+#   CODECOV_TOKEN: Token from codecov.io for this repository
 #
 
 stages:
@@ -36,6 +39,11 @@ test:unit:
     - echo "deb http://repo.mongodb.org/apt/debian stretch/mongodb-org/3.6 main" | tee /etc/apt/sources.list.d/mongodb-org-3.6.list
     - apt-get -qq update
     - apt-get install -qy --allow-unauthenticated mongodb-org-server=3.6.11
+
+    # Install compile dependencies
+    - if [ -f deb-requirements.txt ]; then
+        apt install -yq $(cat deb-requirements.txt);
+      fi
 
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
