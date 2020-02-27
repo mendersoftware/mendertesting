@@ -29,6 +29,8 @@ test:unit:
   image: golang:1.13
   services:
     - mongo
+  variables:
+    GIT_DEPTH: 0
   before_script:
     # Install code coverage tooling
     - go get -u github.com/axw/gocov/gocov
