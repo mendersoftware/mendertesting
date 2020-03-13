@@ -14,6 +14,7 @@
 #
 # The template uses latest Mender supported golang version.
 # To override the version to use, append to your .gitlab-ci.yml:
+# test:unit:
 #   image: golang:1.11.4
 #
 # Requires the following variables set in the project CI/CD settings:

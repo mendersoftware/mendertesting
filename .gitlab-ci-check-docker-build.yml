@@ -3,16 +3,18 @@
 # This gitlab-ci template builds a Docker image and publishes it
 # on Docker Hub or Mender Registry
 #
-# It assumes a Dockerfile in the root of the repository.
-#
 # Requires DOCKER_REPOSITORY variable to be set in the calling Pipeline.
 # Add it to the project in hand through Gitlab's include functionality
-#
 # variables:
 #   DOCKER_REPOSITORY: <Image FQN, i.e mendersoftware/reponame>
 # include:
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-docker-build.yml'
+#
+# It assumes a Dockerfile in the root of the repository. A different
+# directory can optionally be specified using DOCKER_DIR variable:
+# variables:
+#   DOCKER_DIR: <relative path, i.e service/> (optional)
 #
 # Requires credentials for the registry where to push the image.
 # Set in the project CI/CD settings either Docker Hub credentials:
@@ -27,7 +29,7 @@ stages:
   - build
   - publish
 
-build:
+build:docker:
   stage: build
   tags:
     - docker
@@ -40,7 +42,7 @@ build:
     - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
   script:
     - echo "building ${CI_PROJECT_NAME} for ${SERVICE_IMAGE}"
-    - docker build -t $SERVICE_IMAGE .
+    - docker build -t $SERVICE_IMAGE ${DOCKER_DIR:-.}
     - docker save $SERVICE_IMAGE > image.tar
   artifacts:
     expire_in: 2w
@@ -57,7 +59,7 @@ publish:image:
   services:
     - docker:19.03.5-dind
   dependencies:
-    - build
+    - build:docker
   before_script:
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
     - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
