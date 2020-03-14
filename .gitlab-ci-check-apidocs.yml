@@ -19,7 +19,7 @@ test:apidocs:
   image: node:latest
   before_script:
     # Install upstream Swagger verifier
-    - npm install -g swagger-cli
+    - npm install -g @apidevtools/swagger-cli
     # Get our own Swagger verifier
     - apt-get -qq update
     - apt-get install -qy python3-pip
