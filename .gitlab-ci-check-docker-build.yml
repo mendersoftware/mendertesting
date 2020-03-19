@@ -42,7 +42,7 @@ build:docker:
     - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
   script:
     - echo "building ${CI_PROJECT_NAME} for ${SERVICE_IMAGE}"
-    - docker build -t $SERVICE_IMAGE ${DOCKER_DIR:-.}
+    - docker build --build-arg GIT_COMMIT_TAG="${COMMIT_TAG}" -t $SERVICE_IMAGE ${DOCKER_DIR:-.}
     - docker save $SERVICE_IMAGE > image.tar
   artifacts:
     expire_in: 2w
