@@ -24,6 +24,11 @@
 #   REGISTRY_MENDER_IO_USERNAME: Username for registry.mender.io
 #   REGISTRY_MENDER_IO_PASSWORD: Password for registry.mender.io
 #
+# Passes the following variables to the build:
+#   * GIT_COMMIT_TAG
+#     * SHA of git commit at which build occured
+#     * passed via: --build-arg GIT_COMMIT_TAG="${COMMIT_TAG}"
+#
 
 stages:
   - build
