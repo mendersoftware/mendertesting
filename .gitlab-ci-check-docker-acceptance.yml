@@ -92,6 +92,7 @@ test:acceptance_tests:
     paths:
       - tests/acceptance.*
       - tests/coverage-acceptance.txt
+    when: always
 
 publish:acceptance:
   stage: publish
