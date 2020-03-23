@@ -90,6 +90,7 @@ test:acceptance_tests:
   artifacts:
     expire_in: 2w
     paths:
+      - tests/acceptance.*
       - tests/coverage-acceptance.txt
 
 publish:acceptance:
