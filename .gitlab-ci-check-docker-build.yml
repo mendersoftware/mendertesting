@@ -73,10 +73,7 @@ publish:image:
     - docker load -i image.tar
     - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$COMMIT_TAG
     - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$CI_COMMIT_REF_SLUG
-    - if [ -n "$REGISTRY_MENDER_IO_USERNAME" ]; then
-        docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io;
-      else
-        docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD;
-      fi
+    - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
+    - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
     - docker push $DOCKER_REPOSITORY:$COMMIT_TAG
     - docker push $SERVICE_IMAGE
