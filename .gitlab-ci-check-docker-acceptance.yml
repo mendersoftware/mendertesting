@@ -80,7 +80,7 @@ test:acceptance_tests:
     - docker load -i tests_image.tar
     - docker load -i acceptance_testing_image.tar
     - if [ -n "$REGISTRY_MENDER_IO_USERNAME" ]; then
-        echo -n $REGISTRY_MENDER_IO_PASSWORD | docker login -u $REGISTRY_MENDER_IO_USERNAME --password-stdin registry.mender.io;
+        docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io;
       fi
   script:
     - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance.yml

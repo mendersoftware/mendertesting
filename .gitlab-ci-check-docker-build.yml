@@ -54,10 +54,12 @@ build:docker:
     paths:
       - image.tar
 
-publish:image:
+# Internal template
+.publish_image:
   stage: publish
   only:
-    - /^(master|staging|[0-9]+\.[0-9]+\.x)$/
+    refs:
+      - /^(master|staging|[0-9]+\.[0-9]+\.x)$/
   tags:
     - docker
   image: docker
@@ -73,10 +75,25 @@ publish:image:
     - docker load -i image.tar
     - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$COMMIT_TAG
     - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$CI_COMMIT_REF_SLUG
-    - if [ -n "$REGISTRY_MENDER_IO_USERNAME" ]; then
-        echo -n $REGISTRY_MENDER_IO_PASSWORD | docker login -u $REGISTRY_MENDER_IO_USERNAME --password-stdin registry.mender.io;
-      else
-        echo -n $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin;
-      fi
+    - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
+    - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
     - docker push $DOCKER_REPOSITORY:$COMMIT_TAG
-    - docker push $SERVICE_IMAGE
+    - docker push $DOCKER_REPOSITORY:$CI_COMMIT_REF_SLUG
+
+# Regular job, publish into user's DOCKER_REPOSITORY
+publish:image:
+  extends: .publish_image
+
+# Extra job for Enterprise repos, publish also to Docker Hub
+publish:image:dockerhub:
+  extends: .publish_image
+  only:
+    variables:
+      - $DOCKER_REPOSITORY =~ /^registry\.mender\.io.\/*/
+  before_script:
+    # The trick here is to let SERVICE_NAME use the origianl DOCKER_REPOSITORY (i.e. registry.mender.io)
+    # while overriding it at the end for Docker Hub, so that the tag/push in script is done for the latter.
+    - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
+    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
+    - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
+    - export DOCKER_REPOSITORY=${DOCKER_REPOSITORY#registry.mender.io/}
