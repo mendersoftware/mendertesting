@@ -12,9 +12,10 @@
 #     file: '.gitlab-ci-check-docker-build.yml'
 #
 # It assumes a Dockerfile in the root of the repository. A different
-# directory can optionally be specified using DOCKER_DIR variable:
-# variables:
+# directory or a different Dockerfile filename can optionally be specified
+# using the following variables:
 #   DOCKER_DIR: <relative path, i.e service/> (optional)
+#   DOCKERFILE: <filename, i.e. Dockerfile.custom> (optional)
 #
 # Requires credentials for the registry where to push the image.
 # Set in the project CI/CD settings either Docker Hub credentials:
@@ -47,15 +48,18 @@ build:docker:
     - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
   script:
     - echo "building ${CI_PROJECT_NAME} for ${SERVICE_IMAGE}"
-    - docker build --build-arg GIT_COMMIT_TAG="${COMMIT_TAG}" -t $SERVICE_IMAGE ${DOCKER_DIR:-.}
+    - docker build
+        --tag $SERVICE_IMAGE
+        --file ${DOCKERFILE:-Dockerfile}
+        --build-arg GIT_COMMIT_TAG="${COMMIT_TAG}"
+        ${DOCKER_DIR:-.}
     - docker save $SERVICE_IMAGE > image.tar
   artifacts:
     expire_in: 2w
     paths:
       - image.tar
 
-# Internal template
-.publish_image:
+publish:image:
   stage: publish
   only:
     refs:
@@ -80,13 +84,9 @@ build:docker:
     - docker push $DOCKER_REPOSITORY:$COMMIT_TAG
     - docker push $DOCKER_REPOSITORY:$CI_COMMIT_REF_SLUG
 
-# Regular job, publish into user's DOCKER_REPOSITORY
-publish:image:
-  extends: .publish_image
-
 # Extra job for Enterprise repos, publish also to Docker Hub
 publish:image:dockerhub:
-  extends: .publish_image
+  extends: publish:image
   only:
     variables:
       - $DOCKER_REPOSITORY =~ /^registry\.mender\.io.\/*/
