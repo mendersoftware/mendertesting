@@ -54,8 +54,7 @@ build:docker:
     paths:
       - image.tar
 
-# Internal template
-.publish_image:
+publish:image:
   stage: publish
   only:
     refs:
@@ -80,13 +79,9 @@ build:docker:
     - docker push $DOCKER_REPOSITORY:$COMMIT_TAG
     - docker push $DOCKER_REPOSITORY:$CI_COMMIT_REF_SLUG
 
-# Regular job, publish into user's DOCKER_REPOSITORY
-publish:image:
-  extends: .publish_image
-
 # Extra job for Enterprise repos, publish also to Docker Hub
 publish:image:dockerhub:
-  extends: .publish_image
+  extends: publish:image
   only:
     variables:
       - $DOCKER_REPOSITORY =~ /^registry\.mender\.io.\/*/
