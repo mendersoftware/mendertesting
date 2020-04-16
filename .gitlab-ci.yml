@@ -1,6 +1,7 @@
 include:
   - local: '.gitlab-ci-check-commits.yml'
   - local: '.gitlab-ci-check-license.yml'
+  - local: '.gitlab-ci-github-status-updates.yml'
 
 stages:
   - test
