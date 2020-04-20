@@ -13,6 +13,8 @@ stages:
 
 github:start:
   stage: .pre
+  except:
+    - /^(master|staging|[0-9]+\.[0-9]+\.x)$/
   # Keep overhead low by using a small image with curl preinstalled.
   image: appropriate/curl
   script:
@@ -21,6 +23,8 @@ github:start:
 
 github:success:
   stage: .post
+  except:
+    - /^(master|staging|[0-9]+\.[0-9]+\.x)$/
   when: on_success
   # Keep overhead low by using a small image with curl preinstalled.
   image: appropriate/curl
@@ -30,6 +34,8 @@ github:success:
 
 github:failure:
   stage: .post
+  except:
+    - /^(master|staging|[0-9]+\.[0-9]+\.x)$/
   when: on_failure
   # Keep overhead low by using a small image with curl preinstalled.
   image: appropriate/curl
