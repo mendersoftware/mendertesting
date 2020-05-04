@@ -14,13 +14,17 @@
 
 package mendertesting
 
-import "errors"
-import "os/exec"
-import "fmt"
-import "os"
-import "path"
-import "strings"
-import "testing"
+import (
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+	"path"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 const packageLocation string = "github.com/mendersoftware/mendertesting"
 
@@ -41,41 +45,60 @@ func SetFirstEnterpriseCommit(sha string) {
 	firstEnterpriseCommit = sha
 }
 
-func CheckMenderCompliance(t *testing.T) error {
+func CheckMenderCompliance(t *testing.T) {
+	t.Run("Checking Mender compliance", func(t *testing.T) {
+		err := checkMenderCompliance()
+		assert.NoError(t, err, err)
+	})
+}
+
+type MenderComplianceError struct {
+	Output string
+	Err    error
+}
+
+func (m *MenderComplianceError) Error() string {
+	return fmt.Sprintf("MenderCompliance failed with error: %s\nOutput: %s\n", m.Err, m.Output)
+}
+
+func checkMenderCompliance() error {
 	pathToTool, err := locatePackage()
 	if err != nil {
 		return err
 	}
 
-	cmdString := []string{path.Join(pathToTool, "check_license_go_code.sh")}
+	args := []string{path.Join(pathToTool, "check_license_go_code.sh")}
 	if firstEnterpriseCommit != "" {
-		cmdString = append(cmdString, "--ent-start-commit", firstEnterpriseCommit)
+		args = append(args, "--ent-start-commit", firstEnterpriseCommit)
 	}
-	cmd := exec.Command(cmdString[0], cmdString[1:]...)
+	cmd := exec.Command("bash", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Log(err.Error())
-		t.Logf("Output: %s", output)
-		return err
+		return &MenderComplianceError{
+			Err:    err,
+			Output: string(output),
+		}
 	}
 
-	cmdString = []string{path.Join(pathToTool, "check_commits.sh")}
-	cmd = exec.Command(cmdString[0], cmdString[1:]...)
+	args = []string{path.Join(pathToTool, "check_commits.sh")}
+	cmd = exec.Command("bash", args...)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		t.Log(err.Error())
-		t.Logf("Output: %s", output)
-		return err
+		return &MenderComplianceError{
+			Err:    err,
+			Output: string(output),
+		}
 	}
 
-	cmdString = []string{path.Join(pathToTool, "check_license.sh")}
-	cmdString = append(cmdString, known_license_files...)
-	cmd = exec.Command(cmdString[0], cmdString[1:]...)
+	args = []string{path.Join(pathToTool, "check_license.sh")}
+	args = append(args, known_license_files...)
+	cmd = exec.Command("bash", args...)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		t.Log(err.Error())
-		t.Logf("Output: %s", output)
-		return err
+		return &MenderComplianceError{
+			Err:    err,
+			Output: string(output),
+		}
 	}
 	return nil
 }
