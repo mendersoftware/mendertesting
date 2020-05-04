@@ -50,7 +50,7 @@ func TestMockLicenses(t *testing.T) {
 	require.NoError(t, os.Setenv("GOPATH", path.Join(here, "tmp")))
 	defer os.Setenv("GOPATH", oldGopath)
 
-	assert.NoError(t, CheckMenderCompliance(t))
+	assert.NoError(t, checkMenderCompliance())
 
 	// Now try an unexpected license.
 	t.Run("Testing unexpected license", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestMockLicenses(t *testing.T) {
 		fd.Close()
 		defer os.RemoveAll("LICENSE.unexpected")
 
-		assert.Error(t, CheckMenderCompliance(t))
+		assert.Error(t, checkMenderCompliance())
 	})
 
 	// Now try a Godep without license.
@@ -76,7 +76,7 @@ func TestMockLicenses(t *testing.T) {
 		defer os.Remove("vendor")
 		defer os.RemoveAll("vendor/dummy-site.org")
 
-		assert.Error(t, CheckMenderCompliance(t))
+		assert.Error(t, checkMenderCompliance())
 	})
 
 	// Now try a Godep without license, but with README.md.
@@ -95,7 +95,7 @@ func TestMockLicenses(t *testing.T) {
 		defer os.Remove("vendor")
 		defer os.RemoveAll("vendor/dummy-site.org")
 
-		assert.Error(t, CheckMenderCompliance(t))
+		assert.Error(t, checkMenderCompliance())
 	})
 
 	// Now try a Godep with license in README.md, but no checksum.
@@ -116,7 +116,7 @@ func TestMockLicenses(t *testing.T) {
 
 		defer os.Remove("tmp")
 
-		assert.Error(t, CheckMenderCompliance(t))
+		assert.Error(t, checkMenderCompliance())
 	})
 
 	// Now try a Godep with license in README.md, with checksum.
@@ -149,7 +149,7 @@ func TestMockLicenses(t *testing.T) {
 
 		defer os.Remove("tmp")
 
-		assert.NoError(t, CheckMenderCompliance(t))
+		assert.NoError(t, checkMenderCompliance())
 	})
 
 	// Now try an invalid GOPATH.
@@ -157,7 +157,7 @@ func TestMockLicenses(t *testing.T) {
 		t.Log("Testing with an invalid GOPATH")
 		require.NoError(t, os.Setenv("GOPATH", "/invalid"))
 
-		assert.Error(t, CheckMenderCompliance(t))
+		assert.Error(t, checkMenderCompliance())
 	})
 
 	// Now try an unset GOPATH.
@@ -165,19 +165,19 @@ func TestMockLicenses(t *testing.T) {
 		t.Log("Try to unset the GOPATH")
 		require.NoError(t, os.Unsetenv("GOPATH"))
 
-		assert.Error(t, CheckMenderCompliance(t))
+		assert.Error(t, checkMenderCompliance())
 	})
 }
 
 func TestLicenses(t *testing.T) {
-	assert.NoError(t, CheckMenderCompliance(t))
+	assert.NoError(t, checkMenderCompliance())
 }
 
 func TestLicensesWithEnterprise(t *testing.T) {
 	// Should produce the same result as nothing.
 	SetFirstEnterpriseCommit("HEAD")
 	defer SetFirstEnterpriseCommit("")
-	assert.NoError(t, CheckMenderCompliance(t))
+	assert.NoError(t, checkMenderCompliance())
 }
 
 func TestCommercialLicense(t *testing.T) {
