@@ -115,7 +115,7 @@ publish:image:release:
     # Define the same SERVICE_IMAGE as used in the build
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
     - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
-    script:
+  script:
     # Install dependencies
     - apk add git python3
     - pip3 install pyyaml
