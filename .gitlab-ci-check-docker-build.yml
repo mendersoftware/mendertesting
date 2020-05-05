@@ -63,6 +63,7 @@ publish:image:
   stage: publish
   only:
     refs:
+      # NOTE: We can remove [0-9]+\.[0-9]+\.x from here after 2.3.x goes EOL
       - /^(master|staging|[0-9]+\.[0-9]+\.x)$/
   tags:
     - docker
@@ -91,9 +92,58 @@ publish:image:dockerhub:
     variables:
       - $DOCKER_REPOSITORY =~ /^registry\.mender\.io.\/*/
   before_script:
-    # The trick here is to let SERVICE_NAME use the origianl DOCKER_REPOSITORY (i.e. registry.mender.io)
+    # The trick here is to let SERVICE_NAME use the original DOCKER_REPOSITORY (i.e. registry.mender.io)
     # while overriding it at the end for Docker Hub, so that the tag/push in script is done for the latter.
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
     - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
     - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
+    - export DOCKER_REPOSITORY=${DOCKER_REPOSITORY#registry.mender.io/}
+
+publish:image:release:
+  stage: publish
+  only:
+    refs:
+      - /^[0-9]+\.[0-9]+\.x$/
+  tags:
+    - docker
+  image: docker
+  services:
+    - docker:19.03.5-dind
+  dependencies:
+    - build:docker
+  before_script:
+    # Define the same SERVICE_IMAGE as used in the build
+    - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
+    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
+    script:
+    # Install dependencies
+    - apk add git python3
+    - pip3 install pyyaml
+    # Get release_tool:
+    - git clone https://github.com/mendersoftware/integration.git
+    - alias release_tool=$(realpath integration/extra/release_tool.py)
+    # Load image and logins
+    - docker load -i image.tar
+    - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
+    - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
+    # Publish the image for all releases
+    - integration_versions=$(release_tool --integration-versions-including $CI_PROJECT_NAME --version $CI_COMMIT_REF_SLUG | sed -e 's/origin\///')
+    - for version in $integration_versions; do
+    -   docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}
+    -   docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}_${CI_COMMIT_SHA}
+    -   docker push $DOCKER_REPOSITORY:mender-${version}
+    -   docker push $DOCKER_REPOSITORY:mender-${version}_${CI_COMMIT_SHA}
+    - done
+
+# Extra job for Enterprise repos, publish also to Docker Hub
+publish:image:release:dockerhub:
+  extends: publish:image:release
+  only:
+    variables:
+      - $DOCKER_REPOSITORY =~ /^registry\.mender\.io.\/*/
+  before_script:
+    # The trick here is to let SERVICE_NAME use the original DOCKER_REPOSITORY (i.e. registry.mender.io)
+    # while overriding it at the end for Docker Hub, so that the tag/push in script is done for the latter.
+    - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
+    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
     - export DOCKER_REPOSITORY=${DOCKER_REPOSITORY#registry.mender.io/}
