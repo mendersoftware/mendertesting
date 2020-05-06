@@ -120,8 +120,8 @@ publish:image:mender:
     - apk add git python3
     - pip3 install pyyaml
     # Get release_tool:
-    - git clone https://github.com/mendersoftware/integration.git
-    - alias release_tool=$(realpath integration/extra/release_tool.py)
+    - git clone https://github.com/mendersoftware/integration.git mender-integration
+    - alias release_tool=$(realpath mender-integration/extra/release_tool.py)
     # Load image and logins
     - docker load -i image.tar
     - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
