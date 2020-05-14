@@ -122,12 +122,17 @@ publish:image:mender:
     # Get release_tool:
     - git clone https://github.com/mendersoftware/integration.git mender-integration
     - alias release_tool=$(realpath mender-integration/extra/release_tool.py)
+    # If the repo is not part of a Mender release, ignore
+    - integration_versions=$(release_tool --integration-versions-including $CI_PROJECT_NAME --version $CI_COMMIT_REF_SLUG | sed -e 's/origin\///')
+    - if test -z "$integration_versions"; then
+    -  echo "Repository $CI_PROJECT_NAME version $CI_COMMIT_REF_SLUG is not part of any Mender release"
+    -  exit 0
+    - fi
     # Load image and logins
     - docker load -i image.tar
     - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
     - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
     # Publish the image for all releases
-    - integration_versions=$(release_tool --integration-versions-including $CI_PROJECT_NAME --version $CI_COMMIT_REF_SLUG | sed -e 's/origin\///')
     - for version in $integration_versions; do
     -   docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}
     -   docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}_${CI_COMMIT_SHA}
