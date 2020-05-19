@@ -27,13 +27,18 @@
 #
 # Passes the following variables to the build:
 #   * GIT_COMMIT_TAG
-#     * SHA of git commit at which build occured
+#     * SHA of git commit at which build ocurred
 #     * passed via: --build-arg GIT_COMMIT_TAG="${COMMIT_TAG}"
 #
 
 stages:
   - build
   - publish
+
+.export_docker_vars: &export_docker_vars |
+  export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
+  export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
+  export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
 
 build:docker:
   stage: build
@@ -43,9 +48,7 @@ build:docker:
   services:
     - docker:19.03.5-dind
   before_script:
-    - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
-    - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
+    - *export_docker_vars
   script:
     - echo "building ${CI_PROJECT_NAME} for ${SERVICE_IMAGE}"
     - docker build
@@ -73,9 +76,7 @@ publish:image:
   dependencies:
     - build:docker
   before_script:
-    - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
-    - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
+    - *export_docker_vars
   script:
     - docker load -i image.tar
     - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$COMMIT_TAG
@@ -94,9 +95,7 @@ publish:image:dockerhub:
   before_script:
     # The trick here is to let SERVICE_NAME use the original DOCKER_REPOSITORY (i.e. registry.mender.io)
     # while overriding it at the end for Docker Hub, so that the tag/push in script is done for the latter.
-    - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
-    - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
+    - *export_docker_vars
     - export DOCKER_REPOSITORY=${DOCKER_REPOSITORY#registry.mender.io/}
 
 publish:image:mender:
@@ -112,9 +111,8 @@ publish:image:mender:
   dependencies:
     - build:docker
   before_script:
-    # Define the same SERVICE_IMAGE as used in the build
-    - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
+    # Use same variables for loading the image, while COMMIT_TAG will be ignored
+    - *export_docker_vars
   script:
     # Install dependencies
     - apk add git python3
@@ -154,6 +152,5 @@ publish:image:mender:dockerhub:
   before_script:
     # The trick here is to let SERVICE_NAME use the original DOCKER_REPOSITORY (i.e. registry.mender.io)
     # while overriding it at the end for Docker Hub, so that the tag/push in script is done for the latter.
-    - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
+    - *export_docker_vars
     - export DOCKER_REPOSITORY=${DOCKER_REPOSITORY#registry.mender.io/}
