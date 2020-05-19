@@ -28,7 +28,7 @@
 # Passes the following variables to the build:
 #   * GIT_COMMIT_TAG
 #     * SHA of git commit at which build ocurred
-#     * passed via: --build-arg GIT_COMMIT_TAG="${COMMIT_TAG}"
+#     * passed via: --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
 #
 
 stages:
@@ -36,9 +36,10 @@ stages:
   - publish
 
 .export_docker_vars: &export_docker_vars |
-  export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
-  export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
-  export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
+  export DOCKER_BUILD_TAG=${CI_COMMIT_REF_SLUG:-local}
+  export DOCKER_BUILD_SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_BUILD_TAG}
+  export DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
+  export DOCKER_PUBLISH_COMMIT_TAG=${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
 
 build:docker:
   stage: build
@@ -50,13 +51,13 @@ build:docker:
   before_script:
     - *export_docker_vars
   script:
-    - echo "building ${CI_PROJECT_NAME} for ${SERVICE_IMAGE}"
+    - echo "building ${CI_PROJECT_NAME} for ${DOCKER_BUILD_SERVICE_IMAGE}"
     - docker build
-        --tag $SERVICE_IMAGE
+        --tag $DOCKER_BUILD_SERVICE_IMAGE
         --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
-        --build-arg GIT_COMMIT_TAG="${COMMIT_TAG}"
+        --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
         ${DOCKER_DIR:-.}
-    - docker save $SERVICE_IMAGE > image.tar
+    - docker save $DOCKER_BUILD_SERVICE_IMAGE > image.tar
   artifacts:
     expire_in: 2w
     paths:
@@ -79,12 +80,12 @@ publish:image:
     - *export_docker_vars
   script:
     - docker load -i image.tar
-    - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$COMMIT_TAG
-    - docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:$CI_COMMIT_REF_SLUG
+    - docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
+    - docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
     - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
     - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
-    - docker push $DOCKER_REPOSITORY:$COMMIT_TAG
-    - docker push $DOCKER_REPOSITORY:$CI_COMMIT_REF_SLUG
+    - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
+    - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
 
 # Extra job for Enterprise repos, publish also to Docker Hub
 publish:image:dockerhub:
@@ -111,7 +112,7 @@ publish:image:mender:
   dependencies:
     - build:docker
   before_script:
-    # Use same variables for loading the image, while COMMIT_TAG will be ignored
+    # Use same variables for loading the image, while DOCKER_PUBLISH_COMMIT_TAG will be ignored
     - *export_docker_vars
   script:
     # Install dependencies
@@ -126,9 +127,9 @@ publish:image:mender:
     -  exit 0
     - fi
     # If the repo/branch is not part of a Mender release, also ignore
-    - integration_versions=$(release_tool --integration-versions-including $CI_PROJECT_NAME --version $CI_COMMIT_REF_SLUG | sed -e 's/origin\///')
+    - integration_versions=$(release_tool --integration-versions-including $CI_PROJECT_NAME --version $CI_COMMIT_REF_NAME | sed -e 's/origin\///')
     - if test -z "$integration_versions"; then
-    -  echo "Repository $CI_PROJECT_NAME version $CI_COMMIT_REF_SLUG is not part of any Mender release. Exiting"
+    -  echo "Repository $CI_PROJECT_NAME version $CI_COMMIT_REF_NAME is not part of any Mender release. Exiting"
     -  exit 0
     - fi
     # Load image and logins
@@ -137,8 +138,8 @@ publish:image:mender:
     - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
     # Publish the image for all releases
     - for version in $integration_versions; do
-    -   docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}
-    -   docker tag $SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}_${CI_COMMIT_SHA}
+    -   docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}
+    -   docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}_${CI_COMMIT_SHA}
     -   docker push $DOCKER_REPOSITORY:mender-${version}
     -   docker push $DOCKER_REPOSITORY:mender-${version}_${CI_COMMIT_SHA}
     - done
