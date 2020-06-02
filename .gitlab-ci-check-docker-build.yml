@@ -42,7 +42,7 @@ stages:
   export DOCKER_PUBLISH_COMMIT_TAG=${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
 
 .get_release_tool_alpine: &get_release_tool_alpine |
-  apk add git python3
+  apk add git python3 py3-pip
   pip3 install pyyaml
   git clone https://github.com/mendersoftware/integration.git mender-integration
   alias release_tool=$(realpath mender-integration/extra/release_tool.py)
