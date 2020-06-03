@@ -95,7 +95,7 @@ do
         continue
     fi
 
-    if [ -n ${CHECK_SIGNOFFS} ]; then
+    if [ -n "${CHECK_SIGNOFFS}" ]; then
         # Check that Signed-off-by tags are present.
         if ! echo "$COMMIT_MSG" | grep -F "Signed-off-by: ${COMMIT_USER_EMAIL}" >/dev/null; then
             echo >&2 "Commit ${i} is not signed off! Use --signoff with your commit."
@@ -103,7 +103,7 @@ do
         fi
     fi
 
-    if [ -n ${CHECK_CHANGELOGS} ]; then
+    if [ -n "${CHECK_CHANGELOGS}" ]; then
         # Check that Changelog tags are present.
         if ! echo "$COMMIT_MSG" | grep -i "^ *Changelog:" >/dev/null; then
             echo >&2 "Commit ${i} doesn't have a changelog tag! Make a changelog entry for your commit (https://github.com/mendersoftware/mender/blob/master/CONTRIBUTING.md#changelog-tags)."
