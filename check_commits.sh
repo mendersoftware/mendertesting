@@ -109,8 +109,8 @@ do
             echo >&2 "Commit ${i} doesn't have a changelog tag! Make a changelog entry for your commit (https://github.com/mendersoftware/mender/blob/master/CONTRIBUTING.md#changelog-tags)."
             notvalid="$notvalid $i"
         # Less than three words probably means something was misspelled, except for
-        # None, Title and Commit.
-        elif ! echo "$COMMIT_MSG" | egrep -i "^ *Changelog: *(None|Title|Commit|\S+(\s+\S+){2,}) *$" >/dev/null; then
+        # None, Title, Commit and All.
+        elif ! echo "$COMMIT_MSG" | egrep -i "^ *Changelog: *(None|Title|Commit|All|\S+(\s+\S+){2,}) *$" >/dev/null; then
             echo >&2 "Commit ${i} has less than three words in its changelog tag! Typo? (https://github.com/mendersoftware/mender/blob/master/CONTRIBUTING.md#changelog-tags)."
             notvalid="$notvalid $i"
         fi
