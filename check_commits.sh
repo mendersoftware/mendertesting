@@ -90,12 +90,11 @@ do
         continue
     fi
 
-    # Ignore commits from dependabot[-preview]
-    if echo "${COMMIT_USER_EMAIL}" | egrep "^dependabot(-preview)?\[bot\] <[0-9]+\+dependabot(-preview)?\[bot\]@users.noreply.github.com>$" >/dev/null; then
-        continue
-    fi
-
     if [ -n "${CHECK_SIGNOFFS}" ]; then
+        # Ignore commits from dependabot[-preview], as it has Git user and Signed-off-by user differ.
+        if echo "${COMMIT_USER_EMAIL}" | egrep "^dependabot(-preview)?\[bot\] <[0-9]+\+dependabot(-preview)?\[bot\]@users.noreply.github.com>$" >/dev/null; then
+            continue
+        fi
         # Check that Signed-off-by tags are present.
         if ! echo "$COMMIT_MSG" | grep -F "Signed-off-by: ${COMMIT_USER_EMAIL}" >/dev/null; then
             echo >&2 "Commit ${i} is not signed off! Use --signoff with your commit."
