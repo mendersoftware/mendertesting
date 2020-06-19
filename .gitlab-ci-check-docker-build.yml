@@ -73,8 +73,8 @@ publish:image:
   stage: publish
   only:
     refs:
-      # NOTE: We can remove master and [0-9]+\.[0-9]+\.x from here after 2.3.x goes EOL
-      - /^(master|staging|[0-9]+\.[0-9]+\.x)$/
+      # NOTE: We can remove [0-9]+\.[0-9]+\.x from here after 2.3.x goes EOL
+      - /^(master|staging|feature-.+|[0-9]+\.[0-9]+\.x)$/
   tags:
     - docker
   image: docker
