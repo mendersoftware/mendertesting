@@ -100,7 +100,7 @@ publish:image:dockerhub:
     variables:
       - $DOCKER_REPOSITORY =~ /^registry\.mender\.io.\/*/
   before_script:
-    # The trick here is to let SERVICE_NAME use the original DOCKER_REPOSITORY (i.e. registry.mender.io)
+    # The trick here is to let DOCKER_BUILD_SERVICE_IMAGE use the original DOCKER_REPOSITORY (i.e. registry.mender.io)
     # while overriding it at the end for Docker Hub, so that the tag/push in script is done for the latter.
     - *export_docker_vars
     - export DOCKER_REPOSITORY=${DOCKER_REPOSITORY#registry.mender.io/}
@@ -153,10 +153,12 @@ publish:image:mender:dockerhub:
     variables:
       - $DOCKER_REPOSITORY =~ /^registry\.mender\.io.\/*/
   before_script:
-    # The trick here is to let SERVICE_NAME use the original DOCKER_REPOSITORY (i.e. registry.mender.io)
+    # The trick here is to let DOCKER_BUILD_SERVICE_IMAGE use the original DOCKER_REPOSITORY (i.e. registry.mender.io)
     # while overriding it at the end for Docker Hub, so that the tag/push in script is done for the latter.
     - *export_docker_vars
     - export DOCKER_REPOSITORY=${DOCKER_REPOSITORY#registry.mender.io/}
+    # Install release_tool
+    - *get_release_tool_alpine
 
 trigger:saas:sync-staging-component:
   stage: .post
