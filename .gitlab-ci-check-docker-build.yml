@@ -191,3 +191,36 @@ trigger:saas:sync-staging-component:
           -F variables[SYNC_IMAGE_TAG]=${DOCKER_PUBLISH_COMMIT_TAG}
           https://gitlab.com/api/v4/projects/17809112/trigger/pipeline
     - done
+
+# saas-specific job to retag docker images after saas-* tags are pushed to the repository
+publish:image:saas:
+  stage: publish
+  only:
+    refs:
+      - /^saas-[a-zA-Z0-9.]+$/
+  tags:
+    - docker
+  image: docker
+  services:
+    - docker:19.03.5-dind
+  before_script:
+    - export SOURCE_TAG=staging_${CI_COMMIT_SHA}
+    - export DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
+    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
+  script:
+    - docker pull $DOCKER_REPOSITORY:$SOURCE_TAG
+    - docker tag $DOCKER_REPOSITORY:$SOURCE_TAG $SERVICE_IMAGE
+    - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
+    - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
+    - docker push $SERVICE_IMAGE
+
+# Extra job for Enterprise repos, publish also to Docker Hub
+publish:image:saas:dockerhub:
+  extends: publish:image:saas
+  only:
+    variables:
+      - $DOCKER_REPOSITORY =~ /^registry\.mender\.io.\/*/
+  before_script:
+    - export SOURCE_TAG=staging_${CI_COMMIT_SHA}
+    - export DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
+    - export SERVICE_IMAGE=${DOCKER_REPOSITORY#registry.mender.io/}:${DOCKER_PUBLISH_TAG}
