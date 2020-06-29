@@ -27,6 +27,8 @@ stages:
 
 test:unit:
   stage: test
+  except:
+    - /^saas-[a-zA-Z0-9.]+$/
   image: golang:1.13
   services:
     - mongo
@@ -73,6 +75,8 @@ test:unit:
 
 publish:unittests:
   stage: publish
+  except:
+    - /^saas-[a-zA-Z0-9.]+$/
   image: alpine
   dependencies:
     - test:unit
