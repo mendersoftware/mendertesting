@@ -20,6 +20,8 @@ stages:
 
 test:static:
   stage: test
+  except:
+    - /^saas-[a-zA-Z0-9.]+$/
   image: golang:1.13
   before_script:
     # Install cyclomatic dependency analysis tool

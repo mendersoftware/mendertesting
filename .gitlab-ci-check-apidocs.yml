@@ -16,6 +16,8 @@ stages:
 
 test:apidocs:
   stage: test
+  except:
+    - /^saas-[a-zA-Z0-9.]+$/
   image: node:latest
   before_script:
     # Install upstream Swagger verifier
