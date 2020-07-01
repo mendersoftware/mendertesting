@@ -208,10 +208,10 @@ publish:image:saas:
     - export DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
     - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
   script:
-    - docker pull $DOCKER_REPOSITORY:$SOURCE_TAG
-    - docker tag $DOCKER_REPOSITORY:$SOURCE_TAG $SERVICE_IMAGE
     - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
     - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
+    - docker pull $DOCKER_REPOSITORY:$SOURCE_TAG
+    - docker tag $DOCKER_REPOSITORY:$SOURCE_TAG $SERVICE_IMAGE
     - docker push $SERVICE_IMAGE
 
 # Extra job for Enterprise repos, publish also to Docker Hub
