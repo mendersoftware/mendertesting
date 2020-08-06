@@ -1,6 +1,7 @@
 # .gitlab-ci-check-apidocs.yml
 #
-# This gitlab-ci template validates Swagger API specification
+# This gitlab-ci template validates Swagger API specification and
+# triggers Mender API Site rebuilds
 #
 # It assumes the documentation is in a docs/ folder.
 #
@@ -32,3 +33,49 @@ test:apidocs:
     - swagger-cli validate docs/*.yml
     # Verify that the Swagger docs follow the autodeployment requirements
     - python3 verify_docs.py `find docs -name "*.yml"`
+
+trigger:apidocs:rebuild-mender-api-docs:
+  stage: .post
+  only:
+    changes:
+      - docs/*
+    refs:
+      - /^(master|staging|[0-9]+\.[0-9]+\.x)$/
+  image: alpine
+  before_script:
+    - apk add git python3 py3-pip
+    - pip3 install pyyaml
+    - git clone https://github.com/mendersoftware/integration.git mender-integration
+    - alias release_tool=$(realpath mender-integration/extra/release_tool.py)
+    - apk add --no-cache curl
+  script:
+    # Get the current stable release (latest tag matching the N.N.0 pattern)
+    - CURRENT_STABLE=$(cd mender-integration && git tag | egrep -e '^[0-9]+\.[0-9]+\.0$' | sort -V -r | head -n1 | sed -e 's/\.0$/.x/g')
+    # Enable the build of the mender-api-docs site versions where this branch is in use
+    - BUILD_MASTER="false"
+    - BUILD_HOSTED="false"
+    - BUILD_LATEST="false"
+    - BUILD_OLDSTABLE="false"
+    - for version in $(release_tool  --integration-versions-including ${CI_PROJECT_NAME} --version ${CI_COMMIT_REF_NAME} | cut -d"/" -f2); do
+    -   if [ "${version}" == "master" ]; then
+    -     BUILD_MASTER="true"
+    -   elif [ "${version}" == "staging" ]; then
+    -     BUILD_HOSTED="true"
+    -   elif [ "${version}" == "${CURRENT_STABLE}" ]; then
+    -     BUILD_LATEST="true"
+    -   else
+    -     BUILD_OLDSTABLE="true"
+    -   fi
+    - done
+    # Trigger the rebuild of mender-api-docs, if at least one of the build is enabled
+    - if [ "${BUILD_MASTER}" != "false" ] || [ "${BUILD_HOSTED}" != "false" ] || [ "${BUILD_LATEST}" != "false" ] || [ "${BUILD_OLDSTABLE}" != "false" ]; then
+    -   echo "Triggering mender-api-docs rebuild (master ${BUILD_MASTER}, hosted ${BUILD_HOSTED}, latest ${BUILD_LATEST}, oldstable ${BUILD_OLDSTABLE})"
+    -   curl -v -f -X POST
+          -F token=${MENDER_API_DOCS_TRIGGER_TOKEN}
+          -F ref=master
+          -F variables[BUILD_MASTER]=${BUILD_MASTER}
+          -F variables[BUILD_HOSTED]=${BUILD_HOSTED}
+          -F variables[BUILD_LATEST]=${BUILD_LATEST}
+          -F variables[BUILD_OLDSTABLE]=${BUILD_OLDSTABLE}
+          https://gitlab.com/api/v4/projects/20356182/trigger/pipeline
+    - fi
