@@ -84,4 +84,12 @@ publish:unittests:
     - apk add --no-cache bash curl findutils git
   script:
     - tar -xvf unit-coverage.tar
-    - bash -c "bash <(curl -s https://codecov.io/bash) -Z -F unittests -s ./tests/unit-coverage"
+    - curl -s https://codecov.io/bash > /tmp/codecov.bash
+    - chmod +x /tmp/codecov.bash
+    - for i in $(seq 5); do
+        /tmp/codecov.bash -Z -F unittests -s ./tests/unit-coverage;
+        if [ $? -eq 0 ]; then
+          break;
+        fi
+        sleep 1;
+      done
