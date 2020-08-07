@@ -114,6 +114,6 @@ publish:acceptance:
         /tmp/codecov.bash -Z -F acceptance -f ./tests/coverage-acceptance.txt;
         if [ $? -eq 0 ]; then
           break;
-        fi
+        fi;
         sleep 1;
       done
