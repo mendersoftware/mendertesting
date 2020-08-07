@@ -90,6 +90,6 @@ publish:unittests:
         /tmp/codecov.bash -Z -F unittests -s ./tests/unit-coverage;
         if [ $? -eq 0 ]; then
           break;
-        fi
+        fi;
         sleep 1;
       done
