@@ -30,6 +30,12 @@
 #     * SHA of git commit at which build ocurred
 #     * passed via: --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
 #
+# Saves in a dotenv file the published image digests. These env variables
+# can be used by later jobs that have publish:image or publish:image:mender
+# as dependencies:
+#   * PUBLISH_IMAGE_DIGEST
+#   * PUBLISH_IMAGE_MENDER_DIGEST
+#
 
 stages:
   - build
@@ -96,6 +102,10 @@ publish:image:
     - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
     - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
     - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
+    - echo "PUBLISH_IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG)" >> publish.env
+  artifacts:
+    reports:
+      dotenv: publish.env
 
 publish:image:mender:
   stage: publish
@@ -137,6 +147,10 @@ publish:image:mender:
     -   docker push $DOCKER_REPOSITORY:mender-${version}
     -   docker push $DOCKER_REPOSITORY:mender-${version}_${CI_COMMIT_SHA}
     - done
+    - echo "PUBLISH_IMAGE_MENDER_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $DOCKER_REPOSITORY:mender-${version})" >> publish.env
+  artifacts:
+    reports:
+      dotenv: publish.env
 
 trigger:saas:sync-staging-component:
   stage: .post
