@@ -193,3 +193,38 @@ func TestCommercialLicense(t *testing.T) {
 	err = cmd.Run()
 	assert.NoError(t, err)
 }
+
+func TestMisformedLicenseChecksumLines(t *testing.T) {
+
+	t.Log("Testing Godep with license in README.md, with checksum")
+	// We need a custom LIC_FILES_CHKSUM.sha256, so use a temp dir
+	// for this one.
+	require.NoError(t, os.MkdirAll("tmp/vendor/dummy-site.org/test-repo", 0755))
+	require.NoError(t, os.Chdir("tmp"))
+	defer os.RemoveAll("tmp")
+	defer os.Chdir("..")
+	fd, err := os.Create("vendor/dummy-site.org/test-repo/test.go")
+	require.NoError(t, err)
+	fd.Close()
+	fd, err = os.Create("vendor/dummy-site.org/test-repo/README.md")
+	require.NoError(t, err)
+	fd.Close()
+	fd, err = os.Create("LICENSE")
+	fmt.Fprintln(fd, "Copyright 2020 Northern.tech")
+	require.NoError(t, err)
+	fd.Close()
+
+	fd, err = os.Create("LIC_FILES_CHKSUM.sha256")
+	// This is one letter short of a full shasum line
+	fmt.Fprintln(fd, "8c317e825d10807ce0a5e199300a68ea5efecce74c26e92cd3472c724b73d78  LICENSE")
+	fmt.Fprintln(fd, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  vendor/dummy-site.org/test-repo/README.md")
+	require.NoError(t, err)
+	fd.Close()
+
+	SetLicenseFileForDependency("vendor/dummy-site.org/test-repo/README.md")
+	defer resetKnownLicenses()
+
+	err = checkMenderCompliance()
+	assert.Error(t, err, err.Error())
+	assert.Contains(t, err.Error(), "Some line(s) in the LIC_FILE_CHKSUM.sha256 file are misformed")
+}
