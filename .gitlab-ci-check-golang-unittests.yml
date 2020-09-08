@@ -31,7 +31,7 @@ test:unit:
     - /^saas-[a-zA-Z0-9.]+$/
   image: golang:1.14
   services:
-    - mongo
+    - mongo:4.4
   variables:
     GIT_DEPTH: 0
   before_script:
@@ -40,10 +40,10 @@ test:unit:
     - GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
 
     # Install mongodb for the tests that use it locally
-    - apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2930ADAE8CAF5059EE73BB4B58712A2291FA4AD5
-    - echo "deb http://repo.mongodb.org/apt/debian stretch/mongodb-org/3.6 main" | tee /etc/apt/sources.list.d/mongodb-org-3.6.list
+    - wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
+    - echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
     - apt-get -qq update
-    - apt-get install -qy --allow-unauthenticated mongodb-org-server=3.6.11
+    - apt-get install -qy mongodb-org
 
     # Install compile dependencies
     - if [ -f deb-requirements.txt ]; then
