@@ -60,12 +60,12 @@ test:unit:
     # Get last remaining tags, if any.
     - git fetch --tags origin
 
-    # Prepare GOPATH
+    # Prepare GOPATH for the build
     - mkdir -p /go/src/github.com/mendersoftware
     - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
     - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
   script:
-    - go list ./... | grep -v vendor | xargs -n1 -I {} -P 4 go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} || exit $?
+    - go list ./... | grep -v vendor | xargs -n1 -I {} -P 4 go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} || exit $? ;
     - mkdir -p tests/unit-coverage && find . -name 'coverage.txt' -exec cp --parents {} ./tests/unit-coverage \;
     - tar -cvf ${CI_PROJECT_DIR}/unit-coverage.tar tests/unit-coverage
   artifacts:
@@ -73,7 +73,7 @@ test:unit:
     paths:
       - unit-coverage.tar
 
-publish:unittests:codecov:
+publish:unittests:
   stage: publish
   except:
     - /^saas-[a-zA-Z0-9.]+$/
@@ -93,42 +93,3 @@ publish:unittests:codecov:
         fi;
         sleep 1;
       done
-
-publish:unittests:
-  stage: publish
-  except:
-    - /^saas-[a-zA-Z0-9.]+$/
-  image: golang:1.14-alpine3.11
-  dependencies:
-    - test:unit
-  before_script:
-    - apk add --no-cache git
-    # Run go get out of the repo to not modify go.mod
-    - cd / && go get github.com/mattn/goveralls && cd -
-    # Coveralls env variables:
-    #  According to https://docs.coveralls.io/supported-ci-services
-    #  we should set CI_NAME, CI_BUILD_NUMBER, etc. But according
-    #  to goveralls source code (https://github.com/mattn/goveralls)
-    #  many of these are not supported. Set only CI_PR_NUMBER and
-    #  pass few others are command line arguments.
-    #  See also https://docs.coveralls.io/api-reference
-    - export CI_PR_NUMBER=${CI_COMMIT_BRANCH#pr_}
-  script:
-    - tar -xvf unit-coverage.tar
-    - goveralls
-      -repotoken ${COVERALLS_TOKEN}
-      -service gitlab-ci
-      -jobid $CI_PIPELINE_ID
-      -covermode set
-      -flagname unittests
-      -parallel
-      -coverprofile $(find tests/unit-coverage -name 'coverage.txt' | tr '\n' ',' | sed 's/,$//')
-
-coveralls:finish-build:
-  stage: .post
-  # See https://docs.coveralls.io/parallel-build-webhook
-  variables:
-    COVERALLS_WEBHOOK_URL: "https://coveralls.io/webhook"
-  image: appropriate/curl
-  script:
-    - 'curl -k ${COVERALLS_WEBHOOK_URL}?repo_token=${COVERALLS_TOKEN} -d "payload[build_num]=$CI_PIPELINE_ID&payload[status]=done"'
