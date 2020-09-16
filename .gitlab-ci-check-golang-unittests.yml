@@ -39,6 +39,9 @@ test:unit:
     - GO111MODULE=off go get -u github.com/axw/gocov/gocov
     - GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
 
+    # mongodb-org package needs systemd, this circumnavigates the issue providing a fake systemctl command
+    - ln -s /bin/true /usr/sbin/systemctl
+
     # Install mongodb for the tests that use it locally
     - wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -
     - echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
