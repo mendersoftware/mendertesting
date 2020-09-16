@@ -40,7 +40,7 @@ test:unit:
     - GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
 
     # Install mongodb for the tests that use it locally
-    - wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add -
+    - wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -
     - echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
     - apt-get -qq update
     - apt-get install -qy mongodb-org
