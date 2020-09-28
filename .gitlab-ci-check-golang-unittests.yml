@@ -1,6 +1,6 @@
 # .gitlab-ci-check-golang-unittests.yml
 #
-# This gitlab-ci template runs and publishes into codecov unit tests
+# This gitlab-ci template runs unit tests and publishes code coverage
 # from a Go repository
 #
 # Add it to the project in hand through Gitlab's include functionality
@@ -19,6 +19,7 @@
 #
 # Requires the following variables set in the project CI/CD settings:
 #   CODECOV_TOKEN: Token from codecov.io for this repository
+#   COVERALLS_TOKEN: Token from coveralls.io for this repository
 #
 
 stages:
