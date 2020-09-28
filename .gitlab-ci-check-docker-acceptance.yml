@@ -98,26 +98,6 @@ test:acceptance_tests:
       - tests/coverage-acceptance.txt
     when: always
 
-publish:acceptance:codecov:
-  stage: publish
-  except:
-    - /^saas-[a-zA-Z0-9.]+$/
-  image: alpine
-  dependencies:
-    - test:acceptance_tests
-  before_script:
-    - apk add --no-cache bash curl findutils git
-  script:
-    - curl -s https://codecov.io/bash > /tmp/codecov.bash
-    - chmod +x /tmp/codecov.bash
-    - for i in $(seq 5); do
-        /tmp/codecov.bash -Z -F acceptance -f ./tests/coverage-acceptance.txt;
-        if [ $? -eq 0 ]; then
-          break;
-        fi;
-        sleep 1;
-      done
-
 publish:acceptance:
   stage: publish
   except:
