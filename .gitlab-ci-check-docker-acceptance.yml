@@ -1,7 +1,7 @@
 # .gitlab-ci-check-docker-acceptance.yml
 #
-# This gitlab-ci template builds, runs and publishes into codecov acceptance
-# tests from a Docker based repository.
+# This gitlab-ci template builds, runs acceptance tests and publishes
+# code coverage from a Docker based repository.
 #
 # It assumes the following files:
 # * Dockerfile.acceptance-testing: to build the the binary with test coverage.
@@ -19,7 +19,7 @@
 #     file: '.gitlab-ci-check-docker-acceptance.yml'
 #
 # Requires the following variables set in the project CI/CD settings:
-#   CODECOV_TOKEN: Token from codecov.io for this repository
+#   COVERALLS_TOKEN: Token from coveralls.io for this repository
 #
 # If the tests require access to Mender Registry hosted images, it
 # will require also the following vabiables:
