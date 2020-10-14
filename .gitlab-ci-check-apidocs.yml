@@ -1,7 +1,12 @@
 # .gitlab-ci-check-apidocs.yml
 #
 # This gitlab-ci template validates Swagger API specification and
-# triggers Mender API Site rebuilds
+# triggers Mender API site rebuilds.
+#
+# The Mender API site rebuild is triggered automatically on production
+# branches when there are changes to docs/*. Additionally, it can be
+# manually triggered setting REBUILD_MENDER_API_DOCS to "true" when
+# starting a pipeline.
 #
 # It assumes the documentation is in a docs/ folder.
 #
@@ -39,11 +44,13 @@ test:apidocs:verify-swagger:
 
 trigger:apidocs:rebuild-mender-api-docs:
   stage: .post
-  only:
-    changes:
+  variables:
+    REBUILD_MENDER_API_DOCS: "false"
+  rules:
+    - changes:
       - docs/*
-    refs:
-      - /^(master|staging|[0-9]+\.[0-9]+\.x)$/
+      if: '$CI_COMMIT_BRANCH =~ /^(master|staging|[0-9]+\.[0-9]+\.x)$/'
+    - if: '$REBUILD_MENDER_API_DOCS == "true"'
   image: alpine
   before_script:
     - apk add git python3 py3-pip
