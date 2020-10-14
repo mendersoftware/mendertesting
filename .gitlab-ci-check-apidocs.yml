@@ -74,7 +74,7 @@ trigger:apidocs:rebuild-mender-api-docs:
     -   fi
     - done
     # Trigger the rebuild of mender-api-docs, if at least one of the build is enabled
-    - if [ "${BUILD_MASTER}" != "false" ] || [ "${BUILD_HOSTED}" != "false" ] || [ "${BUILD_2_5}" != "false" ] ]; then
+    - if [ "${BUILD_MASTER}" != "false" ] || [ "${BUILD_HOSTED}" != "false" ] || [ "${BUILD_2_5}" != "false" ]; then
     -   echo "Triggering mender-api-docs rebuild (master ${BUILD_MASTER}, hosted ${BUILD_HOSTED}, 2.5 ${BUILD_2_5})"
     -   curl -v -f -X POST
           -F token=${MENDER_API_DOCS_TRIGGER_TOKEN}
