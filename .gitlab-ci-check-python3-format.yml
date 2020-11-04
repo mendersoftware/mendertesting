@@ -51,6 +51,7 @@ stages:
 test:check-python3-formatting:
   image: python:3.8-alpine
   stage: test
+  needs: []
   variables:
       BLACK_FORMATTER_VERSION: "19.10b0" # Hard-coded and unconfigurable
   before_script:

@@ -20,6 +20,7 @@ stages:
 
 test:static:
   stage: test
+  needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
   image: golang:1.14
