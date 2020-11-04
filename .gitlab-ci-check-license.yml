@@ -5,6 +5,7 @@ stages:
 test:check-license:
   image: alpine
   stage: test
+  needs: []
   before_script:
     # Install dependencies
     - apk add --no-cache git bash perl-utils
