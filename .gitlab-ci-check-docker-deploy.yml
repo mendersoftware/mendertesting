@@ -1,0 +1,96 @@
+# .gitlab-ci-check-docker-deploy.yml
+#
+# This gitlab-ci template modifies a manifest file in an infrastructure
+# repository to trigger de deploy of the newly build Docker image.
+#
+# It depends on .gitlab-ci-check-docker-build.yml, so both need to be
+# included for the process to work.
+#
+#
+# Add it to the project in hand through Gitlab's include functionality
+#
+# include:
+#   - project: 'Northern.tech/Mender/mendertesting'
+#     file: '.gitlab-ci-check-docker-deploy.yml'
+#
+# Requires .gitlab-ci-check-docker-build.yml to be included and related
+# varibales to be set.
+#
+# Requires TARGET_MANIFEST_FILE to be set in the calling Pipeline. It
+# can be one or more, separated by commas.
+#
+# The job will modify for the manifest file(s) in sre-repo, master branch,
+# by default. It can overriden with INFRA_REPOSITORY and INFRA_BRANCH
+# variables accordingly
+#
+# variables:
+#   TARGET_MANIFEST_FILE: <path to yaml file>,<path to other yaml file>
+#   INFRA_REPOSITORY: <git@github.com:mendersoftware/other-repo.git> (optional)
+#   INFRA_BRANCH: <other-branch> (optional)
+#
+# By default, it only runs on master branch, override only tag to modify
+# behaviour, for example with a regex:
+#
+# only:
+#   refs:
+#     - /^(master|staging|production|feature-.+|[0-9]+\.[0-9]+\.x)$/
+#
+
+stages:
+  - build
+  - publish
+  - sync
+
+include:
+- project: 'Northern.tech/Mender/mendertesting'
+  file: '.gitlab-ci-check-docker-build.yml'
+
+variables:
+  INFRA_REPOSITORY: "git@github.com:mendersoftware/sre-tools.git"
+  INFRA_BRANCH: "master"
+
+sync:image:
+  only:
+    refs:
+      - master
+  dependencies:
+    - publish:image
+  stage: sync
+  image: debian:buster
+  before_script:
+    - apt update && apt install -yyq git
+    # Prepare SSH key
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan github.com >> ~/.ssh/known_hosts
+    # Configure git
+    - git config --global user.email "mender@northern.tech"
+    - git config --global user.name "Mender Test Bot"
+  script:
+    # Add GitHub repo
+    - git remote add github ${INFRA_REPOSITORY}
+    - git fetch github ${INFRA_BRANCH}:local-sync
+    - git checkout local-sync
+    # Find and edit spec file(s)
+    - for file in $(echo $TARGET_MANIFEST_FILE | tr ',' '\n'); do
+    -   if [ ! -f "$file" ]; then
+    -     echo "Cannot find spec file $file for container $CI_PROJECT_NAME"
+    -     exit 1
+    -   fi
+    -   'sed -i -E "s#image:\s+[-_./@:a-zA-Z0-9]+#image: $PUBLISH_IMAGE_DIGEST#g" $file'
+    -   git add $file
+    - done
+    # Commit
+    - git commit -sm "[Mender CI/CD] Sync $CI_PROJECT_NAME" -m "Update $CI_PROJECT_NAME with tag $PUBLISH_IMAGE_DIGEST"
+    - git show
+    # Push (5 retries)
+    - for retry in $(seq 5); do
+    -   if git push github local-sync:${INFRA_BRANCH}; then
+    -     exit 0
+    -   fi
+    -   git fetch github ${INFRA_BRANCH}
+    -   git rebase github/${INFRA_BRANCH}
+    - done
+    - exit 1
