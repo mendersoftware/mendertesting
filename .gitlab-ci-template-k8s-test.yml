@@ -33,6 +33,9 @@
 stages:
   - test
 
+variables:
+  DEBIAN_FRONTEND: noninteractive
+
 .functions: &functions |
 
   K8S_CLUSTER_NAME=${K8S_CLUSTER_NAME:-mender-`date +%s`}

@@ -48,6 +48,7 @@ include:
 variables:
   INFRA_REPOSITORY: "git@github.com:mendersoftware/sre-tools.git"
   INFRA_BRANCH: "master"
+  DEBIAN_FRONTEND: noninteractive
 
 sync:image:
   only:
