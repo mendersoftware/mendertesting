@@ -62,27 +62,30 @@ trigger:apidocs:rebuild-mender-api-docs:
     # Enable the build of the mender-api-docs site versions where this branch is in use
     - BUILD_MASTER="false"
     - BUILD_HOSTED="false"
-    # TODO: Find a way to set up BUILD_X.Y and pass it as curl parameters dynamically
-    - BUILD_2_5="false"
-    - for version in $(release_tool  --integration-versions-including ${CI_PROJECT_NAME} --version ${CI_COMMIT_REF_NAME} | cut -d"/" -f2); do
+    # BUILD_VARS will contain version-specific flags e.g. (-F BUILD_2_5=true)
+    # translating upstream/2.5.x to BUILD_2_x=true
+    - BUILD_VARS=""
+    - for version in $(release_tool --integration-versions-including ${CI_PROJECT_NAME} --version ${CI_COMMIT_REF_NAME} | cut -d"/" -f2); do
     -   if [ "${version}" == "master" ]; then
     -     BUILD_MASTER="true"
     -   elif [ "${version}" == "staging" ]; then
     -     BUILD_HOSTED="true"
-    -   elif [ "${version}" == "2.5.x" ]; then
-    -     BUILD_2_5="true"
+    -   elif echo $version | egrep -q -e '^[0-9.x]+$'; then
+    -     VERSION_VAR_NAME=BUILD_$(echo $version | tr '.' '_' | sed -e 's/_x$//')
+    -     BUILD_VARS="${BUILD_VARS} -F ${VERSION_VAR_NAME}=true"
     -   fi
     - done
     # Trigger the rebuilds (master + production) of mender-api-docs, if at least one of the build is enabled
-    - if [ "${BUILD_MASTER}" != "false" ] || [ "${BUILD_HOSTED}" != "false" ] || [ "${BUILD_2_5}" != "false" ]; then
-    -   echo "Triggering mender-api-docs rebuild (master ${BUILD_MASTER}, hosted ${BUILD_HOSTED}, 2.5 ${BUILD_2_5})"
+    - if [ "${BUILD_MASTER}" != "false" ] || [ "${BUILD_HOSTED}" != "false" ] || [ "${BUILD_VARS}" != "" ]; then
+    -   BUILD_VARS_DEBUG=$(echo $BUILD_VARS | sed -e 's/-F //g')
+    -   echo "Triggering mender-api-docs rebuild BUILD_MASTER=${BUILD_MASTER} BUILD_HOSTED=${BUILD_HOSTED} ${BUILD_VARS_DEBUG}"
     -   for ref in master production; do
     -     curl -v -f -X POST
             -F token=${MENDER_API_DOCS_TRIGGER_TOKEN}
             -F ref=$ref
             -F variables[BUILD_MASTER]=${BUILD_MASTER}
             -F variables[BUILD_HOSTED]=${BUILD_HOSTED}
-            -F variables[BUILD_2_5]=${BUILD_2_5}
+            ${BUILD_VARS}
             https://gitlab.com/api/v4/projects/20356182/trigger/pipeline
     -   done
     - fi
