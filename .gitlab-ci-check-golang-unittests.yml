@@ -20,6 +20,15 @@
 # Requires the following variables set in the project CI/CD settings:
 #   COVERALLS_TOKEN: Token from coveralls.io for this repository
 #
+# By default, it installs MongoDB version 4.4 for Debian buster. You can
+# specify the Debian release name for the upstream APT repository and
+# the MongoDB version overriding the variables below:
+#
+# test:unit:
+#   variables:
+#     MONGODB_DEBIAN_RELEASE: "stretch"
+#     MONGODB_VERSION: "3.6"
+#
 
 stages:
   - test
@@ -34,6 +43,8 @@ test:unit:
     - mongo:4.4
   variables:
     GIT_DEPTH: 0
+    MONGODB_DEBIAN_RELEASE: "buster"
+    MONGODB_VERSION: "4.4"
   before_script:
     # Install code coverage tooling
     - GO111MODULE=off go get -u github.com/axw/gocov/gocov
@@ -43,8 +54,8 @@ test:unit:
     - ln -s /bin/true /usr/sbin/systemctl
 
     # Install mongodb for the tests that use it locally
-    - wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -
-    - echo "deb http://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+    - wget -qO - https://www.mongodb.org/static/pgp/server-${MONGODB_VERSION}.asc | apt-key add -
+    - echo "deb http://repo.mongodb.org/apt/debian ${MONGODB_DEBIAN_RELEASE}/mongodb-org/${MONGODB_VERSION} main" | tee /etc/apt/sources.list.d/mongodb-org-${MONGODB_VERSION}.list
     - apt-get -qq update
     - apt-get install -qy mongodb-org
 
