@@ -61,8 +61,8 @@ test:unit:
 
     # Install compile dependencies
     - if [ -f deb-requirements.txt ]; then
-        apt install -yq $(cat deb-requirements.txt);
-      fi
+    -   apt install -yq $(cat deb-requirements.txt)
+    - fi
 
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
@@ -95,9 +95,13 @@ publish:unittests:
   dependencies:
     - test:unit
   before_script:
+    # Install dependencies
     - apk add --no-cache git
-    # Run go get out of the repo to not modify go.mod
-    - cd / && go get github.com/mattn/goveralls && cd -
+    - GO111MODULE=off go get -u github.com/mattn/goveralls
+    # Prepare GOPATH
+    - mkdir -p /go/src/github.com/mendersoftware
+    - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
+    - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
     # Coveralls env variables:
     #  According to https://docs.coveralls.io/supported-ci-services
     #  we should set CI_NAME, CI_BUILD_NUMBER, etc. But according
