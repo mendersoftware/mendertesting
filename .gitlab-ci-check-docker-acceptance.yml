@@ -79,18 +79,18 @@ test:acceptance_tests:
     - mv ${CI_PROJECT_NAME} tests/
     - mv mender-artifact tests/
     - if [ -f keys/private.pem ]; then
-        mv keys/private.pem tests/;
-      fi
+    -   mv keys/private.pem tests/
+    - fi
     - docker load -i tests_image.tar
     - docker load -i acceptance_testing_image.tar
     - if [ -n "$REGISTRY_MENDER_IO_USERNAME" ]; then
-        docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io;
-      fi
+    -   docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
+    - fi
   script:
     - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance.yml
     - if [ -f $(pwd)/tests/docker-compose-acceptance-enterprise.yml ]; then
-        TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance-enterprise.yml;
-      fi
+    -   TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance-enterprise.yml
+    - fi
   artifacts:
     expire_in: 2w
     paths:
@@ -106,9 +106,13 @@ publish:acceptance:
   dependencies:
     - test:acceptance_tests
   before_script:
+    # Install dependencies
     - apk add --no-cache git
-    # Run go get out of the repo to not modify go.mod
-    - cd / && go get github.com/mattn/goveralls && cd -
+    - GO111MODULE=off go get -u github.com/mattn/goveralls
+    # Prepare GOPATH
+    - mkdir -p /go/src/github.com/mendersoftware
+    - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
+    - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
     # Coveralls env variables:
     #  According to https://docs.coveralls.io/supported-ci-services
     #  we should set CI_NAME, CI_BUILD_NUMBER, etc. But according
