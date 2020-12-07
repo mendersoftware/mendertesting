@@ -1,3 +1,21 @@
+# .gitlab-ci-check-license.yml
+#
+# This gitlab-ci template runs license tests
+#
+# Add it to the project in hand through Gitlab's include functionality.
+#
+# include:
+#   - project: 'Northern.tech/Mender/mendertesting'
+#     file: '.gitlab-ci-check-license.yml'
+#
+# If the repository includes enterprise (aka, non-Open-Source) Go lang code, you
+# can specify the first git commit SHA of the enterprise code, also known as
+# forking commit, setting the FIRST_ENT_COMMIT env variable:
+#
+# test:check-license:
+#   variables:
+#     FIRST_ENT_COMMIT: "<sha>"
+#
 
 stages:
   - test
