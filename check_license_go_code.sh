@@ -8,9 +8,14 @@ Checks that all licenses on Go files are correct.
 
 --ent-start-commit=COMMIT
 	For an Enterprise repository, specifies the earliest commit that is part
-	of only Enterprise (the very first commit after the fork point)
+	of only Enterprise (the very first commit after the fork point).
+
+If the FIRST_ENT_COMMIT env variable is set, the script uses its value for
+the --ent-start-commit parameter.
 EOF
 }
+
+ENT_COMMIT="${FIRST_ENT_COMMIT}"
 
 while [ -n "$1" ]; do
     case "$1" in
@@ -107,7 +112,12 @@ is_enterprise() {
     # commit. This should be the latest Open Source commit. This doesn't change
     # over the course of a run, so cache it.
     if [ -z "$LATEST_OS_COMMIT" ]; then
-        LATEST_OS_COMMIT=$(git rev-list $ENT_COMMIT..HEAD --ancestry-path --boundary --date-order | grep "^-" | head -n1 | grep -o '[0-9a-f]*')
+        LATEST_OS_COMMIT=$(git rev-list $ENT_COMMIT..HEAD --ancestry-path --boundary --date-order | grep "^-" | head -n1 | sed -e 's/[^0-9a-f]//')
+    fi
+
+    # There is no commit before ENT_COMMIT, all code is enterprise
+    if [ "$LATEST_OS_COMMIT" = "$ENT_COMMIT" ]; then
+        return 0
     fi
 
     if git show $LATEST_OS_COMMIT:"$file" >& /dev/null; then
