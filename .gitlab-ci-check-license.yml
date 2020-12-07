@@ -21,9 +21,11 @@ stages:
   - test
 
 test:check-license:
-  image: alpine
   stage: test
   needs: []
+  image: alpine
+  variables:
+    GIT_DEPTH: 0
   before_script:
     # Install dependencies
     - apk add --no-cache git bash perl-utils
