@@ -22,3 +22,4 @@ test:check-license:
   script:
     # Check licenses
     - /tmp/mendertesting/check_license.sh
+    - /tmp/mendertesting/check_license_go_code.sh
