@@ -10,12 +10,16 @@
 #
 # If the repository includes enterprise (aka, non-Open-Source) Go lang code, you
 # can specify the first git commit SHA of the enterprise code, also known as
-# forking commit, setting the FIRST_ENT_COMMIT env variable:
+# forking commit, setting the FIRST_ENT_COMMIT env variable.
+#
+# You can add known license files setting the KNOWN_LICENSE_FILES env variable
+# to a list of space separated files to include to the list of autodetected
+# license files.
 #
 # test:check-license:
 #   variables:
 #     FIRST_ENT_COMMIT: "<sha>"
-#
+#     KNOWN_LICENSE_FILES: "path/to/README.md path/to-another/LICENSE.md"
 
 stages:
   - test
