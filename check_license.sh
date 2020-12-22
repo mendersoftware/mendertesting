@@ -95,7 +95,7 @@ for dep_dir in Godeps/_workspace/src vendor
 do
     if [ -d "$dep_dir" ]
     then
-        for gofile in $(find "$dep_dir" -name '*.go')
+        for gofile in $(find "$dep_dir" -name '*.go' -type f)
         do
             parent_dir="$(dirname "$gofile")"
             found=0
