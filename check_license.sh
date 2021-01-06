@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -9,8 +9,8 @@ ret=0
 ################################################################################
 
 # Find commit with latest author date (which is surprisingly difficult!).
-LATEST=`git log --no-merges --format="%at %H" | sort -rn | head -n1 | cut -d' ' -f2`
-LATEST_YEAR=`git log -n1 --format=%ad --date=format:%Y $LATEST`
+LATEST="$(git log --no-merges --format="%at %H" | sort -rn | head -n1 | cut -d' ' -f2)"
+LATEST_YEAR="$(git log -n1 --format=%ad --date=format:%Y $LATEST)"
 
 if ! grep -iq "Copyright *$LATEST_YEAR *Northern.tech" LICENSE; then
     echo "'Copyright $LATEST_YEAR Northern.tech' not found in LICENSE. Wrong year maybe?"
@@ -76,7 +76,7 @@ do
     file=$(echo $file | sed -e 's,./,,')
     if ! fgrep "$(shasum -a 256 $file)" $CHKSUM_FILE > /dev/null
     then
-        echo "$file has missing or wrong entry in $CHKSUM_FILE"
+        echo >&2 "$file has missing or wrong entry in $CHKSUM_FILE"
         ret=1
     fi
 done
@@ -91,45 +91,42 @@ fi
 # There must be a license at the top level of each Go dependency.
 # The logic is so that each .go source file must have a license file in the same
 # directory, or in a parent directory.
-for dep_dir in Godeps/_workspace/src vendor
-do
-    if [ -d "$dep_dir" ]
-    then
-        for gofile in $(find "$dep_dir" -name '*.go' -type f)
+if [ -d vendor ]
+then
+    for gofile in $(find vendor -name '*.go' -type f)
+    do
+        parent_dir="$(dirname "$gofile")"
+        found=0
+        while [ "$parent_dir" != "vendor" ]
         do
-            parent_dir="$(dirname "$gofile")"
-            found=0
-            while [ "$parent_dir" != "$dep_dir" ]
-            do
-                # Either we need to find a license file, or the file must be
-                # covered by one of the license files specified in
-                # KNOWN_LICENSE_FILES.
-                if [ $(find "$parent_dir" -maxdepth 1 -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -iname 'COPYING' | wc -l) -ge 1 ]
-                then
-                    found=1
-                    break
-                fi
-                if [ -n "$KNOWN_LICENSE_FILES" ]
-                then
-                    for known_file in $KNOWN_LICENSE_FILES
-                    do
-                        if [ "$(dirname $known_file)" = "$parent_dir" ]
-                        then
-                            found=1
-                            break 2
-                        fi
-                    done
-                fi
-                parent_dir="$(dirname "$parent_dir")"
-            done
-            if [ $found != 1 ]
+            # Either we need to find a license file, or the file must be
+            # covered by one of the license files specified in
+            # KNOWN_LICENSE_FILES.
+            if [ $(find "$parent_dir" -maxdepth 1 -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -iname 'COPYING' | wc -l) -ge 1 ]
             then
-                echo "No license file to cover $gofile"
-                ret=1
+                found=1
                 break
             fi
+            if [ -n "$KNOWN_LICENSE_FILES" ]
+            then
+                for known_file in $KNOWN_LICENSE_FILES
+                do
+                    if [ "$(dirname $known_file)" = "$parent_dir" ]
+                    then
+                        found=1
+                        break 2
+                    fi
+                done
+            fi
+            parent_dir="$(dirname "$parent_dir")"
         done
-    fi
-done
+        if [ $found != 1 ]
+        then
+            echo "No license file to cover $gofile"
+            ret=1
+            break
+        fi
+    done
+fi
 
-exit $ret
+exit ${ret}

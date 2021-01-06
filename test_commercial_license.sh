@@ -28,7 +28,7 @@ do_check() {
     echo "TEST: $1..."
     shift
 
-    if "$(dirname "$0")/check_license_go_code.sh" "$@"; then
+    if "$(dirname "$0")/check_license_source_files.sh" "$@"; then
         echo PASSED
         return 0
     else
@@ -41,7 +41,7 @@ do_negative_check() {
     echo "TEST: $1..."
     shift
 
-    if "$(dirname "$0")/check_license_go_code.sh" "$@"; then
+    if "$(dirname "$0")/check_license_source_files.sh" "$@"; then
         echo FAILED
         return 1
     else

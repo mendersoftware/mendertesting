@@ -67,7 +67,7 @@ func checkMenderCompliance() error {
 		return err
 	}
 
-	args := []string{path.Join(pathToTool, "check_license_go_code.sh")}
+	args := []string{path.Join(pathToTool, "check_license_source_files.sh")}
 	if firstEnterpriseCommit != "" {
 		args = append(args, "--ent-start-commit", firstEnterpriseCommit)
 	}
