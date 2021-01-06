@@ -197,7 +197,7 @@ check_files "${GO_FILES}"
 
 echo >&2 "Checking licenses on all Python files"
 PYTHON_FILES="\
-$(find . -type f \( ! -regex ${LICENSE_HEADERS_IGNORE_FILES_REGEXP} ! -regex '.*\.venv.*' ! -regex '.*build/.*' -name '*.py' \))"
+$(find . -type f \( ! -regex ${LICENSE_HEADERS_IGNORE_FILES_REGEXP} ! -path './vendor/*' ! -regex '.*\.venv.*' ! -regex '.*build/.*' -name '*.py' \))"
 check_files "${PYTHON_FILES}"
 
 exit ${TEST_RESULT}
