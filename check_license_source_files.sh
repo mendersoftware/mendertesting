@@ -31,7 +31,6 @@ EOF
 }
 
 ENT_COMMIT="${FIRST_ENT_COMMIT}"
-VERBOSE=""
 
 while [ -n "$1" ]; do
     case "$1" in
@@ -43,9 +42,8 @@ while [ -n "$1" ]; do
             ENT_COMMIT="$1"
             ;;
         --verbose)
-          set -x
-          VERBOSE="--verbose"
-          ;;
+            set -x
+            ;;
         *)
             echo >&2 "Unrecognized option $1"
             usage
@@ -179,6 +177,9 @@ check_files() {
               ;;
           *)
               echo >&2 "No source file testing done for file:\n\t ${source_file}\nThe filetype is unsupported type"
+              TEST_RESULT=1
+              continue
+              ;;
       esac
       check_file "${source_file}" "${CM}"
     done
