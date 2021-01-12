@@ -43,6 +43,8 @@ test:prepare_acceptance:
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
     - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
     - export COMMIT_TAG=${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}
+    - echo "DEBUG DOCKER_REPOSITORY $DOCKER_REPOSITORY"
+    - echo "DEBUG DEBUG_TEST_VAR $DEBUG_TEST_VAR"
   script:
     - docker build -f Dockerfile.acceptance-testing -t $DOCKER_REPOSITORY:prtest .
     - docker save $DOCKER_REPOSITORY:prtest > tests_image.tar
@@ -85,6 +87,13 @@ test:acceptance_tests:
     - docker load -i acceptance_testing_image.tar
     - if [ -n "$REGISTRY_MENDER_IO_USERNAME" ]; then
     -   docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
+    - fi
+    - if [ -n "$UPSTREAM_PIPELINE_ID" ]; then
+    -   echo "called from upstream"
+    -   git clone --depth=1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    -   cd /tmp/mendertesting && git checkout -b mchalski-mender-test-container master && git pull https://github.com/mchalski/mendertesting.git mender-test-container
+    -   cd /tmp/mendertesting && ./get_upstream_acceptance_docker.py
+    -   docker load -i /tmp/mendersoftware/testingImage.tar
     - fi
   script:
     - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance.yml
