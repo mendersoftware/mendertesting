@@ -36,6 +36,7 @@ stages:
 
 test:unit:
   stage: test
+  needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
   image: golang:1.14
@@ -49,6 +50,9 @@ test:unit:
     # Install code coverage tooling
     - GO111MODULE=off go get -u github.com/axw/gocov/gocov
     - GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
+
+    # Install JUnit test reporting formatter
+    - GO111MODULE=off go get -u github.com/jstemmer/go-junit-report/...
 
     # mongodb-org package needs systemd, this circumnavigates the issue providing a fake systemctl command
     - ln -s /bin/true /usr/sbin/systemctl
@@ -79,13 +83,16 @@ test:unit:
     - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
     - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
   script:
-    - go list ./... | grep -v vendor | xargs -n1 -I {} -P 4 go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} || exit $?
+    - go list ./... | grep -v vendor | xargs -n1 -I {} go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} 2>&1 | tee /dev/stderr | go-junit-report > ${CI_PROJECT_DIR}/test-results.xml || exit $?
     - mkdir -p tests/unit-coverage && find . -name 'coverage.txt' -exec cp --parents {} ./tests/unit-coverage \;
     - tar -cvf ${CI_PROJECT_DIR}/unit-coverage.tar tests/unit-coverage
   artifacts:
     expire_in: 2w
     paths:
       - unit-coverage.tar
+    reports:
+      junit: test-results.xml
+    when: always
 
 publish:unittests:
   stage: publish
