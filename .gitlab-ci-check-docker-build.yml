@@ -41,6 +41,12 @@ stages:
   - build
   - publish
 
+.docker_login_registries: &docker_login_registries |
+  docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io || \
+    echo "Warning: registry.mender.io credentials unavailable or invalid"
+  docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD || \
+    echo "Warning: Docker credentials unavailable or invalid"
+
 .export_docker_vars: &export_docker_vars |
   export DOCKER_BUILD_TAG=${CI_COMMIT_REF_SLUG:-local}
   export DOCKER_BUILD_SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_BUILD_TAG}
@@ -94,12 +100,11 @@ publish:image:
     - build:docker
   before_script:
     - *export_docker_vars
+    - *docker_login_registries
   script:
     - docker load -i image.tar
     - docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
     - docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
-    - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
-    - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
     - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
     - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
     - echo "PUBLISH_IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG)" >> publish.env
@@ -122,8 +127,8 @@ publish:image:mender:
   before_script:
     # Use same variables for loading the image, while DOCKER_PUBLISH_COMMIT_TAG will be ignored
     - *export_docker_vars
-    # Install release_tool
     - *get_release_tool_alpine
+    - *docker_login_registries
   script:
     # If the repo is not recognized, ignore
     - if ! echo $(release_tool --list git --all) | grep $CI_PROJECT_NAME; then
@@ -136,10 +141,8 @@ publish:image:mender:
     -  echo "Repository $CI_PROJECT_NAME version $CI_COMMIT_REF_NAME is not part of any Mender release. Exiting"
     -  exit 0
     - fi
-    # Load image and logins
+    # Load image
     - docker load -i image.tar
-    - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
-    - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
     # Publish the image for all releases
     - for version in $integration_versions; do
     -   docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}
@@ -195,9 +198,8 @@ publish:image:saas:
     - export SOURCE_TAG=staging_${CI_COMMIT_SHA}
     - export DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
     - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
+    - *docker_login_registries
   script:
-    - docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
-    - docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
     - docker pull $DOCKER_REPOSITORY:$SOURCE_TAG
     - docker tag $DOCKER_REPOSITORY:$SOURCE_TAG $SERVICE_IMAGE
     - docker push $SERVICE_IMAGE
