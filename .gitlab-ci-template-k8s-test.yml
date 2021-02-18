@@ -27,7 +27,7 @@
 #
 # variables:
 #   K8S_CLUSTER_NAME: "my-test-cluster"
-#   K8S_VERSION: "v1.12.10"
+#   K8S_VERSION: "v1.18.15"
 #
 
 stages:
@@ -39,7 +39,7 @@ variables:
 .functions: &functions |
 
   K8S_CLUSTER_NAME=${K8S_CLUSTER_NAME:-mender-`date +%s`}
-  K8S_VERSION=${K8S_VERSION:-v1.12.10}
+  K8S_VERSION=${K8S_VERSION:-v1.18.15}
 
   function log() {
     echo "`date` $*"
@@ -63,8 +63,10 @@ variables:
 
   function ci_start_k8s() {
     # create k8s cluster for testing
-    log "creating $K8S_CLUSTER_NAME k8s cluster"
-    kind create cluster --name="${K8S_CLUSTER_NAME}" --image kindest/node:${K8S_VERSION}
+    curl -s https://raw.githubusercontent.com/rancher/k3d/main/install.sh | bash
+    k3d cluster create $K8S_CLUSTER_NAME
+    # wait for the k3s cluster to show up
+    log "waiting for the k3s cluster"
     echo
     status="starting"
     max_wait=128
@@ -107,10 +109,6 @@ variables:
     - add-apt-repository "deb https://apt.kubernetes.io/ kubernetes-xenial main"
     - apt-get update
     - apt-get install --reinstall -y kubeadm kubelet kubectl
-    # Install kind
-    - curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.6.1/kind-Linux-amd64
-    - chmod 755 kind
-    - mv kind /usr/bin/
     # Prepare dockerd for CI
     - ci_prepare
     # Start k8s cluster for CI
