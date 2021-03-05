@@ -35,8 +35,9 @@ stages:
 test:prepare_acceptance:
   stage: test_prep
   image: docker
-  except:
-    - /^saas-[a-zA-Z0-9.]+$/
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
   services:
     - docker:19.03.5-dind
   before_script:
@@ -62,8 +63,9 @@ test:prepare_acceptance:
 
 test:acceptance_tests:
   stage: test
-  except:
-    - /^saas-[a-zA-Z0-9.]+$/
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
   tags:
     - docker
   image: tiangolo/docker-with-compose
@@ -100,8 +102,9 @@ test:acceptance_tests:
 
 publish:acceptance:
   stage: publish
-  except:
-    - /^saas-[a-zA-Z0-9.]+$/
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
   image: golang:1.14-alpine3.11
   dependencies:
     - test:acceptance_tests

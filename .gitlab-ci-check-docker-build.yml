@@ -61,8 +61,9 @@ stages:
 
 build:docker:
   stage: build
-  except:
-    - /^saas-[a-zA-Z0-9.]+$/
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
   tags:
     - docker
   image: docker
@@ -85,12 +86,9 @@ build:docker:
 
 publish:image:
   stage: publish
-  except:
-    - /^saas-[a-zA-Z0-9.]+$/
-  only:
-    refs:
-      # NOTE: We can remove [0-9]+\.[0-9]+\.x from here after 2.3.x goes EOL
-      - /^(master|staging|production|feature-.+|[0-9]+\.[0-9]+\.x)$/
+  rules:
+    # NOTE: We can remove [0-9]+\.[0-9]+\.x from here after 2.3.x goes EOL
+    - if: '$CI_COMMIT_BRANCH =~ /^(master|staging|production|feature-.+|[0-9]+\.[0-9]+\.x)$/'
   tags:
     - docker
   image: docker
@@ -114,9 +112,8 @@ publish:image:
 
 publish:image:mender:
   stage: publish
-  only:
-    refs:
-      - /^(master|[0-9]+\.[0-9]+\.x)$/
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(master|[0-9]+\.[0-9]+\.x)$/'
   tags:
     - docker
   image: docker
@@ -157,9 +154,8 @@ publish:image:mender:
 
 trigger:saas:sync-staging-component:
   stage: .post
-  only:
-    refs:
-      - /^staging$/
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "staging"'
   image: alpine
   before_script:
     - *export_docker_vars
@@ -186,9 +182,8 @@ trigger:saas:sync-staging-component:
 # saas-specific job to retag docker images after saas-* tags are pushed to the repository
 publish:image:saas:
   stage: publish
-  only:
-    refs:
-      - /^saas-[a-zA-Z0-9.]+$/
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
   tags:
     - docker
   image: docker
