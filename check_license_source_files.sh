@@ -141,7 +141,7 @@ EOF
         lic_type="Open Source"
     fi
 
-    modified_year=$(git log --follow -n1 --format=%ad --date=format:%Y -- "$file")
+    modified_year=$(git log --follow --format=%ad --date=format:%Y -- "$file" | sort -n | tail -n 1)
 
     orig_file="${file}"
     file=$(strip_hashbang "${file}")
