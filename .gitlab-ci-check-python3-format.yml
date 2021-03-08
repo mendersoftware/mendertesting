@@ -25,7 +25,6 @@
 # target-version = ['py37']
 # include = '\.py$'
 # exclude = '''
-
 # (
 #   /(
 #       \.eggs         # exclude a few common directories
