@@ -28,12 +28,11 @@
 #   INFRA_REPOSITORY: <git@github.com:mendersoftware/other-repo.git> (optional)
 #   INFRA_BRANCH: <other-branch> (optional)
 #
-# By default, it only runs on master branch, override only tag to modify
-# behaviour, for example with a regex:
+# By default, it only runs on master branch, override rules tag to modify
+# behavior, for example with a regex:
 #
-# only:
-#   refs:
-#     - /^(master|staging|production|feature-.+|[0-9]+\.[0-9]+\.x)$/
+# rules:
+#   - if: '$CI_COMMIT_BRANCH =~ /^(master|staging|production|feature-.+|[0-9]+\.[0-9]+\.x)$/'
 #
 
 stages:
@@ -51,9 +50,8 @@ variables:
   DEBIAN_FRONTEND: noninteractive
 
 sync:image:
-  only:
-    refs:
-      - master
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
   dependencies:
     - publish:image
   stage: sync
