@@ -72,7 +72,7 @@ trigger:apidocs:rebuild-mender-api-docs:
     -     BUILD_HOSTED="true"
     -   elif echo $version | egrep -q -e '^[0-9.x]+$'; then
     -     VERSION_VAR_NAME=BUILD_$(echo $version | tr '.' '_' | sed -e 's/_x$//')
-    -     BUILD_VARS="${BUILD_VARS} -F ${VERSION_VAR_NAME}=true"
+    -     BUILD_VARS="${BUILD_VARS} -F variables[${VERSION_VAR_NAME}]=true"
     -   fi
     - done
     # Trigger the rebuilds (master + production) of mender-api-docs, if at least one of the build is enabled
