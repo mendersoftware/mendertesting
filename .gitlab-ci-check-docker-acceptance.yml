@@ -101,6 +101,8 @@ test:acceptance_tests:
     paths:
       - tests/acceptance.*
       - tests/coverage-acceptance.txt
+    reports:
+      junit: tests/results.xml
     when: always
 
 publish:acceptance:
