@@ -99,7 +99,11 @@ test:acceptance_tests:
   script:
     - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance.yml
     - if [ -f $(pwd)/tests/docker-compose-acceptance-enterprise.yml ]; then
+    -   mv tests/coverage-acceptance.txt cover.prof
     -   TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance-enterprise.yml
+      # Merge the test coverage from open-source and enterprise runs
+    -   mv tests/coverage-acceptance.txt cover-ent.prof
+    -   tail -n +2 cover-ent.prof | cat cover.prof - > tests/coverage-acceptance.txt
     - fi
   artifacts:
     expire_in: 2w
