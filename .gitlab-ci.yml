@@ -5,7 +5,6 @@ include:
 
 stages:
   - test
-  - publish
 
 # See QA-274
 # test:lint:
@@ -62,13 +61,3 @@ test:unit:
     expire_in: 2w
     paths:
       - coverage.txt
-
-publish:tests:
-  image: alpine
-  stage: publish
-  before_script:
-    - apk add --no-cache bash curl findutils git
-  dependencies:
-    - test:unit
-  script:
-    - bash -c "bash <(curl -s https://codecov.io/bash) -Z"
