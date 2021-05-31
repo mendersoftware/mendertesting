@@ -1,0 +1,72 @@
+# .gitlab-ci-check-shell-format.yml
+#
+# This gitlab-ci file runs the shfmt code formatter https://github.com/mvdan/sh
+# on the shell code in the repository, and fails the pipeline if the code is
+# not formatted correctly
+#
+# Add it to the project in hand through Gitlab's include functionality
+#
+# include:
+#   - project: 'Northern.tech/Mender/mendertesting'
+#     file: '.gitlab-ci-check-shell-format.yml'
+#
+# By default, it will check all files with "*.sh" extension. To change this,
+# override before_script defining your custom SHELL_SCRIPTS variable. For
+# example:
+#
+#  before_script:
+#    - SHELL_SCRIPTS=$(find mender-convert* modules configs scripts
+#            -type f
+#            -not -name "*.md"
+#            -not -path "scripts/linkbot/*"
+#            -not -wholename "scripts/test/*")
+#
+
+stages:
+  - test
+
+test:check-shell-formatting:
+  stage: test
+  needs: []
+  image: alpine:3.13
+  before_script:
+    - SHELL_SCRIPTS=$(find . -type f -name "*.sh")
+  script:
+    - apk update
+    - apk upgrade
+    - apk add --update bash git shfmt
+    - shfmt -version
+    - /bin/bash
+    - 'echo -e "Checking shell formatting for the following files:\n${SHELL_SCRIPTS}"'
+    # shfmt
+    ## Language=Bash
+    #     -ln bash
+    ## Indent=4 spaces
+    #     -i 4
+    ## List files who differ in formatting
+    #     -l
+    ## Redirect operators should be followed by a space
+    #     -sr
+    ## Indent switch statements
+    #     -ci
+    ## Keep column alignment padding
+    #     -kp
+    ## Binary operators like &&, || may start a new line
+    #     -bn
+    ## Overwrite the source files
+    #     -w
+    - |
+        shfmt \
+        -ln bash \
+        -i 4 \
+        -l \
+        -sr \
+        -ci \
+        -kp \
+        -bn \
+        -w \
+        ${SHELL_SCRIPTS}
+      # Print diff
+    - git diff HEAD
+      # Actual test: exits with non zero status if diff
+    - git diff-index --quiet HEAD
