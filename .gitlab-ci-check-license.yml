@@ -13,13 +13,18 @@
 # forking commit, setting the FIRST_ENT_COMMIT env variable.
 #
 # You can add known license files setting the KNOWN_LICENSE_FILES env variable
-# to a list of space separated files to include to the list of autodetected
+# to a list of space separated files to include to the list of auto-detected
 # license files.
+#
+# With regards to Python source files, you can exclude files via regular
+# expression with the variable LICENSE_HEADERS_IGNORE_FILES_REGEXP.
 #
 # test:check-license:
 #   variables:
 #     FIRST_ENT_COMMIT: "<sha>"
 #     KNOWN_LICENSE_FILES: "path/to/README.md path/to-another/LICENSE.md"
+#     LICENSE_HEADERS_IGNORE_FILES_REGEXP: '\./exclude-this/.*\.py'
+#
 
 stages:
   - test
