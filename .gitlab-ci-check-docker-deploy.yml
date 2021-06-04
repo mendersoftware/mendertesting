@@ -52,9 +52,8 @@ variables:
 sync:image:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-  needs:
-    - job: publish:image
-      artifacts: true
+  dependencies:
+    - publish:image
   stage: sync
   image: debian:buster
   before_script:
