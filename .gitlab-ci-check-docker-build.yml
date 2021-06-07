@@ -96,9 +96,8 @@ publish:image:
   image: docker
   services:
     - docker:19.03.5-dind
-  needs:
-    - job: build:docker
-      artifacts: true
+  dependencies:
+    - build:docker
   before_script:
     - *export_docker_vars
     - *docker_login_registries
@@ -122,9 +121,8 @@ publish:image:mender:
   image: docker
   services:
     - docker:19.03.5-dind
-  needs:
-    - job: build:docker
-      artifacts: true
+  dependencies:
+    - build:docker
   before_script:
     # Use same variables for loading the image, while DOCKER_PUBLISH_COMMIT_TAG will be ignored
     - *export_docker_vars
