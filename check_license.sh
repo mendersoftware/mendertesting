@@ -54,6 +54,9 @@ TMP_CHKSUM_FILE=$(mktemp)
 trap cleanup EXIT
 cleanup()
 {
+  if [ -n "$output" ]; then
+    echo "$output"
+  fi
   rm $TMP_CHKSUM_FILE
 }
 sed '/^$/d' $CHKSUM_FILE > $TMP_CHKSUM_FILE
