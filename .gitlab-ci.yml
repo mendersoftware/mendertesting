@@ -6,14 +6,6 @@ include:
 stages:
   - test
 
-# See QA-274
-# test:lint:
-#   image: python:3
-#   before_script:
-#     - pip install requests
-#   script:
-#     - ./gitlab_ci_lint.py
-
 test:unit:
   image: golang:1.14
   stage: test
