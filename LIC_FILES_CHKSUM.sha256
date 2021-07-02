@@ -10,3 +10,6 @@ b4acfcfa2a0ba1a8c82ec3965fbcee886cff8394ca4214e0ddac0a36beb1e05a  LICENSE
 # MIT license
 f8e536c1c7b695810427095dc85f5f80d44ff7c10535e8a9486cf393e2599189  vendor/github.com/stretchr/testify/LICENSE
 d18f6323b71b0b768bb5e9616e36da390fbd39369a81807cca352de4e4e6aa0b  vendor/gopkg.in/yaml.v3/LICENSE
+#
+# UUID license
+0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d  github.com/google/uuid/LICENSE
