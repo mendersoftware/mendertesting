@@ -22,9 +22,9 @@
 #       - checksums
 # Later jobs that will call mender_ci_load_tmp_artifact have to define "needs:"
 # or "depends:" to load the checksums directory
-function mender_ci_save_tmp_artifact {
+mender_ci_save_tmp_artifact() {
     if [ -z "$1" ]; then
-        echo Usage $0 file-to-save [project-name] [pipeline-id]
+        echo "Usage $0 file-to-save [project-name] [pipeline-id]"
         exit 1
     fi
     user_file="$1"
@@ -43,9 +43,9 @@ function mender_ci_save_tmp_artifact {
 #
 # Loads the given file from S3 bucket temporary storage. It checks the SHA256
 # checksum (see mender_ci_save_tmp_artifact).
-function mender_ci_load_tmp_artifact {
+mender_ci_load_tmp_artifact() {
     if [ -z "$1" ]; then
-        echo Usage $0 file-to-save [project-name] [pipeline-id]
+        echo "Usage $0 file-to-save [project-name] [pipeline-id]"
         exit 1
     fi
     user_file="$1"
