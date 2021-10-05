@@ -36,7 +36,9 @@ mender_ci_save_tmp_artifact() {
     fi
     mkdir -p ${CI_PROJECT_DIR}/checksums
     sha256sum ${user_file} > ${CI_PROJECT_DIR}/checksums/$(basename ${user_file}).sha256
-    aws s3 cp ${user_file} s3://mender-gitlab-tmp-storage/$project_name/$pipeline_id/$(basename ${user_file})
+    env AWS_ACCESS_KEY_ID=$TMP_STORAGE_AWS_ACCESS_KEY_ID \
+            AWS_SECRET_ACCESS_KEY=$TMP_STORAGE_AWS_SECRET_ACCESS_KEY \
+            aws s3 cp ${user_file} s3://mender-gitlab-tmp-storage/$project_name/$pipeline_id/$(basename ${user_file})
 }
 
 # Usage: mender_ci_load_tmp_artifact file-to-load
@@ -55,6 +57,8 @@ mender_ci_load_tmp_artifact() {
         echo "Could not get project-name or pipeline-id. Either set env variables or pass them as parameters"
         exit 1
     fi
-    aws s3 cp s3://mender-gitlab-tmp-storage/$project_name/$pipeline_id/$(basename ${user_file}) ${user_file}
+    env AWS_ACCESS_KEY_ID=$TMP_STORAGE_AWS_ACCESS_KEY_ID \
+            AWS_SECRET_ACCESS_KEY=$TMP_STORAGE_AWS_SECRET_ACCESS_KEY \
+            aws s3 cp s3://mender-gitlab-tmp-storage/$project_name/$pipeline_id/$(basename ${user_file}) ${user_file}
     sha256sum -c ${CI_PROJECT_DIR}/checksums/$(basename ${user_file}).sha256
 }
