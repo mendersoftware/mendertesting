@@ -96,7 +96,7 @@ test:acceptance_tests:
     -   docker load -i acceptance_testing_image.tar
     - fi
     - if [ -n "$REGISTRY_MENDER_IO_USERNAME" ]; then
-    -   docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io
+    -   docker login -u "$REGISTRY_MENDER_IO_USERNAME" -p "$REGISTRY_MENDER_IO_PASSWORD" registry.mender.io
     - fi
   script:
     - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance.yml

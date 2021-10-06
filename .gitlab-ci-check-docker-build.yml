@@ -42,9 +42,9 @@ stages:
   - publish
 
 .docker_login_registries: &docker_login_registries |
-  docker login -u $REGISTRY_MENDER_IO_USERNAME -p $REGISTRY_MENDER_IO_PASSWORD registry.mender.io || \
+  docker login -u "$REGISTRY_MENDER_IO_USERNAME" -p "$REGISTRY_MENDER_IO_PASSWORD" registry.mender.io || \
     echo "Warning: registry.mender.io credentials unavailable or invalid"
-  docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD || \
+  docker login -u "$DOCKER_HUB_USERNAME" -p "$DOCKER_HUB_PASSWORD" || \
     echo "Warning: Docker credentials unavailable or invalid"
 
 .export_docker_vars: &export_docker_vars |
