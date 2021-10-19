@@ -66,7 +66,23 @@ is_enterprise() {
     # commit. This should be the latest Open Source commit. This doesn't change
     # over the course of a run, so cache it.
     if [ -z "$LATEST_OS_COMMIT" ]; then
-        LATEST_OS_COMMIT=$(git rev-list $ENT_COMMIT..HEAD --ancestry-path --boundary --date-order | grep "^-" | head -n1 | sed -e 's/[^0-9a-f]//')
+        LATEST_OS_COMMIT=$(git rev-list $ENT_COMMIT..HEAD --ancestry-path --boundary --date-order \
+                               | grep -v $ENT_COMMIT \
+                               | grep "^-" \
+                               | head -n1 \
+                               | sed -e 's/[^0-9a-f]//')
+        if [ -z "$LATEST_OS_COMMIT" ]; then
+            # Very unlikely, but this can happen if every descendant commit of
+            # ENT_COMMIT has no other ancestor. This can only happen if:
+            #
+            # 1) Open Source has never been merged into the repo after the fork.
+            #
+            # 2) ENT_COMMIT was pushed directly to the repo, instead of being
+            #    merged.
+            #
+            # If so, the correct commit to set is $ENT_COMMIT~1
+            LATEST_OS_COMMIT=$ENT_COMMIT~1
+        fi
     fi
 
     # There is no commit before ENT_COMMIT, all code is enterprise
