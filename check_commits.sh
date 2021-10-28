@@ -11,6 +11,9 @@ do
             echo "    --signoffs    Enable checking of signoffs"
             echo "    --changelogs  Enable checking of changelogs"
             echo
+            echo "In all cases it checks if commits are leaked from"
+            echo "hosted/staging to any other branch."
+            echo
             echo "NOTE: In the case that none of the above flags are set"
             echo "      then they are both enabled by default."
             exit 1
@@ -77,9 +80,9 @@ else
     git --no-pager log $COMMIT_RANGE
     commits="$(git rev-list --no-merges $COMMIT_RANGE)"
 fi
-notvalid=
-for i in $commits
-do
+
+function check_commit_for_signoffs_and_changelogs() {
+    local -r i="$1"
     COMMIT_MSG="$(git show -s --format=%B "$i")"
     COMMIT_USER_EMAIL="$(git show -s --format="%an <%ae>" "$i")"
 
@@ -113,6 +116,32 @@ do
             echo >&2 "Commit ${i} has less than three words in its changelog tag! Typo? (https://github.com/mendersoftware/mender/blob/master/CONTRIBUTING.md#changelog-tags)."
             notvalid="$notvalid $i"
         fi
+    fi
+}
+
+# If any commit in the range TARGET_BRANCH...{hosted,staging} matches a commit in the PR
+function prevent_staging_and_hosted_leaks() {
+    local -r pull_request_commit="$1"
+    # Get the commits in the range TARGET_BRANCH...{hosted,staging}
+    local -r target_branch_commits="$(git rev-list origin/${TARGET_BRANCH}...origin/hosted || git rev-list origin/${TARGET_BRANCH}...origin/staging)"
+    for commit in ${target_branch_commits}; do
+        if [[ "${commit}" = "${pull_request_commit}" ]]; then
+            echo >&2 "The commit ${pull_request_commit} is present in the hosted or staging branch."
+            echo >&2 "Please do not merge this code to another branch (pretty please)."
+            exit 1
+        fi
+    done
+}
+
+TARGET_BRANCH="${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-master}"
+notvalid=
+for i in $commits
+do
+    # Check signoffs and changelogs
+    check_commit_for_signoffs_and_changelogs ${i}
+    # Prevent staging and hosted leaks
+    if [[ ! "${TARGET_BRANCH}" =~ "hosted|staging" ]]; then
+        prevent_staging_and_hosted_leaks ${i}
     fi
 done
 
