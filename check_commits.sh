@@ -90,13 +90,13 @@ function check_commit_for_signoffs_and_changelogs() {
     # to sign and add changelogs to, and signing should anyway be present in the
     # original repository.
     if echo "$COMMIT_MSG" | egrep "^git-subtree-[^:]+:" >/dev/null; then
-        continue
+        return
     fi
 
     if [ -n "${CHECK_SIGNOFFS}" ]; then
         # Ignore commits from dependabot[-preview], as it has Git user and Signed-off-by user differ.
         if echo "${COMMIT_USER_EMAIL}" | egrep "^dependabot(-preview)?\[bot\] <[0-9]+\+dependabot(-preview)?\[bot\]@users.noreply.github.com>$" >/dev/null; then
-            continue
+            return
         fi
         # Check that Signed-off-by tags are present.
         if ! echo "$COMMIT_MSG" | grep -F "Signed-off-by: ${COMMIT_USER_EMAIL}" >/dev/null; then
