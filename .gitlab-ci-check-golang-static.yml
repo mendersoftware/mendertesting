@@ -1,5 +1,7 @@
 # .gitlab-ci-check-golang-static.yml
 #
+# NOTE: This template is deprecated, use .gitlab-ci-check-golang-lint.yml
+#
 # This gitlab-ci template performs the following static checks on Go code:
 # - check format with go fmt
 # - check code health with go vet
