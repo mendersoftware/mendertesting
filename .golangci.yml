@@ -20,6 +20,7 @@ linters:
     - errcheck
     - gocyclo
     - gofmt
+    - goimports
     - gosimple
     - govet
     - ineffassign
