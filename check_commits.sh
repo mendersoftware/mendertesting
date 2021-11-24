@@ -133,6 +133,10 @@ function prevent_staging_and_hosted_leaks() {
     done
 }
 
+function branch_exists_in_remote() {
+    git remote show origin 2>/dev/null | grep -q -E "\b$1\b"
+}
+
 TARGET_BRANCH="${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-master}"
 notvalid=
 for i in $commits
@@ -140,7 +144,7 @@ do
     # Check signoffs and changelogs
     check_commit_for_signoffs_and_changelogs ${i}
     # Prevent staging and hosted leaks
-    if [[ ! "${TARGET_BRANCH}" =~ "hosted|staging" ]]; then
+    if [[ ! "${TARGET_BRANCH}" =~ "hosted|staging" ]] && branch_exists_in_remote "(hosted|staging)"; then
         prevent_staging_and_hosted_leaks ${i}
     fi
 done
