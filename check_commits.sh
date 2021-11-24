@@ -123,7 +123,7 @@ function check_commit_for_signoffs_and_changelogs() {
 function prevent_staging_and_hosted_leaks() {
     local -r pull_request_commit="$1"
     # Get the commits in the range TARGET_BRANCH...{hosted,staging}
-    local -r target_branch_commits="$(git rev-list origin/${TARGET_BRANCH}...origin/hosted || git rev-list origin/${TARGET_BRANCH}...origin/staging)"
+    local -r target_branch_commits="$(git rev-list origin/${TARGET_BRANCH}...origin/hosted 2>/dev/null || git rev-list origin/${TARGET_BRANCH}...origin/staging)"
     for commit in ${target_branch_commits}; do
         if [[ "${commit}" = "${pull_request_commit}" ]]; then
             echo >&2 "The commit ${pull_request_commit} is present in the hosted or staging branch."
@@ -133,6 +133,10 @@ function prevent_staging_and_hosted_leaks() {
     done
 }
 
+function branch_exists_in_remote() {
+    git remote show origin 2>/dev/null | grep -q -E "\b$1\b"
+}
+
 TARGET_BRANCH="${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-master}"
 notvalid=
 for i in $commits
@@ -140,7 +144,7 @@ do
     # Check signoffs and changelogs
     check_commit_for_signoffs_and_changelogs ${i}
     # Prevent staging and hosted leaks
-    if [[ ! "${TARGET_BRANCH}" =~ "hosted|staging" ]]; then
+    if [[ ! "${TARGET_BRANCH}" =~ "hosted|staging" ]] && branch_exists_in_remote "(hosted|staging)"; then
         prevent_staging_and_hosted_leaks ${i}
     fi
 done
