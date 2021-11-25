@@ -28,6 +28,11 @@ do
             shift
             continue
             ;;
+        --contributor-email)
+            CHECK_CONTRIBUTOR_EMAIL=TRUE
+            shift
+            continue
+            ;;
         *)
             break
             ;;
@@ -137,12 +142,36 @@ function branch_exists_in_remote() {
     git remote show origin 2>/dev/null | grep -q -E "\b$1\b"
 }
 
+#
+# Check the company map for inclusion
+#
+function contributor_is_in_company_map() {
+    local -r commit="$1"
+    local -r user_email="$(git log -1 --format='%ae' "${commit}")"
+    if [[ "${user_email}" =~ .*dependabot\[bot\]@users.noreply.github.com$ ]]; then
+        return 0
+    fi
+    local -r user_email_company=$(echo ${user_email} | cut -d'@' -f2)
+    if [[ "${user_email_company}" =~ (northern.tech|cfengine.com) ]]; then
+        return 0
+    fi
+    company_map="$(wget --quiet --output-document=- https://raw.githubusercontent.com/mendersoftware/integration/master/extra/gitdm/company-map)"
+    if echo "${company_map}" | grep -q "${user_email_company}"; then
+        echo >&2 "Error: user email ${user_email} not found in the company map (integration/extra/gitdm/company-map)"
+        notvalid="$notvalid $commit"
+    fi
+}
+
 TARGET_BRANCH="${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-master}"
 notvalid=
 for i in $commits
 do
     # Check signoffs and changelogs
     check_commit_for_signoffs_and_changelogs ${i}
+    # Check contributer email inclusion in the company-map
+    if [[ -n "${CHECK_CONTRIBUTOR_EMAIL}" ]]; then
+        contributor_is_in_company_map "${i}"
+    fi
     # Prevent staging and hosted leaks
     if [[ ! "${TARGET_BRANCH}" =~ "hosted|staging" ]] && branch_exists_in_remote "(hosted|staging)"; then
         prevent_staging_and_hosted_leaks ${i}
