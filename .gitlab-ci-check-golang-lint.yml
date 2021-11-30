@@ -53,5 +53,5 @@ test:govendor-check:
     - if [ -d vendor ]; then
     -   go mod tidy
     -   go mod vendor
-    -   git diff | wc -l && exit 1
+    -   git diff --exit-code
     - fi
