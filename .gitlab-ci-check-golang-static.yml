@@ -47,3 +47,18 @@ test:static:
     - go vet `go list ./... | grep -v vendor`
     # Fail builds when the cyclomatic complexity reaches 20 or more
     - gocyclo -over 20 `find . -iname '*.go' | grep -v 'vendor' | grep -v '_test.go'`
+
+test:govendor-check:
+  stage: test
+  needs: []
+  variables:
+    GOLANG_VERSION: "1.16"
+  except:
+    - /^(master|hosted|staging|production|[0-9]+\.[0-9]+\.x|^saas-[a-zA-Z0-9.]+)$/
+  image: golang:${GOLANG_VERSION}
+  script:
+    - if [ -d vendor ]; then
+    -   go mod tidy
+    -   go mod vendor
+    -   git diff --exit-code
+    - fi
