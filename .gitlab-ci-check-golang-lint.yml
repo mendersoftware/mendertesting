@@ -46,8 +46,6 @@ test:govendor-check:
   needs: []
   variables:
     GOLANG_VERSION: "1.16"
-  except:
-    - /^(master|hosted|staging|production|[0-9]+\.[0-9]+\.x|^saas-[a-zA-Z0-9.]+)$/
   image: golang:${GOLANG_VERSION}
   script:
     - if [ -d vendor ]; then
