@@ -184,6 +184,10 @@ check_files() {
     fi
     local -r SOURCE_FILES="$@"
     for source_file in ${SOURCE_FILES}; do
+        if fgrep -q -s ${source_file} ./3RDPARTY_FILES.txt; then
+            # Skip license checks on files that are not Northern.tech copyright.
+            continue
+        fi
         case ${source_file} in
           *.go)
               CM='//'
@@ -204,6 +208,13 @@ check_files() {
 }
 
 echo >&2 "LICENSE_HEADERS_IGNORE_FILES_REGEXP: ${LICENSE_HEADERS_IGNORE_FILES_REGEXP}"
+
+if [ -e 3RDPARTY_FILES.txt ]; then
+    echo >&2 "3RDPARTY_FILES.txt:"
+    echo >&2 "-----"
+    cat >&2 ./3RDPARTY_FILES.txt
+    echo >&2 "-----"
+fi
 
 echo >&2 "Checking licenses on all Go files"
 GO_FILES="\
