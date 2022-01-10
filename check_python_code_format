@@ -34,7 +34,14 @@ do
     esac
 done
 
-if  ! black --check --verbose .; then
+tfile=$(mktemp)
+trap cleanup EXIT
+function cleanup() {
+    rm -f ${tfile}
+}
+
+if  ! black --check --verbose . >& ${tfile}; then
+    cat ${tfile} | grep -v "good job" | grep -v "wasn't modified on disk since last run" >&2 || true
     echo >&2 ""
     echo >&2 "Please fix your code locally with: black ."
     echo >&2 "This will automatically format the code as needed."

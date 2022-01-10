@@ -1,4 +1,4 @@
-// Copyright 2021 Northern.tech AS
+// Copyright 2022 Northern.tech AS
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -134,12 +134,12 @@ func TestMockLicenses(t *testing.T) {
 		require.NoError(t, err)
 		fd.Close()
 		fd, err = os.Create("LICENSE")
-		fmt.Fprintln(fd, "Copyright 2021 Northern.tech")
+		fmt.Fprintln(fd, "Copyright 2022 Northern.tech")
 		require.NoError(t, err)
 		fd.Close()
 
 		fd, err = os.Create("LIC_FILES_CHKSUM.sha256")
-		fmt.Fprintln(fd, "d52695a7dec81e54a9d843af44d65d46828974251d6aa6d680623ee942ee5d61  LICENSE")
+		fmt.Fprintln(fd, "a7ca1fa6d48edbd8568ee8ee8f21379e8dbb07e97159240d23beffadd29f0956  LICENSE")
 		fmt.Fprintln(fd, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  vendor/dummy-site.org/test-repo/README.md")
 		require.NoError(t, err)
 		fd.Close()
