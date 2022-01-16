@@ -72,7 +72,7 @@ fi
 
 if [ -n "$1" ]
 then
-    echo "Checking range: $@:"
+    echo >&2 "Checking range: $@:"
     git --no-pager log "$@"
     commits="$(git rev-list --no-merges "$@")"
 else
