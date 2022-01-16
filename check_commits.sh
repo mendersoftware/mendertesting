@@ -10,12 +10,13 @@ do
             echo
             echo "    --signoffs    Enable checking of signoffs"
             echo "    --changelogs  Enable checking of changelogs"
+            echo "    --schema      Enable checking of the commit schema format (conventional commits required)"
             echo
             echo "In all cases it checks if commits are leaked from"
             echo "hosted/staging to any other branch."
             echo
             echo "NOTE: In the case that none of the above flags are set"
-            echo "      then they are both enabled by default."
+            echo "      then they are all enabled by default."
             exit 1
             ;;
         -s|--signoffs)
@@ -24,7 +25,12 @@ do
             continue
             ;;
         -c|--changelogs)
-            CHECK_CHANGELOGS=TRUE
+            echo "The Changelog check is deprecated"
+            shift
+            continue
+            ;;
+        -v|--schema)
+            CHECK_COMMIT_SCHEMA=TRUE
             shift
             continue
             ;;
@@ -34,10 +40,21 @@ do
     esac
 done
 
-# Special case, no Signoff or Changelog flags set -> Do both
-if [ -z $CHECK_SIGNOFFS ] && [ -z $CHECK_CHANGELOGS ]; then
+function check_required_tools() {
+    which awk >/dev/null || { echo >&2 "AWK is a required tool for the commit check. Please install it"; exit 1; }
+}
+
+check_required_tools
+
+# Special case, no Signoff, Schema, or Changelog flags set -> Do all
+if [ -z "$CHECK_SIGNOFFS" ] && [ -z "$CHECK_COMMIT_SCHEMA" ]; then
     CHECK_SIGNOFFS=TRUE
-    CHECK_CHANGELOGS=TRUE
+    CHECK_COMMIT_SCHEMA=TRUE
+fi
+
+# Unset the check, if it is an unversioned repo
+if [ -n "${UNVERSIONED_REPOSITORY}" ]; then
+    CHECK_COMMIT_SCHEMA=
 fi
 
 if [ -z "$COMMIT_RANGE" ] && [ -n "$CI_COMMIT_REF_NAME" ]
@@ -81,7 +98,7 @@ else
     commits="$(git rev-list --no-merges $COMMIT_RANGE)"
 fi
 
-function check_commit_for_signoffs_and_changelogs() {
+function check_commit_for_signoffs() {
     local -r i="$1"
     COMMIT_MSG="$(git show -s --format=%B "$i")"
     COMMIT_USER_EMAIL="$(git show -s --format="%an <%ae>" "$i")"
@@ -105,18 +122,6 @@ function check_commit_for_signoffs_and_changelogs() {
         fi
     fi
 
-    if [ -n "${CHECK_CHANGELOGS}" ]; then
-        # Check that Changelog tags are present.
-        if ! echo "$COMMIT_MSG" | grep -i "^ *Changelog:" >/dev/null; then
-            echo >&2 "Commit ${i} doesn't have a changelog tag! Make a changelog entry for your commit (https://github.com/mendersoftware/mender/blob/master/CONTRIBUTING.md#changelog-tags)."
-            notvalid="$notvalid $i"
-        # Less than three words probably means something was misspelled, except for
-        # None, Title, Commit and All.
-        elif ! echo "$COMMIT_MSG" | egrep -i "^ *Changelog: *(None|Title|Commit|All|\S+(\s+\S+){2,}) *$" >/dev/null; then
-            echo >&2 "Commit ${i} has less than three words in its changelog tag! Typo? (https://github.com/mendersoftware/mender/blob/master/CONTRIBUTING.md#changelog-tags)."
-            notvalid="$notvalid $i"
-        fi
-    fi
 }
 
 # If any commit in the range TARGET_BRANCH...{hosted,staging} matches a commit in the PR
@@ -137,12 +142,23 @@ function branch_exists_in_remote() {
     git remote show origin 2>/dev/null | grep -q -E "\b$1\b"
 }
 
+function check_conventional_commits() {
+    local -r git_msg="$(git show -s --format=%B $1)"
+    if ! echo "${git_msg}" | $(dirname $(realpath ${BASH_SOURCE[0]}))/commitlint/commitlint; then
+        echo >&2 "Commit $1 does not adhere to the conventional commit specification, used in the Mender project"
+        echo >&2 "See https://github.com/mendersoftware/mendertesting/commitlint/grammar.md for more information"
+        notvalid="$notvalid $1"
+    fi
+}
+
 TARGET_BRANCH="${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-master}"
 notvalid=
 for i in $commits
 do
+    # Check the conventional commits
+    [ -n "${CHECK_COMMIT_SCHEMA}" ] && check_conventional_commits ${i}
     # Check signoffs and changelogs
-    check_commit_for_signoffs_and_changelogs ${i}
+    check_commit_for_signoffs ${i}
     # Prevent staging and hosted leaks
     if [[ ! "${TARGET_BRANCH}" =~ "hosted|staging" ]] && branch_exists_in_remote "(hosted|staging)"; then
         prevent_staging_and_hosted_leaks ${i}

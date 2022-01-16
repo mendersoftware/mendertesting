@@ -1,0 +1,327 @@
+#! /usr/bin/awk -f
+
+# TOKENS = COMMIT_TYPE | COMMIT_SCOPE | HEADER | BODY | FOOTER
+#
+# Grammar
+#
+# HEADER = type[(COMMIT_SCOPE)]: TITLE
+# EMPTY_LINE
+# BODY
+# EMPTY LINE
+# FOOTER
+#
+
+BEGIN {
+    # TOKENS
+
+    ## Header
+    COMMIT_TYPE = "^(fix|feat|build|chore|ci|docs|perf|refac|revert|style|test)"
+    LINE=".*"
+    WORD = "[[:print:]]+"
+    COMMIT_SCOPE = "^\\("WORD"\\)"
+    EMPTY_LINE = "^$"
+
+    ## Footer
+    CHANGELOG_PREFIX="Changelog(\\((fix|feat)+\\))?: "
+    CHANGELOG=CHANGELOG_PREFIX ".*"
+    TICKET="Ticket: .*"
+    BREAKING_CHANGE="BREAKING[- ]CHANGE: .*"
+    SIGN_OFF_LINE="Signed-off-by: .*"
+    CHERRY_PICK="(cherry picked from commit .*)"
+
+    ## special
+    COLON = "^:"
+    EOF = "E_O_F"
+
+    # Initialize the lexer
+    init_lexer()
+
+    # Parse the entire commit
+    parse()
+
+    # Enforce our own custom checks
+    lint()
+
+}
+
+function debugf(format, expr1, expr2, expr3, expr4, expr5) {
+    if (DEBUG == "true") {
+        l = sprintf(format, expr1, expr2, expr3, expr4, expr5)
+        printf "Debug: " l "\n" | "cat 1>&2"
+    }
+}
+
+function perror(format, expr1, expr2, expr3, expr4, expr5) {
+    l = sprintf(format, expr1, expr2, expr3, expr4, expr5)
+    printf "Error: " l "\n" | "cat 1>&2"
+}
+
+function error(format, expr1, expr2, expr3, expr4, expr5) {
+    l = sprintf(format, expr1, expr2, expr3, expr4, expr5)
+    printf "Error: " l "\n" | "cat 1>&2"; exit 1
+}
+
+function init_lexer() {
+    advance()
+}
+
+# advance
+#
+# LL1 lexer (1 lookahead)
+#
+# Produces
+#
+# tok
+# next_tok
+#
+function advance() {
+    _advance()
+    tok = next_tok
+    next_tok = _tok
+}
+
+function _advance() {
+    debugf("%d advance: line '%s'", NR, line)
+    if (_tok == EOF)  return _tok;
+    if (length(line) == 0) {
+        if (getline line == 0) {
+            _tok = EOF
+            return EOF
+        }
+    }
+    if (match(line, COMMIT_TYPE) != 0) {
+        debugf("Matched COMMIT_TYPE: %s", line)
+        _tok = substr(line, 1, RLENGTH)
+        line = substr(line, RLENGTH+1)
+        return _tok
+    }
+    if (match(line, COMMIT_SCOPE)) {
+        debugf("Matched COMMIT_SCOPE")
+        _tok = substr(line, 0, RLENGTH)
+        line = substr(line, RLENGTH+1)
+        return _tok
+    }
+    if (match(line, COLON)) {
+        debugf("COLON: '%s'", line)
+        _tok = substr(line, 1, RLENGTH)
+        line = substr(line, RLENGTH+1)
+        VAL = _tok;
+        return _tok
+    }
+    if (match(line, CHANGELOG)) {
+        debugf("Matched Changelog!")
+        _tok = line
+        VAL = _tok;
+        line = ""
+        return _tok
+    }
+    if (match(line, TICKET)) {
+        debugf("Matched Ticket!")
+        _tok = line
+        VAL = _tok;
+        line = ""
+        return _tok
+    }
+    if (match(line, BREAKING_CHANGE)) {
+        debugf("Matched BREAKING CHANGE!")
+        _tok = line
+        VAL = _tok;
+        line = ""
+        return _tok
+    }
+    if (match(line, LINE)) {
+        debugf("Matched LINE!")
+        _tok = line
+        VAL = _tok
+        line = ""
+        return _tok
+    }
+    error("No matches found. This is unexpected")
+}
+
+# consume
+#
+# Consume sets CONSUMED_VAL to tok's token value
+# if tok matches the expected token type
+#
+function consume(expect, err_msg) {
+    debugf("consuming: %s", expect)
+    if (!match(tok, expect)) {
+        if (err_msg != "") {
+            perror(err_msg)
+        }
+        error("got token '%s', expected '%s'", tok, expect)
+    }
+    CONSUMED_VAL = tok
+    advance()
+}
+
+# Parse TITLE
+#
+# WORD [ | WORD ]*
+# (Really just the remainder of the line)
+function parse_title() {
+    consume(LINE)
+    TITLE_VAL=CONSUMED_VAL
+}
+
+# Parse HEADER
+#
+# COMMIT_TYPE [(COMMIT_SCOPE)] COLON
+#
+function parse_header() {
+    advance()
+    consume(COMMIT_TYPE)
+    COMMIT_TYPE_VAL = CONSUMED_VAL;
+    if (match(tok, COMMIT_SCOPE)) {
+        consume(COMMIT_SCOPE)
+        COMMIT_SCOPE_VAL = CONSUMED_VAL
+    }
+    consume(COLON) # End of prefix
+    parse_title()
+}
+
+function empty_line(err_msg) {
+    if (tok == EOF) {
+        return
+    }
+    consume(EMPTY_LINE, err_msg)
+}
+
+# Parse BODY
+#
+# [WORD [ (| WORD )*]
+#
+function parse_body() {
+    if (tok == EOF) {
+        return
+    }
+    BODY_VAL=tok
+    advance()
+    # Consume the remainder of the body
+    while (tok != EOF && !is_footer(next_tok)) {
+        advance()
+    }
+    return
+}
+
+# Parse FOOTER
+#
+# [BREAKING_CHANGE]
+# [CHANGELOG]
+# [TICKET]
+#
+function parse_footer() {
+
+    if (tok == EOF) {
+        return
+    }
+    while (tok != EOF) {
+        if ( ! (match(tok, CHANGELOG) ||
+                match(tok, TICKET) ||
+                match(tok, BREAKING_CHANGE) ||
+                match(tok, EMPTY_LINE) ||
+                match(tok, CHERRY_PICK) ||
+                match(tok, SIGN_OFF_LINE))) {
+            error("Only Changelogs, Tickets, Sign-offs, cherry pick notes and BREAKING CHANGES allowed in the FOOTER")
+        }
+        if (match(tok, CHANGELOG)) {
+            CHANGELOG_VAL=tok
+            verify_changelog(tok)
+        }
+        if (match(tok, TICKET)) {
+            TICKET_VAL=tok
+            verify_ticket_id(tok)
+        }
+        if (match(tok, BREAKING_CHANGE)) {
+            BREAKING_CHANGE_VAL=tok
+        }
+        advance()
+    }
+    return
+}
+
+function is_footer(token) {
+    return match(token, CHANGELOG) || match(token, TICKET) || match(token, BREAKING_CHANGE)
+}
+
+function parse() {
+
+    parse_header()
+
+    # expect empty line before the body
+    empty_line("The commit must have one line of air in between the header and the body")
+
+    #
+    # BODY (optional)
+    #
+    if (! tok != EOF && ! is_footer(next_tok)) {
+
+        # BODY
+        parse_body()
+
+        # Expect empty line between body and footer
+        empty_line("The commit must have one line of air in between the body and the footer")
+    }
+
+    # FOOTER
+    parse_footer()
+
+}
+
+# lint
+#
+# Verify that the commit structure conforms to our grammar
+#
+# Requires parse() to have run first.
+function lint() {
+    # fix, feat, BREAKING CHANGE requries a ticket, and a changelog in the footer
+    if (match(COMMIT_TYPE_VAL, "fix|feat") || BREAKING_CHANGE_VAL != "") {
+        lint_required_footer_values()
+        return
+    }
+}
+
+# lint_required_footer_values
+#
+# Make sure that a Changelog, and a Ticket reference is
+# included in the commit footer if required.
+#
+function lint_required_footer_values() {
+    if (CHANGELOG_VAL == "") {
+        error("A 'Changelog' is required for the given commit")
+    }
+    if (TICKET_VAL == "") {
+        error("A 'Ticket' is required for the given commit")
+    }
+}
+
+# verify_changelog
+#
+# Verify that the Changelog is set correctly
+# It has to be either:
+# * Commit
+# * All
+# * None
+# * Title
+function verify_changelog(changelog) {
+    # Strip the CHANGELOG[(fix|feat)] prefix
+    gsub(CHANGELOG_PREFIX, "", changelog)
+    if ( match(changelog, "(None|Title|Commit|All|\\S+(\\s+\\S+){2,})") == 0 ) {
+        error("Misspelled word in Changelog")
+    }
+}
+
+# verify_ticket
+#
+# Verify that the ticket_id is set correctly
+# It has to be either:
+# * None
+# * Ticket ID (<project><dash><numbers>)
+function verify_ticket_id(ticket_id) {
+    # Strip the 'Ticket: ' prefix
+    gsub("Ticket: ", "", ticket_id)
+    if ( match(ticket_id, "\\s*(None|\\S+-[0-9]+)") == 0 ) {
+        error("Misspelled word in the 'Ticket: <word>'")
+    }
+}
