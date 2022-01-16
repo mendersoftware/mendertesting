@@ -1,6 +1,8 @@
 #!/bin/bash
 
-set -e
+set -ex
+
+echo >&2 "Current dir: $(pwd)"
 
 while [[ $# -gt 0 ]]
 do
@@ -10,12 +12,13 @@ do
             echo
             echo "    --signoffs    Enable checking of signoffs"
             echo "    --changelogs  Enable checking of changelogs"
+            echo "    --schema      Enable checking of the commit schema format (conventional commits required)"
             echo
             echo "In all cases it checks if commits are leaked from"
             echo "hosted/staging to any other branch."
             echo
             echo "NOTE: In the case that none of the above flags are set"
-            echo "      then they are both enabled by default."
+            echo "      then they are all enabled by default."
             exit 1
             ;;
         -s|--signoffs)
@@ -28,17 +31,37 @@ do
             shift
             continue
             ;;
+        -cz|--schema)
+            CHECK_COMMIT_SCHEMA=TRUE
+            shift
+            continue
+            ;;
         *)
             break
             ;;
     esac
 done
 
-# Special case, no Signoff or Changelog flags set -> Do both
-if [ -z $CHECK_SIGNOFFS ] && [ -z $CHECK_CHANGELOGS ]; then
+function required_tools() {
+    which cz >/dev/null || { echo >&2 "Please install https://github.com/commitizen-tools/commitizen"; exit 1; }
+}
+
+required_tools
+
+
+
+# Special case, no Signoff, Schema, or Changelog flags set -> Do all
+if [ -z "$CHECK_SIGNOFFS" ] && [ -z "$CHECK_CHANGELOGS" ] && [ -z "$CHECK_COMMIT_SCHEMA" ]; then
     CHECK_SIGNOFFS=TRUE
     CHECK_CHANGELOGS=TRUE
+    CHECK_COMMIT_SCHEMA=TRUE
 fi
+
+# Unset the check, if it is an unversioned repo, and schema check not given as a flag
+if [ -n "${UNVERSIONED_REPOSITORY}" ]; then
+    CHECK_COMMIT_SCHEMA=
+fi
+
 
 if [ -z "$COMMIT_RANGE" ] && [ -n "$CI_COMMIT_REF_NAME" ]
 then
@@ -137,10 +160,21 @@ function branch_exists_in_remote() {
     git remote show origin 2>/dev/null | grep -q -E "\b$1\b"
 }
 
+function check_conventional_commits() {
+    local -r git_msg="$(git show -s --format=%B $1)"
+    if ! cz check --message="${git_msg}" >/dev/null 2>/dev/null; then
+        echo >&2 "Commit $1 does not adhere to the conventional commit specification."
+        echo >&2 "See https://conventionalcommits.org for more information"
+        notvalid="$notvalid $1"
+    fi
+}
+
 TARGET_BRANCH="${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-master}"
 notvalid=
 for i in $commits
 do
+    # Check the conventional commits
+    [ -n "${CHECK_COMMIT_SCHEMA}" ] && check_conventional_commits ${i}
     # Check signoffs and changelogs
     check_commit_for_signoffs_and_changelogs ${i}
     # Prevent staging and hosted leaks

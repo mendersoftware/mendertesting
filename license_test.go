@@ -228,3 +228,70 @@ func TestMisformedLicenseChecksumLines(t *testing.T) {
 	assert.Error(t, err, err.Error())
 	assert.Contains(t, err.Error(), "Some line(s) in the LIC_FILE_CHKSUM.sha256 file are misformed")
 }
+
+type DirCmd struct {
+	dir string
+}
+
+func (d *DirCmd) Command(cmd string, args ...string) *exec.Cmd {
+	_cmd := exec.Command(cmd, args...)
+	_cmd.Dir = d.dir
+	return _cmd
+}
+
+func TestConventionalCommitMessages(t *testing.T) {
+
+	os.Setenv("UNVERSIONED_REPOSITORY", "")
+	os.Setenv("COMMIT_RANGE", "HEAD~1..HEAD")
+
+	dir, err := ioutil.TempDir("/tmp", "test")
+	require.NoError(t, err)
+	t.Log(dir)
+	defer os.RemoveAll(dir)
+	cmds := [][]string{
+		[]string{"commit", "--allow-empty", "-m", `feat(app): New feature added`},
+		[]string{"commit", "--allow-empty", "-m", `fix(route): Fixed app routing`},
+		[]string{"commit", "--allow-empty", "-m", `fix(route): Fixed app routing
+
+BREAKING CHANGE: new route changes the API.
+		`},
+	}
+	cmd := exec.Command("cp", "check_commits.sh", dir)
+	_, err = cmd.CombinedOutput()
+	dc := DirCmd{dir}
+	cmd = dc.Command("git", "init", ".")
+	_, err = cmd.CombinedOutput()
+	cmd = dc.Command("git", "commit", "--allow-empty", "-m", "In the beginning there was darkness")
+	_, err = cmd.CombinedOutput()
+	cmd = dc.Command("git", "config", "user.name", "mendertester")
+	output, err := cmd.CombinedOutput()
+	require.NoError(t, err, string(output))
+	cmd = dc.Command("git", "config", "user.email", "mendertester@mender.io")
+	_, err = cmd.CombinedOutput()
+	require.NoError(t, err)
+	cmd = dc.Command("git", "commit", "--allow-empty", "-m", "In the beginning there was darkness")
+	_, err = cmd.CombinedOutput()
+	require.NoError(t, err)
+	for _, args := range cmds {
+		t.Log(args)
+		cmd := dc.Command("git", args...)
+		output, err := cmd.CombinedOutput()
+		require.NoError(t, err, string(output))
+		cmd = dc.Command("/bin/bash", "check_commits.sh", "--schema")
+		output, err = cmd.CombinedOutput()
+		assert.NoError(t, err, string(output))
+	}
+
+	cmds = [][]string{
+		[]string{"commit", "--allow-empty", "-m", "Missing commit verb"},
+	}
+	for _, args := range cmds {
+		cmd := dc.Command("git", args...)
+		output, err := cmd.CombinedOutput()
+		require.NoError(t, err, string(output))
+		cmd = dc.Command("/bin/bash", "check_commits.sh", "--schema")
+		output, err = cmd.CombinedOutput()
+		assert.Error(t, err, string(output))
+	}
+
+}
