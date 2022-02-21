@@ -16,7 +16,7 @@
 # to a list of space separated files to include to the list of auto-detected
 # license files.
 #
-# With regards to Python source files, you can exclude files via regular
+# With regards to source code files, you can exclude files via regular
 # expression with the variable LICENSE_HEADERS_IGNORE_FILES_REGEXP.
 #
 # test:check-license:
