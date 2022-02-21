@@ -74,7 +74,7 @@ if echo "$output" | grep -q 'line is improperly formatted' -; then
 fi
 
 # Unlisted licenses not allowed.
-for file in $(find . -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -iname 'COPYING'); do
+for file in $(find . -type f -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -iname 'COPYING'); do
     file=$(echo $file | sed -e 's,./,,')
     if ! fgrep "$(shasum -a 256 $file)" $CHKSUM_FILE > /dev/null; then
         echo >&2 "$file has missing or wrong entry in $CHKSUM_FILE"
