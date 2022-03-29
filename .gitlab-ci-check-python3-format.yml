@@ -56,6 +56,7 @@ test:check-python3-formatting:
   before_script:
     # Install dependencies
     - apk add --no-cache git curl bash gcc musl-dev
+    - pip3 install click==8.0.4
     - pip3 install black==$BLACK_FORMATTER_VERSION
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
