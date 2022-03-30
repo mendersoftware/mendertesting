@@ -50,7 +50,9 @@ test:prepare_acceptance:
     - docker build -f Dockerfile.acceptance-testing -t $DOCKER_REPOSITORY:prtest .
     - docker save $DOCKER_REPOSITORY:prtest > tests_image.tar
     - docker build -t $DOCKER_REPOSITORY:pr .
-    - docker run --rm --entrypoint "/bin/sh" -v $(pwd):/binary $DOCKER_REPOSITORY:pr -c "cp /usr/bin/${CI_PROJECT_NAME} /binary"
+    - CONTAINER_ID=$(docker create "$DOCKER_REPOSITORY:pr")
+    - docker cp "$CONTAINER_ID:/usr/bin/${CI_PROJECT_NAME}" "$(pwd)"
+    - docker rm "$CONTAINER_ID"
     # Repos using common tester image might not have the Dockerfile
     - if [ -f tests/Dockerfile ]; then
     -   docker build -t testing -f tests/Dockerfile tests
