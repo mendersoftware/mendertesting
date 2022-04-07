@@ -6,6 +6,9 @@ include:
 stages:
   - test
 
+variables:
+  UNVERSIONED_REPOSITORY: "true"
+
 test:unit:
   image: golang:1.14
   stage: test
