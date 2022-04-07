@@ -22,7 +22,11 @@ test:check-commits:
     - git fetch origin 'refs/heads/*:refs/heads/*'
     # Get last remaining tags, if any.
     - git fetch --tags origin
-    - git clone --depth=1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - if [ "${CI_PROJECT_NAME}" = "mendertesting" ]; then
+    -   git clone --shared --local . /tmp/mendertesting
+    - else
+    -   git clone --depth=1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - fi
   script:
     # Check commit compliance.
     - /tmp/mendertesting/check_commits.sh
