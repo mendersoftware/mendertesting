@@ -6,6 +6,9 @@ include:
 stages:
   - test
 
+variables:
+  UNVERSIONED_REPOSITORY: "true"
+
 test:unit:
   image: golang:1.14
   stage: test
@@ -53,3 +56,12 @@ test:unit:
     expire_in: 2w
     paths:
       - coverage.txt
+
+
+test:unit:commitlint:
+  image: ubuntu:20.04
+  stage: test
+  before_script:
+    - apt-get update && apt-get -y install gawk
+  script:
+    - commitlint/testcommitlint.sh
