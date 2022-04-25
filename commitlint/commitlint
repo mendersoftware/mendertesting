@@ -255,7 +255,7 @@ function parse() {
     #
     # BODY (optional)
     #
-    if (! tok != EOF && ! is_footer(next_tok)) {
+    if ( ! tok != EOF && ! is_footer(tok) && ! is_footer(next_tok) ) {
 
         # BODY
         parse_body()
