@@ -321,4 +321,13 @@ Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>
 (cherry picked from commit 9ce8090ec2e4c7dc4a6ad428751a761254520106)
 "
 
+assert "false" \
+       "No Ticket in the body" \
+       "feat: extend deployments instruction with artifact id
+
+Changelog: Title
+
+Signed-off-by: Krzysztof Jaskiewicz <krzysztof.jaskiewicz@northern.tech>
+"
+
 exit 0
