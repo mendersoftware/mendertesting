@@ -146,7 +146,7 @@ function check_conventional_commits() {
     local -r git_msg="$(git show -s --format=%B $1)"
     if ! echo "${git_msg}" | $(dirname $(realpath ${BASH_SOURCE[0]}))/commitlint/commitlint; then
         echo >&2 "Commit $1 does not adhere to the conventional commit specification, used in the Mender project"
-        echo >&2 "See https://github.com/mendersoftware/mendertesting/commitlint/grammar.md for more information"
+        echo >&2 "See https://github.com/mendersoftware/mendertesting/blob/master/commitlint/grammar.md for more information"
         notvalid="$notvalid $1"
     fi
 }
