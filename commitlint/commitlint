@@ -77,7 +77,9 @@ function init_lexer() {
 function advance() {
     _advance()
     tok = next_tok
+    tok_type = next_tok_type
     next_tok = _tok
+    next_tok_type = _tok_type
 }
 
 function _advance() {
@@ -93,12 +95,14 @@ function _advance() {
         debugf("Matched COMMIT_TYPE: %s", line)
         _tok = substr(line, 1, RLENGTH)
         line = substr(line, RLENGTH+1)
+        _tok_type = "COMMIT_TYPE"
         return _tok
     }
     if (match(line, COMMIT_SCOPE)) {
         debugf("Matched COMMIT_SCOPE")
         _tok = substr(line, 0, RLENGTH)
         line = substr(line, RLENGTH+1)
+        _tok_type = "COMMIT_SCOPE"
         return _tok
     }
     if (match(line, COLON)) {
@@ -106,6 +110,7 @@ function _advance() {
         _tok = substr(line, 1, RLENGTH)
         line = substr(line, RLENGTH+1)
         VAL = _tok;
+        _tok_type = "COLON"
         return _tok
     }
     if (match(line, CHANGELOG)) {
@@ -113,6 +118,7 @@ function _advance() {
         _tok = line
         VAL = _tok;
         line = ""
+        _tok_type = "CHANGELOG"
         return _tok
     }
     if (match(line, TICKET)) {
@@ -120,6 +126,7 @@ function _advance() {
         _tok = line
         VAL = _tok;
         line = ""
+        _tok_type = "TICKET"
         return _tok
     }
     if (match(line, BREAKING_CHANGE)) {
@@ -127,6 +134,7 @@ function _advance() {
         _tok = line
         VAL = _tok;
         line = ""
+        _tok_type = "BREAKING_CHANGE"
         return _tok
     }
     if (match(line, LINE)) {
@@ -134,6 +142,7 @@ function _advance() {
         _tok = line
         VAL = _tok
         line = ""
+        _tok_type = "LINE"
         return _tok
     }
     error("No matches found. This is unexpected")
@@ -228,6 +237,14 @@ function parse_footer() {
         if (match(tok, CHANGELOG)) {
             CHANGELOG_VAL=tok
             verify_changelog(tok)
+            # Consume the entire paragraph for the 'Changelog' if it is multiline
+            if (next_tok_type == "LINE") {
+                while (tok != EOF && next_tok_type == "LINE") {
+                    advance()
+                }
+                # Require empty line afterwards in paragraph
+                empty_line("A 'Changelog' over multiple lines needs to have a trailing empty line")
+            }
         }
         if (match(tok, TICKET)) {
             TICKET_VAL=tok
