@@ -12,7 +12,7 @@ test:check-commits:
     GIT_DEPTH: 0
   before_script:
     # Install dependencies
-    - apk add --no-cache git bash
+    - apk add --no-cache git bash gawk
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
     # branch.
