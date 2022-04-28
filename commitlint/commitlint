@@ -1,4 +1,4 @@
-#! /usr/bin/awk -f
+#! /usr/bin/env -S gawk -f
 
 # TOKENS = COMMIT_TYPE | COMMIT_SCOPE | HEADER | BODY | FOOTER
 #
