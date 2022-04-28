@@ -1,4 +1,5 @@
-#! /usr/bin/env -S gawk -f
+#! /bin/sh
+workaround==0 "exec" "gawk" "--re-interval" "-f" "$0" "$@"
 
 # TOKENS = COMMIT_TYPE | COMMIT_SCOPE | HEADER | BODY | FOOTER
 #
