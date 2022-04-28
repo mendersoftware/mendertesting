@@ -65,3 +65,13 @@ test:unit:commitlint:
     - apt-get update && apt-get -y install gawk
   script:
     - commitlint/testcommitlint.sh
+
+
+test:unit:commitlint:mac:
+  tags:
+    - mac-runner
+  stage: test
+  before_script:
+    - brew install gawk
+  script:
+    - commitlint/testcommitlint.sh
