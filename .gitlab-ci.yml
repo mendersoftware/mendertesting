@@ -59,10 +59,10 @@ test:unit:
 
 
 test:unit:commitlint:
-  image: ubuntu:20.04
+  image: alpine
   stage: test
   before_script:
-    - apt-get update && apt-get -y install gawk
+    - apk add --no-cache bash gawk
   script:
     - commitlint/testcommitlint.sh
 
