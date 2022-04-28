@@ -324,7 +324,7 @@ function lint_required_footer_values() {
 function verify_changelog(changelog) {
     # Strip the CHANGELOG[(fix|feat)] prefix
     gsub(CHANGELOG_PREFIX, "", changelog)
-    if ( match(changelog, "(None|Title|Commit|All|\\S+(\\s+\\S+){2,})") == 0 ) {
+    if ( match(changelog, "([Nn]one|[Tt]itle|[Cc]ommit|[Aa]ll|\\S+(\\s+\\S+){2,})") == 0 ) {
         error("Misspelled word in Changelog")
     }
 }
