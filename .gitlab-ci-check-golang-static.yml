@@ -25,7 +25,7 @@ test:static:
   needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
-  image: golang:1.16
+  image: golang:1.17
   before_script:
     # Install cyclomatic dependency analysis tool
     - GO111MODULE=off go get -u github.com/fzipp/gocyclo/...
@@ -52,7 +52,7 @@ test:govendor-check:
   stage: test
   needs: []
   variables:
-    GOLANG_VERSION: "1.16"
+    GOLANG_VERSION: "1.17"
   image: golang:${GOLANG_VERSION}
   script:
     - if [ -d vendor ]; then

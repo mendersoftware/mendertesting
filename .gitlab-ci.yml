@@ -10,7 +10,7 @@ variables:
   UNVERSIONED_REPOSITORY: "true"
 
 test:unit:
-  image: golang:1.14
+  image: golang:1.17
   stage: test
 
   before_script:
