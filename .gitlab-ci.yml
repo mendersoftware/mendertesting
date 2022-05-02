@@ -30,8 +30,7 @@ test:unit:
     - cd /go/src/github.com/mendersoftware/mendertesting
 
     # Install code coverage / coveralls tooling
-    - GO111MODULE=off go get -u github.com/axw/gocov/gocov
-    - GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
+    - go install github.com/axw/gocov/gocov@v1.1.0
 
   script:
     # Test if code was formatted with 'go fmt'
