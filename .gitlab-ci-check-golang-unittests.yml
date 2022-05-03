@@ -49,7 +49,6 @@ test:unit:
   before_script:
     # Install code coverage tooling
     - GO111MODULE=off go get -u github.com/axw/gocov/gocov
-    - GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
 
     # Install JUnit test reporting formatter
     - GO111MODULE=off go get -u github.com/jstemmer/go-junit-report/...
