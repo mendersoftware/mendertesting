@@ -48,10 +48,10 @@ test:unit:
     MONGODB_VERSION: "4.4"
   before_script:
     # Install code coverage tooling
-    - GO111MODULE=off go get -u github.com/axw/gocov/gocov
+    - go install github.com/axw/gocov/gocov@v1.1.0
 
     # Install JUnit test reporting formatter
-    - GO111MODULE=off go get -u github.com/jstemmer/go-junit-report/...
+    - go install github.com/jstemmer/go-junit-report@v1.0.0
 
     # mongodb-org package needs systemd, this circumnavigates the issue providing a fake systemctl command
     - ln -s /bin/true /usr/sbin/systemctl
