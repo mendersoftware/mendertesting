@@ -29,10 +29,6 @@ test:unit:
     - cp -r $CI_PROJECT_DIR /go/src/github.com/mendersoftware/mendertesting
     - cd /go/src/github.com/mendersoftware/mendertesting
 
-    # Install code coverage / coveralls tooling
-    - GO111MODULE=off go get -u github.com/axw/gocov/gocov
-    - GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
-
   script:
     # Test if code was formatted with 'go fmt'
     # Command will format code and return modified files
