@@ -369,4 +369,15 @@ Ticket: MEN-1234
 Signed-off-by: Krzysztof Jaskiewicz <krzysztof.jaskiewicz@northern.tech>
 "
 
+
+assert "false" \
+       "Allow lowercase keyword values" \
+       "feat: extend deployments instruction with artifact id
+
+Changelog: title
+Ticket: none
+
+Signed-off-by: Krzysztof Jaskiewicz <krzysztof.jaskiewicz@northern.tech>
+"
+
 exit 0
