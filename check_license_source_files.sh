@@ -188,7 +188,7 @@ check_files() {
           *.go)
               CM='//'
               ;;
-          *.py)
+          *.py|*.sh)
               CM="#"
               ;;
           *)
@@ -215,5 +215,11 @@ echo >&2 "Checking licenses on all Python files"
 PYTHON_FILES="\
 $(find . -type f \( ! -regex ${LICENSE_HEADERS_IGNORE_FILES_REGEXP} ! -path './vendor/*' ! -regex '.*\.venv.*' ! -regex '.*build/.*' -name '*.py' \))"
 check_files "${PYTHON_FILES}"
+
+
+echo >&2 "Checking licenses on all Shell files"
+SHELL_FILES="\
+$(find . -type f \( ! -regex ${LICENSE_HEADERS_IGNORE_FILES_REGEXP} ! -path './vendor/*' -name '*.sh' \))"
+check_files "${SHELL_FILES}"
 
 exit ${TEST_RESULT}
