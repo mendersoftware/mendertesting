@@ -138,6 +138,14 @@ function _advance() {
         _tok_type = "BREAKING_CHANGE"
         return _tok
     }
+    if (match(line, SIGN_OFF_LINE)) {
+        debugf("Matched SIGN-OFF")
+        _tok = line
+        VAL = _tok;
+        line = ""
+        _tok_type = "SIGN_OFF_LINE"
+        return _tok
+    }
     if (match(line, LINE)) {
         debugf("Matched LINE!")
         _tok = line
