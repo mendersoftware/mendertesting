@@ -61,10 +61,8 @@ sed '/^$/d' $CHKSUM_FILE > $TMP_CHKSUM_FILE
 # Use the tmp-file for the rest of the script
 CHKSUM_FILE=$TMP_CHKSUM_FILE
 
-# Collect only stderr from the subcommand
 output="$(
-          exec 3>&1
-          shasum --warn --algorithm 256 --check $CHKSUM_FILE > /dev/null 2>&3
+          shasum --warn --algorithm 256 --check $CHKSUM_FILE
 )"
 
 if echo "$output" | grep -q 'line is improperly formatted' -; then
