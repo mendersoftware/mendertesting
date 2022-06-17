@@ -1,4 +1,17 @@
 #!/bin/bash
+# Copyright 2022 Northern.tech AS
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
 
 # This regular expression can be set in the '.gitlab-ci.yml' file, and is passed
 # on to the find expression used to aggregate all the files to check for license
@@ -188,7 +201,7 @@ check_files() {
           *.go)
               CM='//'
               ;;
-          *.py)
+          *.py|*.sh)
               CM="#"
               ;;
           *)
@@ -215,5 +228,11 @@ echo >&2 "Checking licenses on all Python files"
 PYTHON_FILES="\
 $(find . -type f \( ! -regex ${LICENSE_HEADERS_IGNORE_FILES_REGEXP} ! -path './vendor/*' ! -regex '.*\.venv.*' ! -regex '.*build/.*' -name '*.py' \))"
 check_files "${PYTHON_FILES}"
+
+
+echo >&2 "Checking licenses on all Shell files"
+SHELL_FILES="\
+$(find . -type f \( ! -regex ${LICENSE_HEADERS_IGNORE_FILES_REGEXP} ! -path './vendor/*' -name '*.sh' \))"
+check_files "${SHELL_FILES}"
 
 exit ${TEST_RESULT}
