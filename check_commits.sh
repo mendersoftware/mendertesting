@@ -164,7 +164,7 @@ function check_conventional_commits() {
     fi
 }
 
-TARGET_BRANCH="${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-master}"
+TARGET_BRANCH="${CI_PIPELINE_ID:+${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME:-master}}"
 notvalid=
 for i in $commits
 do
@@ -173,7 +173,7 @@ do
     # Check signoffs and changelogs
     check_commit_for_signoffs ${i}
     # Prevent staging and hosted leaks
-    if [[ ! "${TARGET_BRANCH}" =~ "hosted|staging" ]] && branch_exists_in_remote "(hosted|staging)"; then
+    if [ -n "$TARGET_BRANCH" ] && [[ ! "${TARGET_BRANCH}" =~ "hosted|staging" ]] && branch_exists_in_remote "(hosted|staging)"; then
         prevent_staging_and_hosted_leaks ${i}
     fi
 done
