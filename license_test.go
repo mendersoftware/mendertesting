@@ -200,8 +200,8 @@ func TestCommercialLicense(t *testing.T) {
 	require.NoError(t, err)
 	cmd := exec.Command(abspath, abspath)
 	cmd.Dir = tmpdir
-	err = cmd.Run()
-	assert.NoError(t, err)
+	output, err := cmd.CombinedOutput()
+	assert.NoError(t, err, string(output))
 }
 
 func TestMisformedLicenseChecksumLines(t *testing.T) {
