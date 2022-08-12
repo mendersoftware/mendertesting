@@ -25,7 +25,7 @@ ret=0
 LATEST="$(git log --no-merges --format="%at %H" | sort -rn | head -n1 | cut -d' ' -f2)"
 LATEST_YEAR="$(git log -n1 --format=%ad --date=format:%Y $LATEST)"
 
-if ! grep -iq "Copyright *$LATEST_YEAR *Northern.tech" LICENSE; then
+if ! grep -siq "Copyright *$LATEST_YEAR *Northern.tech" LICENSE && ! grep -siq "Copyright *$LATEST_YEAR *Northern.tech" LICENSE.md; then
     echo "'Copyright $LATEST_YEAR Northern.tech' not found in LICENSE. Wrong year maybe?"
     ret=1
 fi
