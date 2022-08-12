@@ -71,25 +71,22 @@ cleanup() {
 }
 sed '/^$/d' $CHKSUM_FILE > $TMP_CHKSUM_FILE
 
-# Use the tmp-file for the rest of the script
-CHKSUM_FILE=$TMP_CHKSUM_FILE
-
 # Collect only stderr from the subcommand
 output="$(
           exec 3>&1
-          shasum --warn --algorithm 256 --check $CHKSUM_FILE > /dev/null 2>&3
+          shasum --warn --algorithm 256 --check $TMP_CHKSUM_FILE > /dev/null 2>&3
 )"
 
 if echo "$output" | grep -q 'line is improperly formatted' -; then
     echo >&2 "Some line(s) in the LIC_FILE_CHKSUM.sha256 file are misformed"
-    cat $CHKSUM_FILE
+    cat $TMP_CHKSUM_FILE
     exit 1
 fi
 
 # Unlisted licenses not allowed.
 for file in $(find . -type f -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -iname 'COPYING'); do
     file=$(echo $file | sed -e 's,./,,')
-    if ! fgrep "$(shasum -a 256 $file)" $CHKSUM_FILE > /dev/null; then
+    if ! fgrep "$(shasum -a 256 $file)" $TMP_CHKSUM_FILE > /dev/null; then
         echo >&2 "$file has missing or wrong entry in $CHKSUM_FILE"
         ret=1
     fi
