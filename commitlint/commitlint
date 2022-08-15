@@ -32,6 +32,7 @@ BEGIN {
 
     ## special
     COLON = "^:"
+    SINGLE_SPACE = "^ {1}"
     EOF = "E_O_F"
 
     # Initialize the lexer
@@ -112,6 +113,14 @@ function _advance() {
         line = substr(line, RLENGTH+1)
         VAL = _tok;
         _tok_type = "COLON"
+        return _tok
+    }
+    if (match(line, SINGLE_SPACE)) {
+        debugf("SINGLE_SPACE: '%s'", line)
+        _tok = substr(line, 1, RLENGTH)
+        line = substr(line, RLENGTH+1)
+        VAL = _tok;
+        _tok_type = "SINGLE_SPACE"
         return _tok
     }
     if (match(line, CHANGELOG)) {
@@ -196,6 +205,7 @@ function parse_header() {
         COMMIT_SCOPE_VAL = CONSUMED_VAL
     }
     consume(COLON) # End of prefix
+    consume(SINGLE_SPACE)
     parse_title()
 }
 
