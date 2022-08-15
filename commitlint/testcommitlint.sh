@@ -391,5 +391,14 @@ Changelog: None
 Signed-off-by: Alf-Rune Siqveland <alf.rune@northern.tech>
 (cherry picked from commit d50c065c477448bf89ac747d2607ca7497f9f8e4)"
 
+assert "false" \
+       "No space in between : and title in header" \
+       "chore(vendor):Add github.com/alfrunes/filelock to the vendor tree
+
+Changelog: None
+
+Signed-off-by: Alf-Rune Siqveland <alf.rune@northern.tech>
+(cherry picked from commit d50c065c477448bf89ac747d2607ca7497f9f8e4)"
+
 
 exit 0
