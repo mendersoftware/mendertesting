@@ -1,0 +1,3 @@
+# For testing purposes: Without the next line, the check would fail because of
+# the below unknown license.
+mock/LICENSE

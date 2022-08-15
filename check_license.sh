@@ -86,7 +86,19 @@ fi
 # Unlisted licenses not allowed.
 for file in $(find . -type f -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -iname 'COPYING'); do
     file=$(echo $file | sed -e 's,./,,')
-    if ! fgrep "$(shasum -a 256 $file)" $TMP_CHKSUM_FILE > /dev/null; then
+    # Files in ".COVERED_LICENSES" are omitted from checking. There are two main
+    # reasons this is useful:
+    #
+    # 1. The license is restrictive and is not being used. For example it can be
+    # part of the test code of a sub component, but not linked to the main
+    # project.
+    #
+    # 2. A restrictive open source license is superseded by a commercial
+    # license. We use this for example for libntech, which is licensed under
+    # GPL-3, but since Northern.tech owns the copyright, we are relicensing it
+    # under commercial terms. We do not want this license text to appear in the
+    # combined license listing.
+    if ! fgrep "$(shasum -a 256 $file)" $TMP_CHKSUM_FILE > /dev/null && ! grep "^$file\$" .COVERED_LICENSES >&/dev/null; then
         echo >&2 "$file has missing or wrong entry in $CHKSUM_FILE"
         ret=1
     fi
