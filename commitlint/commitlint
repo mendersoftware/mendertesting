@@ -94,70 +94,70 @@ function _advance() {
         }
     }
     if (match(line, COMMIT_TYPE) != 0) {
-        debugf("Matched COMMIT_TYPE: %s", line)
         _tok = substr(line, 1, RLENGTH)
+        debugf("Matched COMMIT_TYPE: %s", _tok)
         line = substr(line, RLENGTH+1)
         _tok_type = "COMMIT_TYPE"
         return _tok
     }
     if (match(line, COMMIT_SCOPE)) {
-        debugf("Matched COMMIT_SCOPE")
         _tok = substr(line, 0, RLENGTH)
+        debugf("Matched COMMIT_SCOPE: %s", _tok)
         line = substr(line, RLENGTH+1)
         _tok_type = "COMMIT_SCOPE"
         return _tok
     }
     if (match(line, COLON)) {
-        debugf("COLON: '%s'", line)
         _tok = substr(line, 1, RLENGTH)
+        debugf("COLON: '%s'", _tok)
         line = substr(line, RLENGTH+1)
         VAL = _tok;
         _tok_type = "COLON"
         return _tok
     }
     if (match(line, SINGLE_SPACE)) {
-        debugf("SINGLE_SPACE: '%s'", line)
         _tok = substr(line, 1, RLENGTH)
+        debugf("SINGLE_SPACE: '%s'", _tok)
         line = substr(line, RLENGTH+1)
         VAL = _tok;
         _tok_type = "SINGLE_SPACE"
         return _tok
     }
     if (match(line, CHANGELOG)) {
-        debugf("Matched Changelog!")
         _tok = line
+        debugf("Matched Changelog: %s", _tok)
         VAL = _tok;
         line = ""
         _tok_type = "CHANGELOG"
         return _tok
     }
     if (match(line, TICKET)) {
-        debugf("Matched Ticket!")
         _tok = line
+        debugf("Matched Ticket: %s", _tok)
         VAL = _tok;
         line = ""
         _tok_type = "TICKET"
         return _tok
     }
     if (match(line, BREAKING_CHANGE)) {
-        debugf("Matched BREAKING CHANGE!")
         _tok = line
+        debugf("Matched BREAKING CHANGE: %s", _tok)
         VAL = _tok;
         line = ""
         _tok_type = "BREAKING_CHANGE"
         return _tok
     }
     if (match(line, SIGN_OFF_LINE)) {
-        debugf("Matched SIGN-OFF")
         _tok = line
+        debugf("Matched SIGN-OFF: %s", _tok)
         VAL = _tok;
         line = ""
         _tok_type = "SIGN_OFF_LINE"
         return _tok
     }
     if (match(line, LINE)) {
-        debugf("Matched LINE!")
         _tok = line
+        debugf("Matched LINE: %s", _tok)
         VAL = _tok
         line = ""
         _tok_type = "LINE"
@@ -177,7 +177,7 @@ function consume(expect, err_msg) {
         if (err_msg != "") {
             perror(err_msg)
         }
-        error("got token '%s', expected '%s'", tok, expect)
+        error("got token '%s', with value: %s, expected token match '%s'", tok_type, tok, expect)
     }
     CONSUMED_VAL = tok
     advance()
