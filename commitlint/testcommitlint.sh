@@ -49,11 +49,17 @@ function assert() {
 
 assert "true" \
        "Base case" \
-"chore(client): foobar"
+"chore(client): foobar
+
+Signed-off-by: Manuel Zedel <manuel.zedel@northern.tech>
+"
 
 assert "true" \
        "Base case (no scope)" \
-       "chore: foobar"
+       "chore: foobar
+
+Signed-off-by: Manuel Zedel <manuel.zedel@northern.tech>
+"
 
 assert "true" \
        "Changelog required when fix, or feat or breaking change!" \
@@ -399,6 +405,14 @@ Changelog: None
 
 Signed-off-by: Alf-Rune Siqveland <alf.rune@northern.tech>
 (cherry picked from commit d50c065c477448bf89ac747d2607ca7497f9f8e4)"
+
+
+assert "true" \
+       "Check that the tokenizer does not mistake fixed for a keyword (fix)" \
+       "chore: fixed some issues reported from static analysis
+
+Signed-off-by: Manuel Zedel <manuel.zedel@northern.tech>"
+
 
 
 exit 0

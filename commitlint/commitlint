@@ -90,6 +90,7 @@ function _advance() {
     if (length(line) == 0) {
         if (getline line == 0) {
             _tok = EOF
+            _tok_type = EOF
             return EOF
         }
     }
@@ -155,6 +156,22 @@ function _advance() {
         _tok_type = "SIGN_OFF_LINE"
         return _tok
     }
+    if (match(line, WORD)) {
+           _tok = substr(line, 1, RLENGTH)
+            debugf("Matched LINE: %s", _tok)
+            VAL = _tok
+            line = ""
+            _tok_type = "WORD"
+            return _tok
+    }
+    if (match(line, EMPTY_LINE)) {
+            _tok = line
+            debugf("Matched EMPTY_LINE: %s", _tok)
+            VAL = _tok
+            line = ""
+            _tok_type = "EMPTY_LINE"
+            return _tok
+        }
     if (match(line, LINE)) {
         _tok = line
         debugf("Matched LINE: %s", _tok)
@@ -188,8 +205,15 @@ function consume(expect, err_msg) {
 # WORD [ | WORD ]*
 # (Really just the remainder of the line)
 function parse_title() {
-    consume(LINE)
-    TITLE_VAL=CONSUMED_VAL
+    TITLE_VAL=""
+    while (tok_type != "EMPTY_LINE" && tok_type != EOF) {
+              advance()
+              TITLE_VAL = sprintf("%s %s", TITLE_VAL, tok)
+    }
+    if (tok_type == EOF) {
+           error("Unexpected EOF")
+    }
+    debugf("TITLE_VAL: %s", TITLE_VAL)
 }
 
 # Parse HEADER
@@ -257,11 +281,12 @@ function parse_footer() {
             CHANGELOG_VAL=tok
             verify_changelog(tok)
             # Consume the entire paragraph for the 'Changelog' if it is multiline
-            if (next_tok_type == "LINE") {
-                while (tok != EOF && next_tok_type == "LINE") {
+            if (next_tok_type == "LINE" || next_tok_type == "WORD") {
+                while (tok != EOF && (next_tok_type == "LINE" || next_tok_type == "WORD")) {
                     advance()
                 }
                 # Require empty line afterwards in paragraph
+                advance()
                 empty_line("A 'Changelog' over multiple lines needs to have a trailing empty line")
             }
         }
