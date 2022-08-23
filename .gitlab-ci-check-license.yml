@@ -47,8 +47,13 @@ test:check-license:
     - git fetch origin 'refs/heads/*:refs/heads/*'
     # Get last remaining tags, if any.
     - git fetch --tags origin
-    - git clone --depth=1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - if [ "$CI_PROJECT_NAME" = "mendertesting" ]; then
+    -   SCRIPT_PATH=$PWD
+    - else
+    -   git clone --depth=1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    -   SCRIPT_PATH=/tmp/mendertesting
+    - fi
   script:
     # Check licenses
-    - /tmp/mendertesting/check_license.sh
-    - /tmp/mendertesting/check_license_source_files.sh
+    - $SCRIPT_PATH/check_license.sh
+    - $SCRIPT_PATH/check_license_source_files.sh

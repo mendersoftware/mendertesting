@@ -29,6 +29,10 @@ test:unit:
     - cp -r $CI_PROJECT_DIR /go/src/github.com/mendersoftware/mendertesting
     - cd /go/src/github.com/mendersoftware/mendertesting
 
+    # Prepare Git
+    - git config --global user.name "Test"
+    - git config --global user.email "test@example.com"
+
   script:
     # Test if code was formatted with 'go fmt'
     # Command will format code and return modified files

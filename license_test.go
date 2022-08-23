@@ -174,8 +174,18 @@ func TestLicenses(t *testing.T) {
 }
 
 func TestLicensesWithEnterprise(t *testing.T) {
+	// The code below sets the Enterprise commit to HEAD, and then expects
+	// the license test to produce no errors. This is logical, because all
+	// code was already Open Source, except in HEAD. However, it doesn't
+	// work if we have added a new file in HEAD. Therefore, produce a
+	// throwaway commit which is one step beyond HEAD, and use that as the
+	// Enterprise commit instead.
+	cmd := exec.Command("bash", "-c", "git commit-tree -p HEAD -m test `git cat-file commit HEAD | grep '^tree ' | awk '{print $2}'`")
+	output, err := cmd.Output()
+	require.NoError(t, err)
+
 	// Should produce the same result as nothing.
-	SetFirstEnterpriseCommit("HEAD")
+	SetFirstEnterpriseCommit(string(output))
 	defer SetFirstEnterpriseCommit("")
 	assert.NoError(t, checkMenderCompliance())
 }
@@ -190,8 +200,8 @@ func TestCommercialLicense(t *testing.T) {
 	require.NoError(t, err)
 	cmd := exec.Command(abspath, abspath)
 	cmd.Dir = tmpdir
-	err = cmd.Run()
-	assert.NoError(t, err)
+	output, err := cmd.CombinedOutput()
+	assert.NoError(t, err, string(output))
 }
 
 func TestMisformedLicenseChecksumLines(t *testing.T) {
