@@ -413,6 +413,35 @@ assert "true" \
 
 Signed-off-by: Manuel Zedel <manuel.zedel@northern.tech>"
 
+assert "true" \
+       "Check that pretty formatted Changelogs are accepted" \
+       "$(cat <<'EOF'
+feat: Support commercial licenses correctly in meta-mender
 
+Changelog: Implemented proper license tracking for commercial
+components. This was necessary for several reasons:
+* Licenses were not being correctly generated inside
+    `$BUILDDIR/tmp/deploy/licenses`.
+* Because they were not generated correctly, it wasn't previously
+    possible to bind a particular version of a commercial component to
+    a specific license. Hence, if Northern.tech were to change the
+    license, this online version would be the only available copy. It
+    thus would become unclear exactly what terms the user had accepted.
+    This has been fixed by including the license with the software.
+This requires all users to re-accept the license (the license text can
+be found in
+`meta-mender-commercial/files/licenses/Mender-Yocto-Layer-License.md`),
+by adding this to their `local.conf`:
+```
+LICENSE_FLAGS_ACCEPTED:append = " commercial_mender-yocto-layer-license"
+```
+Previous assignments of `LICENSE_FLAGS_ACCEPTED` mentioning "mender"
+software can be removed.
+
+Ticket: MEN-5517
+
+Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>
+EOF
+)"
 
 exit 0
