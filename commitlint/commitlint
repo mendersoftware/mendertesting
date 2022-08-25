@@ -282,7 +282,7 @@ function parse_footer() {
             verify_changelog(tok)
             # Consume the entire paragraph for the 'Changelog' if it is multiline
             if (next_tok_type == "LINE" || next_tok_type == "WORD") {
-                while (tok != EOF && (next_tok_type == "LINE" || next_tok_type == "WORD")) {
+                while (tok != EOF && next_tok_type != "EMPTY_LINE" ) {
                     advance()
                 }
                 # Require empty line afterwards in paragraph
