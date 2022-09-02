@@ -414,5 +414,16 @@ assert "true" \
 Signed-off-by: Manuel Zedel <manuel.zedel@northern.tech>"
 
 
+assert "true" \
+       "Commit with Cancel-Changelog" \
+       "chore: amend changelog from abcdef
+
+Cancel-changelog: abcdefabcdefabcdefabcdefabcdefabcdef
+Changelog: Something more descriptive than the original changelog
+Ticket: MEN-1234
+
+Signed-off-by: Signed-off-by: Lluis Campos <lluis.campos@northern.tech>"
+
+
 
 exit 0

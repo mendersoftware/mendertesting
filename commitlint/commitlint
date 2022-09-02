@@ -29,6 +29,7 @@ BEGIN {
     BREAKING_CHANGE="BREAKING[- ]CHANGE: .*"
     SIGN_OFF_LINE="Signed-off-by: .*"
     CHERRY_PICK="(cherry picked from commit .*)"
+    CANCEL_CHANGELOG="Cancel-[Cc]hangelog: *([0-9a-f]+).*"
 
     ## special
     COLON = "^:"
@@ -274,6 +275,7 @@ function parse_footer() {
                 match(tok, BREAKING_CHANGE) ||
                 match(tok, EMPTY_LINE) ||
                 match(tok, CHERRY_PICK) ||
+                match(tok, CANCEL_CHANGELOG) ||
                 match(tok, SIGN_OFF_LINE))) {
             error("Only Changelogs, Tickets, Sign-offs, cherry pick notes and BREAKING CHANGES allowed in the FOOTER")
         }
