@@ -131,6 +131,8 @@ check_file() {
     local lines
     local lic_type
     local -r CM="$2"
+    local rc
+    local -r tab=$'\t'
 
     cat > license-os.tmp <<-EOF
 ${CM}    Licensed under the Apache License, Version 2.0 (the "License");
@@ -176,7 +178,12 @@ EOF
     file=$(strip_hashbang "${file}")
 
     head -n $lines "$file" | tail -n +3 | diff -u "$license" - > /dev/null
-    if [ $? -ne 0 ]; then
+    rc=$?
+    if [[ $rc -ne 0 ]]; then
+        head -n $lines "$file" | sed -e "s/${tab}/    /g" | tail -n +3 | diff -u "$license" - > /dev/null
+        rc=$?
+    fi
+    if [ $rc -ne 0 ]; then
         echo >&2 "!!! FAILED license check on ${orig_file}. Expected this $lic_type license:"
         cat "$license" >&2
         TEST_RESULT=1
