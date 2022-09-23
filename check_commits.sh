@@ -137,11 +137,11 @@ function check_commit_for_signoffs() {
 
 }
 
-# If any commit in the range TARGET_BRANCH...{hosted,staging} matches a commit in the PR
+# If any commit in the range TARGET_BRANCH..{hosted,staging} matches a commit in the PR
 function prevent_staging_and_hosted_leaks() {
     local -r pull_request_commit="$1"
-    # Get the commits in the range TARGET_BRANCH...{hosted,staging}
-    local -r target_branch_commits="$(git rev-list origin/${TARGET_BRANCH}...origin/hosted 2>/dev/null || git rev-list origin/${TARGET_BRANCH}...origin/staging)"
+    # Get the commits in the range TARGET_BRANCH..{hosted,staging}
+    local -r target_branch_commits="$(git rev-list origin/${TARGET_BRANCH}..origin/hosted 2>/dev/null || git rev-list origin/${TARGET_BRANCH}..origin/staging)"
     for commit in ${target_branch_commits}; do
         if [[ "${commit}" = "${pull_request_commit}" ]]; then
             echo >&2 "The commit ${pull_request_commit} is present in the hosted or staging branch."
