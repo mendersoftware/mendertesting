@@ -25,7 +25,7 @@ test:check-commits:
     - if [ "${CI_PROJECT_NAME}" = "mendertesting" ]; then
     -   git clone --shared --local . /tmp/mendertesting
     - else
-    -   git clone --depth=1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    -   git clone --depth=1 https://github.com/mendersoftware/mendertesting /tmp/mendertesting
     - fi
   script:
     # Check commit compliance.

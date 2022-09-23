@@ -50,7 +50,7 @@ test:check-license:
     - if [ "$CI_PROJECT_NAME" = "mendertesting" ]; then
     -   SCRIPT_PATH=$PWD
     - else
-    -   git clone --depth=1 http://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    -   git clone --depth=1 https://github.com/mendersoftware/mendertesting /tmp/mendertesting
     -   SCRIPT_PATH=/tmp/mendertesting
     - fi
   script:
