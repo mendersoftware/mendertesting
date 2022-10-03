@@ -83,6 +83,8 @@ function advance() {
     tok_type = next_tok_type
     next_tok = _tok
     next_tok_type = _tok_type
+    debugf("Current token: %s", tok)
+    debugf("Next token: %s", next_tok)
 }
 
 function _advance() {
@@ -158,21 +160,21 @@ function _advance() {
         return _tok
     }
     if (match(line, WORD)) {
-           _tok = substr(line, 1, RLENGTH)
-            debugf("Matched LINE: %s", _tok)
-            VAL = _tok
-            line = ""
-            _tok_type = "WORD"
-            return _tok
+        _tok = substr(line, 1, RLENGTH)
+         debugf("Matched LINE: %s", _tok)
+         VAL = _tok
+         line = ""
+         _tok_type = "WORD"
+         return _tok
     }
     if (match(line, EMPTY_LINE)) {
-            _tok = line
-            debugf("Matched EMPTY_LINE: %s", _tok)
-            VAL = _tok
-            line = ""
-            _tok_type = "EMPTY_LINE"
-            return _tok
-        }
+         _tok = line
+         debugf("Matched EMPTY_LINE: %s", _tok)
+         VAL = _tok
+         line = ""
+         _tok_type = "EMPTY_LINE"
+         return _tok
+    }
     if (match(line, LINE)) {
         _tok = line
         debugf("Matched LINE: %s", _tok)
@@ -290,6 +292,7 @@ function parse_footer() {
                 # Require empty line afterwards in paragraph
                 advance()
                 empty_line("A 'Changelog' over multiple lines needs to have a trailing empty line")
+                continue
             }
         }
         if (match(tok, TICKET)) {

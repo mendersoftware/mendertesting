@@ -425,5 +425,20 @@ Ticket: MEN-1234
 Signed-off-by: Signed-off-by: Lluis Campos <lluis.campos@northern.tech>"
 
 
+assert "true" \
+       "Commit with multiple multiline Changelogs" \
+       "fix: Commit with multiple multiline Changelogs
+
+Ticket: None
+
+Changelog: First multiline changelog
+with multiple words
+
+Changelog: First multiline changelog with one
+word
+
+Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
+
+
 
 exit 0
