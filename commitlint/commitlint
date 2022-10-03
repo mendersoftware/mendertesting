@@ -292,6 +292,7 @@ function parse_footer() {
                 # Require empty line afterwards in paragraph
                 advance()
                 empty_line("A 'Changelog' over multiple lines needs to have a trailing empty line")
+                continue
             }
         }
         if (match(tok, TICKET)) {
