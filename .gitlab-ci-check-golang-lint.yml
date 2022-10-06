@@ -24,7 +24,7 @@ test:static:
   needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
-  image: golangci/golangci-lint:v1.43.0
+  image: golangci/golangci-lint:v1.47.3
   before_script:
     # Install compile dependencies
     - if [ -f deb-requirements.txt ]; then
@@ -45,7 +45,7 @@ test:govendor-check:
   stage: test
   needs: []
   variables:
-    GOLANG_VERSION: "1.17"
+    GOLANG_VERSION: "1.18"
   image: golang:${GOLANG_VERSION}
   script:
     - if [ -d vendor ]; then
