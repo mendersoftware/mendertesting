@@ -119,13 +119,13 @@ function check_commit_for_signoffs() {
     # Ignore commits that have git-subtree tags in them. They are a PITA both
     # to sign and add changelogs to, and signing should anyway be present in the
     # original repository.
-    if echo "$COMMIT_MSG" | egrep "^git-subtree-[^:]+:" >/dev/null; then
+    if echo "$COMMIT_MSG" | grep -E "^git-subtree-[^:]+:" >/dev/null; then
         return
     fi
 
     if [ -n "${CHECK_SIGNOFFS}" ]; then
         # Ignore commits from dependabot[-preview], as it has Git user and Signed-off-by user differ.
-        if echo "${COMMIT_USER_EMAIL}" | egrep "^dependabot(-preview)?\[bot\] <[0-9]+\+dependabot(-preview)?\[bot\]@users.noreply.github.com>$" >/dev/null; then
+        if echo "${COMMIT_USER_EMAIL}" | grep -E "^dependabot(-preview)?\[bot\] <[0-9]+\+dependabot(-preview)?\[bot\]@users.noreply.github.com>$" >/dev/null; then
             return
         fi
         # Check that Signed-off-by tags are present.

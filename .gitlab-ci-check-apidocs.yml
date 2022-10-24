@@ -71,7 +71,7 @@ trigger:apidocs:rebuild-mender-api-docs:
     -     BUILD_MASTER="true"
     -   elif [ "${version}" == "staging" ]; then
     -     BUILD_HOSTED="true"
-    -   elif echo $version | egrep -q -e '^[0-9.x]+$'; then
+    -   elif echo $version | grep -E -q -e '^[0-9.x]+$'; then
     -     VERSION_VAR_NAME=BUILD_$(echo $version | tr '.' '_' | sed -e 's/_x$//')
     -     BUILD_VARS="${BUILD_VARS} -F variables[${VERSION_VAR_NAME}]=true"
     -   fi
