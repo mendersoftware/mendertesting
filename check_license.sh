@@ -42,7 +42,7 @@ while [ -n "$1" ]; do
             file="${1#--add-license=}"
             KNOWN_LICENSE_FILES="$KNOWN_LICENSE_FILES $file"
             # The file must exist in LIC_FILES_CHKSUM.sha256
-            if ! fgrep -q "$file" $CHKSUM_FILE; then
+            if ! grep -F -q "$file" $CHKSUM_FILE; then
                 echo "$file does not have a checksum in $CHKSUM_FILE"
                 exit 1
             fi
@@ -98,7 +98,7 @@ for file in $(find . -type f -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -in
     # GPL-3, but since Northern.tech owns the copyright, we are relicensing it
     # under commercial terms. We do not want this license text to appear in the
     # combined license listing.
-    if ! fgrep "$(shasum -a 256 $file)" $TMP_CHKSUM_FILE > /dev/null && ! grep "^$file\$" .COVERED_LICENSES >&/dev/null; then
+    if ! grep -F "$(shasum -a 256 $file)" $TMP_CHKSUM_FILE > /dev/null && ! grep "^$file\$" .COVERED_LICENSES >&/dev/null; then
         echo >&2 "$file has missing or wrong entry in $CHKSUM_FILE"
         ret=1
     fi
