@@ -440,5 +440,16 @@ word
 Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
 
 
+assert "true" \
+       "Commit with lowercase entries" \
+       "fix: Commit with lowercase entries
+
+Ticket: none
+
+Changelog: none
+
+Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
+
+
 
 exit 0

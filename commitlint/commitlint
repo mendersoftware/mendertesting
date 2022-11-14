@@ -23,18 +23,20 @@ BEGIN {
     EMPTY_LINE = "^$"
 
     ## Footer
-    CHANGELOG_PREFIX="Changelog(\\((fix|feat)+\\))?: "
+    CHANGELOG_PREFIX="^Changelog(\\((fix|feat)+\\))?: "
     CHANGELOG=CHANGELOG_PREFIX ".*"
     TICKET="Ticket: .*"
     BREAKING_CHANGE="BREAKING[- ]CHANGE: .*"
     SIGN_OFF_LINE="Signed-off-by: .*"
     CHERRY_PICK="(cherry picked from commit .*)"
-    CANCEL_CHANGELOG="Cancel-[Cc]hangelog: *([0-9a-f]+).*"
+    CANCEL_CHANGELOG="Cancel-changelog: *([0-9a-f]+).*"
 
     ## special
     COLON = "^:"
     SINGLE_SPACE = "^ {1}"
     EOF = "E_O_F"
+
+    IGNORECASE = 1
 
     # Initialize the lexer
     init_lexer()
