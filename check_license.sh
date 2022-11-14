@@ -84,7 +84,7 @@ if echo "$output" | grep -q 'line is improperly formatted' -; then
 fi
 
 # Unlisted licenses not allowed.
-for file in $(find . -type f -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -iname 'COPYING'); do
+while read -r file; do
     file=$(echo $file | sed -e 's,./,,')
     # Files in ".COVERED_LICENSES" are omitted from checking. There are two main
     # reasons this is useful:
@@ -102,7 +102,7 @@ for file in $(find . -type f -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -in
         echo >&2 "$file has missing or wrong entry in $CHKSUM_FILE"
         ret=1
     fi
-done
+done < <(find . \( -type f -iname 'LICEN[SC]E' -o -iname 'LICEN[SC]E.*' -o -iname 'COPYING' \) -and -not -iname '*.go' -and -not -iname '*.c' -and -not -iname '*.cpp')
 
 # There must be a license at the top level.
 if [ LICENSE* = "LICENSE*" ] && [ COPYING* = "COPYING*" ]; then
