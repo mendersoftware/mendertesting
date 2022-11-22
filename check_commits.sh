@@ -130,7 +130,7 @@ function check_commit_for_signoffs() {
         fi
         # Check that Signed-off-by tags are present.
         if ! echo "$COMMIT_MSG" | grep -F "Signed-off-by: ${COMMIT_USER_EMAIL}" >/dev/null; then
-            echo >&2 "Commit ${i} is not signed off! Use --signoff with your commit."
+            echo >&2 "Commit ${i} is not signed off! Use --signoff with your commit. Make sure that the Author of the commit matches the one in Signed-off-by"
             notvalid="$notvalid $i"
         fi
     fi
