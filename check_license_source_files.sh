@@ -205,7 +205,7 @@ check_files() {
     local -r SOURCE_FILES="$@"
     for source_file in ${SOURCE_FILES}; do
         case ${source_file} in
-          *.go)
+          *.go|*.[ch]|*.[ch]pp)
               CM='//'
               ;;
           *.py|*.sh)
@@ -240,5 +240,10 @@ echo >&2 "Checking licenses on all Shell files"
 SHELL_FILES="\
 $(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path './vendor/*' -name '*.sh')"
 check_files "${SHELL_FILES}"
+
+echo >&2 "Checking licenses on all C/C++ files"
+C_FILES="\
+$(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path './vendor/*' \( -name '*.[ch]' -o -name '*.[ch]pp' \))"
+check_files "${C_FILES}"
 
 exit ${TEST_RESULT}
