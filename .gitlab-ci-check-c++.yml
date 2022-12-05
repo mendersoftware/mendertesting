@@ -1,0 +1,33 @@
+# .gitlab-ci-check-c++.yml
+#
+# This gitlab-ci template performs format checks using clang-format,
+#
+# Add it to the project in hand through Gitlab's include functionality
+#
+# include:
+#   - project: 'Northern.tech/Mender/mendertesting'
+#     file: '.gitlab-ci-check-c++.yml'
+#
+# The standard .clang-format from this repository is used unless the
+# project including this template has its own version in the root dir.
+#
+
+stages:
+  - test
+
+test:format:
+  stage: test
+  needs: []
+  image: alpine:3.17
+  before_script:
+    # Install compile dependencies
+    - apk add git curl clang15-extra-tools
+    # Copy .clang-format
+    - if [ ! -f .clang-format ]; then
+    -   curl -f
+          https://raw.githubusercontent.com/mendersoftware/mendertesting/master/.clang-format
+          --output .clang-format
+    - fi
+  script:
+    - git ls-tree --name-only --full-name -r HEAD | grep -E '\.([ch](pp)?|cc)$' | xargs clang-format -i --style=file:.clang-format
+    - git diff --exit-code
