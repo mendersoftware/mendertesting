@@ -85,11 +85,11 @@ build:docker:
         --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
         --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
         ${DOCKER_DIR:-.}
-    - docker save $DOCKER_BUILD_SERVICE_IMAGE > image.tar
+    - docker save $DOCKER_BUILD_SERVICE_IMAGE > ${CI_PROJECT_NAME}.tar
   artifacts:
     expire_in: 2w
     paths:
-      - image.tar
+      - ${CI_PROJECT_NAME}.tar
 
 publish:image:
   stage: publish
@@ -108,7 +108,7 @@ publish:image:
     - *export_docker_vars
     - *docker_login_registries
   script:
-    - docker load -i image.tar
+    - docker load -i ${CI_PROJECT_NAME}.tar
     - docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
     - docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
     - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
@@ -149,7 +149,7 @@ publish:image:mender:
     -  exit 0
     - fi
     # Load image
-    - docker load -i image.tar
+    - docker load -i ${CI_PROJECT_NAME}.tar
     # Publish the image for all releases
     - for version in $integration_versions; do
     -   docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}
