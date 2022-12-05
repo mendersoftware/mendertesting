@@ -17,6 +17,10 @@
 #   DOCKER_DIR: <relative path, i.e service/> (optional)
 #   DOCKERFILE: <filename, i.e. Dockerfile.custom> (optional)
 #
+# The Docker image is saved as job artifact in ${CI_PROJECT_DIR}/image.tar and
+# loaded from there in further jobs. A different filename can be specified with:
+#   IMAGE_ARTIFACT_FILENAME: <full path to Docker image filename> (optional)
+#
 # Requires credentials for the registry where to push the image.
 # Set in the project CI/CD settings either Docker Hub credentials:
 #   DOCKER_HUB_USERNAME: Username for docker.io
@@ -85,11 +89,11 @@ build:docker:
         --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
         --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
         ${DOCKER_DIR:-.}
-    - docker save $DOCKER_BUILD_SERVICE_IMAGE > ${CI_PROJECT_NAME}.tar
+    - docker save $DOCKER_BUILD_SERVICE_IMAGE > ${IMAGE_ARTIFACT_FILENAME:-${CI_PROJECT_DIR}/image.tar}
   artifacts:
     expire_in: 2w
     paths:
-      - ${CI_PROJECT_NAME}.tar
+      - ${IMAGE_ARTIFACT_FILENAME:-${CI_PROJECT_DIR}/image.tar}
 
 publish:image:
   stage: publish
@@ -108,7 +112,7 @@ publish:image:
     - *export_docker_vars
     - *docker_login_registries
   script:
-    - docker load -i ${CI_PROJECT_NAME}.tar
+    - docker load -i ${IMAGE_ARTIFACT_FILENAME:-${CI_PROJECT_DIR}/image.tar}
     - docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
     - docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
     - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
@@ -149,7 +153,7 @@ publish:image:mender:
     -  exit 0
     - fi
     # Load image
-    - docker load -i ${CI_PROJECT_NAME}.tar
+    - docker load -i ${IMAGE_ARTIFACT_FILENAME:-${CI_PROJECT_DIR}/image.tar}
     # Publish the image for all releases
     - for version in $integration_versions; do
     -   docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:mender-${version}
