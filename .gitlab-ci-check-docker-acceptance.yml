@@ -41,7 +41,7 @@ test:prepare_acceptance:
       when: never
     - when: on_success
   services:
-    - docker:19.03.5-dind
+    - docker:20.10.21-dind
   before_script:
     - export DOCKER_TAG=${CI_COMMIT_REF_SLUG:-master}
     - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_TAG}
@@ -77,7 +77,7 @@ test:acceptance_tests:
     - docker
   image: tiangolo/docker-with-compose
   services:
-    - name: docker:20.10.8-dind
+    - name: docker:20.10.21-dind
       alias: docker
       command: ["--mtu=1440"]
   dependencies:
