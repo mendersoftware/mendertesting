@@ -25,6 +25,8 @@ BinPackParameters: false
 AlignAfterOpenBracket: AlwaysBreak
 AllowAllParametersOfDeclarationOnNextLine: true
 IndentCaseLabels: false
+IndentAccessModifiers: false
+AccessModifierOffset: -4
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
