@@ -33,4 +33,5 @@ AllowShortFunctionsOnASingleLine: None
 BreakBeforeBraces: Attach
 BreakBeforeBinaryOperators: NonAssignment
 InsertBraces: true
+BreakConstructorInitializers: AfterColon
 ---
