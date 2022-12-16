@@ -52,10 +52,10 @@ stages:
     echo "Warning: Docker credentials unavailable or invalid"
 
 .export_docker_vars: &export_docker_vars |
-  export DOCKER_BUILD_TAG=${CI_COMMIT_REF_SLUG:-local}
-  export DOCKER_BUILD_SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_BUILD_TAG}
-  export DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
-  export DOCKER_PUBLISH_COMMIT_TAG=${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
+  DOCKER_BUILD_TAG=${CI_COMMIT_REF_SLUG:-local}
+  DOCKER_BUILD_SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_BUILD_TAG}
+  DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
+  DOCKER_PUBLISH_COMMIT_TAG=${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
 
 .get_release_tool_alpine: &get_release_tool_alpine |
   apk add git python3 py3-pip
@@ -207,9 +207,9 @@ publish:image:saas:
       alias: docker
       command: ["--mtu=1440"] # https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5590
   before_script:
-    - export SOURCE_TAG=staging_${CI_COMMIT_SHA}
-    - export DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
-    - export SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
+    - SOURCE_TAG=staging_${CI_COMMIT_SHA}
+    - DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
+    - SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
     - *docker_login_registries
   script:
     - docker pull $DOCKER_REPOSITORY:$SOURCE_TAG
