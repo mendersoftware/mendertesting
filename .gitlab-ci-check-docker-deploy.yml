@@ -14,13 +14,13 @@
 #     file: '.gitlab-ci-check-docker-deploy.yml'
 #
 # Requires .gitlab-ci-check-docker-build.yml to be included and related
-# varibales to be set.
+# variables to be set.
 #
 # Requires TARGET_MANIFEST_FILE to be set in the calling Pipeline. It
 # can be one or more, separated by commas.
 #
 # The job will modify for the manifest file(s) in sre-repo, master branch,
-# by default. It can overriden with INFRA_REPOSITORY and INFRA_BRANCH
+# by default. It can overridden with INFRA_REPOSITORY and INFRA_BRANCH
 # variables accordingly
 #
 # variables:

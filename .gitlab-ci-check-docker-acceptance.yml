@@ -7,7 +7,7 @@
 # * Dockerfile.acceptance-testing: to build the the binary with test coverage.
 # * tests/Dockerfile to build the Python test runner.
 # * tests/docker-compose-acceptance.yml for the tests composition runtime.
-# * tests/docker-compose-acceptance-enterprise.yml (optional) for Enteprise tests.
+# * tests/docker-compose-acceptance-enterprise.yml (optional) for Enterprise tests.
 #
 # Requires DOCKER_REPOSITORY variable to be set in the calling Pipeline.
 # Add it to the project in hand through Gitlab's include functionality
