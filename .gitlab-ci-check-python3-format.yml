@@ -16,7 +16,7 @@
 # configuration of the Black tool. This is especially handy for ignoring, and/or
 # excluding specific directories from being evaluated.
 #
-# The configuration parameters available match the command-line paramaters as listed here:
+# The configuration parameters available match the command-line parameters as listed here:
 #    https://github.com/psf/black#command-line-options
 #
 # Example 'pyproject.toml' file:
