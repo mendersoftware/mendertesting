@@ -45,9 +45,7 @@ publish:image:final-tag:
     - docker
   image: docker
   services:
-    - name: docker:20.10.21-dind
-      alias: docker
-      command: ["--mtu=1440"] # https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5590
+    - docker:20.10.21-dind
   before_script:
     - DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
     - SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
