@@ -50,6 +50,7 @@ publish:image:final-tag:
     - DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
     - SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
     - *docker_login_registries
+    - apk add --no-cache git
   script:
     - last_release_candidate=$(
         git tag --contains ${CI_COMMIT_SHA} |
