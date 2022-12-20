@@ -54,8 +54,8 @@ publish:image:final-tag:
   script:
     - last_release_candidate=$(
         git tag --contains ${CI_COMMIT_SHA} |
-        sort --field-separator 'd' --key 2,2n |
-        tail --lines 1
+        sort -t 'd' -k 2,2n |
+        tail -n 1
       )
     - docker pull $DOCKER_REPOSITORY:$last_release_candidate
     - docker tag $DOCKER_REPOSITORY:$last_release_candidate $SERVICE_IMAGE
