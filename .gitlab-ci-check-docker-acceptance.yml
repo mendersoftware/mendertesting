@@ -73,9 +73,7 @@ test:acceptance_tests:
     - docker
   image: tiangolo/docker-with-compose
   services:
-    - name: docker:20.10.21-dind
-      alias: docker
-      command: ["--mtu=1440"]
+    - docker:20.10.21-dind
   dependencies:
     - test:prepare_acceptance
   before_script:

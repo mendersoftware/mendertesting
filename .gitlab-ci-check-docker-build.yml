@@ -77,9 +77,7 @@ build:docker:
     - docker
   image: docker
   services:
-    - name: docker:20.10.21-dind
-      alias: docker
-      command: ["--mtu=1440"] # https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5590
+    - docker:20.10.21-dind
   before_script:
     - *export_docker_vars
   script:
@@ -104,9 +102,7 @@ publish:image:
     - docker
   image: docker
   services:
-    - name: docker:20.10.21-dind
-      alias: docker
-      command: ["--mtu=1440"] # https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5590
+    - docker:20.10.21-dind
   dependencies:
     - build:docker
   before_script:
@@ -131,9 +127,7 @@ publish:image:mender:
     - docker
   image: docker
   services:
-    - name: docker:20.10.21-dind
-      alias: docker
-      command: ["--mtu=1440"] # https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5590
+    - docker:20.10.21-dind
   dependencies:
     - build:docker
   before_script:
@@ -203,9 +197,7 @@ publish:image:saas:
     - docker
   image: docker
   services:
-    - name: docker:20.10.21-dind
-      alias: docker
-      command: ["--mtu=1440"] # https://gitlab.com/gitlab-com/gl-infra/production/-/issues/5590
+    - docker:20.10.21-dind
   before_script:
     - SOURCE_TAG=staging_${CI_COMMIT_SHA}
     - DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
