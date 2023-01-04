@@ -315,6 +315,12 @@ function is_footer(token) {
 
 function parse() {
 
+    # In the case of Reverts, the commit is already in the tree, so it need not be
+    # conforming to our specification.
+    if (match(next_tok, "Revert")){
+           return
+    }
+
     parse_header()
 
     # expect empty line before the body

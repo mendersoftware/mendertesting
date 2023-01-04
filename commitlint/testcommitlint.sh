@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright 2022 Northern.tech AS
+# Copyright 2023 Northern.tech AS
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -450,6 +450,12 @@ Changelog: none
 
 Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
 
+
+assert "true" \
+       "Accept standard git-revert commits" \
+"Revert \"build(docker-client): Add support for building the cpp-client
+
+This reverts commit 6a80e86e265a1d659bac6e3e67b899ba387f829c.\""
 
 
 exit 0
