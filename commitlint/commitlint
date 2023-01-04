@@ -85,8 +85,8 @@ function advance() {
     tok_type = next_tok_type
     next_tok = _tok
     next_tok_type = _tok_type
-    debugf("Current token: %s", tok)
-    debugf("Next token: %s", next_tok)
+    debugf("Current token(%s): %s", tok_type, tok)
+    debugf("Next token(%s): %s", next_tok_type, next_tok)
 }
 
 function _advance() {
