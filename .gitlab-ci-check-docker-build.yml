@@ -65,6 +65,8 @@ stages:
   alias release_tool=$(realpath mender-integration/extra/release_tool.py)
 
 build:docker:
+  tags:
+    - mender-qa-worker-generic-light
   stage: build
   needs: []
   variables:
@@ -73,8 +75,6 @@ build:docker:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
       when: never
     - when: on_success
-  tags:
-    - docker
   image: docker
   services:
     - docker:20.10.21-dind
@@ -95,11 +95,11 @@ build:docker:
       - image.tar
 
 publish:image:
+  tags:
+    - mender-qa-worker-generic-light
   stage: publish
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(master|staging|production|feature-.+)$/'
-  tags:
-    - docker
   image: docker
   services:
     - docker:20.10.21-dind
@@ -120,11 +120,11 @@ publish:image:
       dotenv: publish.env
 
 publish:image:mender:
+  tags:
+    - mender-qa-worker-generic-light
   stage: publish
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(master|[0-9]+\.[0-9]+\.x)$/'
-  tags:
-    - docker
   image: docker
   services:
     - docker:20.10.21-dind
@@ -162,6 +162,8 @@ publish:image:mender:
       dotenv: publish.env
 
 trigger:saas:sync-staging-component:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .post
   rules:
     - if: '$CI_COMMIT_BRANCH == "staging"'
@@ -190,11 +192,11 @@ trigger:saas:sync-staging-component:
 
 # saas-specific job to retag docker images after saas-* tags are pushed to the repository
 publish:image:saas:
+  tags:
+    - mender-qa-worker-generic-light
   stage: publish
   rules:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
-  tags:
-    - docker
   image: docker
   services:
     - docker:20.10.21-dind

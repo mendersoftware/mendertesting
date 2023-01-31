@@ -38,11 +38,11 @@ publish:image:
 # Specific job for final tag to re-tag last release candidate as final
 # It assumes that release candidate(s) has been build and published on the same CI_COMMIT_SHA
 publish:image:final-tag:
+  tags:
+    - mender-qa-worker-generic-light
   stage: publish
   rules:
     - if: '$CI_COMMIT_TAG =~ /^[0-9]+\.[0-9]+\.[0-9]+$/'
-  tags:
-    - docker
   image: docker
   services:
     - docker:20.10.21-dind

@@ -35,6 +35,8 @@ stages:
   - publish
 
 test:unit:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   needs: []
   except:
@@ -91,6 +93,8 @@ test:unit:
     when: always
 
 publish:unittests:
+  tags:
+    - mender-qa-worker-generic-light
   stage: publish
   except:
     - /^saas-[a-zA-Z0-9.]+$/
@@ -125,6 +129,8 @@ publish:unittests:
       -coverprofile $(find tests/unit-coverage -name 'coverage.txt' | tr '\n' ',' | sed 's/,$//')
 
 coveralls:finish-build:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .post
   # See https://docs.coveralls.io/parallel-build-webhook
   variables:

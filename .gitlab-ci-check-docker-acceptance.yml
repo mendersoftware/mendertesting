@@ -34,6 +34,8 @@ stages:
   - publish
 
 test:prepare_acceptance:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test_prep
   image: docker
   rules:
@@ -64,13 +66,13 @@ test:prepare_acceptance:
       - mender-artifact
 
 test:acceptance_tests:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   rules:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
       when: never
     - when: on_success
-  tags:
-    - docker
   image: tiangolo/docker-with-compose
   services:
     - docker:20.10.21-dind
@@ -113,6 +115,8 @@ test:acceptance_tests:
     when: always
 
 publish:acceptance:
+  tags:
+    - mender-qa-worker-generic-light
   stage: publish
   rules:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
@@ -148,6 +152,8 @@ publish:acceptance:
       -coverprofile ./tests/coverage-acceptance.txt
 
 coveralls:finish-build:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .post
   # See https://docs.coveralls.io/parallel-build-webhook
   variables:

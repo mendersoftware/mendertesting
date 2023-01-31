@@ -20,6 +20,8 @@ stages:
   - test
 
 test:static:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   needs: []
   except:
@@ -42,6 +44,8 @@ test:static:
     - golangci-lint run -v
 
 test:govendor-check:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   needs: []
   variables:

@@ -26,6 +26,8 @@ stages:
   - test
 
 test:check-shell-formatting:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   needs: []
   image: alpine:3.13

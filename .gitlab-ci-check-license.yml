@@ -30,6 +30,8 @@ stages:
   - test
 
 test:check-license:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   needs: []
   image: alpine

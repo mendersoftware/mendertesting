@@ -21,6 +21,8 @@ stages:
   - test
 
 test:apidocs:verify-yaml:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   except:
     - /^saas-[a-zA-Z0-9.]+$/
@@ -34,6 +36,8 @@ test:apidocs:verify-yaml:
     - python3 verify_docs.py `find docs -name "*.yml"`
 
 test:apidocs:verify-swagger:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   except:
     - /^saas-[a-zA-Z0-9.]+$/
@@ -43,6 +47,8 @@ test:apidocs:verify-swagger:
     - npx @apidevtools/swagger-cli validate docs/*.yml
 
 trigger:apidocs:rebuild-mender-api-docs:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .post
   variables:
     REBUILD_MENDER_API_DOCS: "false"

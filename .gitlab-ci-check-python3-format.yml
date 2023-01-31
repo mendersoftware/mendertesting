@@ -48,6 +48,8 @@ stages:
   - test
 
 test:check-python3-formatting:
+  tags:
+    - mender-qa-worker-generic-light
   image: python:3.8-alpine
   stage: test
   needs: []
