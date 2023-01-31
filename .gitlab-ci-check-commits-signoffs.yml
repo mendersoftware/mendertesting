@@ -3,6 +3,8 @@ stages:
   - test
 
 test:check-commits:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   needs: []
   except:

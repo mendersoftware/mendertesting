@@ -21,6 +21,8 @@ stages:
   - test
 
 test:static:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   needs: []
   except:
@@ -49,6 +51,8 @@ test:static:
     - gocyclo -over 20 `find . -iname '*.go' | grep -v 'vendor' | grep -v '_test.go'`
 
 test:govendor-check:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   needs: []
   variables:

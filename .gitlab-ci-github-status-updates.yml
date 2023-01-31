@@ -12,6 +12,8 @@ stages:
   - .post
 
 github:start:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .pre
   # Keep overhead low by using a small image with curl preinstalled.
   image: appropriate/curl
@@ -20,6 +22,8 @@ github:start:
     - 'curl -f -H "$GITHUB_AUTH" -d "$JSON" "$GITHUB_STATUS_API_URL"'
 
 github:success:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .post
   when: on_success
   # Keep overhead low by using a small image with curl preinstalled.
@@ -29,6 +33,8 @@ github:success:
     - 'curl -f -H "$GITHUB_AUTH" -d "$JSON" "$GITHUB_STATUS_API_URL"'
 
 github:failure:
+  tags:
+    - mender-qa-worker-generic-light
   stage: .post
   when: on_failure
   # Keep overhead low by using a small image with curl preinstalled.

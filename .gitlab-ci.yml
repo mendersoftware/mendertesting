@@ -10,6 +10,8 @@ variables:
   UNVERSIONED_REPOSITORY: "true"
 
 test:unit:
+  tags:
+    - mender-qa-worker-generic-light
   image: golang:1.17
   stage: test
 
@@ -59,6 +61,8 @@ test:unit:
 
 
 test:unit:commitlint:
+  tags:
+    - mender-qa-worker-generic-light
   image: alpine
   stage: test
   before_script:

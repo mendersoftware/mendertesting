@@ -50,6 +50,8 @@ variables:
   DEBIAN_FRONTEND: noninteractive
 
 sync:image:
+  tags:
+    - mender-qa-worker-generic-light
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   dependencies:

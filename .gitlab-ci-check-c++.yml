@@ -16,6 +16,8 @@ stages:
   - test
 
 test:format:
+  tags:
+    - mender-qa-worker-generic-light
   stage: test
   needs: []
   image: alpine:3.17
