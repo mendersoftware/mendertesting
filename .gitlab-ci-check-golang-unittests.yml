@@ -45,7 +45,8 @@ test:unit:
   services:
     - mongo:4.4
   variables:
-    GIT_DEPTH: 0
+    GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
+    GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
     MONGODB_DEBIAN_RELEASE: "buster"
     MONGODB_VERSION: "4.4"
   before_script:
