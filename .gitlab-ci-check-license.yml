@@ -36,7 +36,8 @@ test:check-license:
   needs: []
   image: alpine
   variables:
-    GIT_DEPTH: 0
+    GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
+    GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
     # Install dependencies
     - apk add --no-cache git bash perl-utils
