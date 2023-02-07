@@ -70,9 +70,11 @@ sync:image:
     - git config --global user.email "mender@northern.tech"
     - git config --global user.name "Mender Test Bot"
   script:
-    # Add GitHub repo
-    - git remote add github ${INFRA_REPOSITORY}
-    - git fetch github ${INFRA_BRANCH}:local-sync
+    # Prepare temporary workspace
+    - cd $(mktemp -d)
+    - git clone --depth 1 ${INFRA_REPOSITORY}
+    - cd ${INFRA_REPOSITORY}
+    - git fetch origin ${INFRA_BRANCH}:local-sync
     - git checkout local-sync
     # Find and edit spec file(s)
     - for file in $(echo $TARGET_MANIFEST_FILE | tr ',' '\n'); do
@@ -88,10 +90,10 @@ sync:image:
     - git show
     # Push (5 retries)
     - for retry in $(seq 5); do
-    -   if git push github local-sync:${INFRA_BRANCH}; then
+    -   if git push origin local-sync:${INFRA_BRANCH}; then
     -     exit 0
     -   fi
-    -   git fetch github ${INFRA_BRANCH}
-    -   git rebase github/${INFRA_BRANCH}
+    -   git fetch origin ${INFRA_BRANCH}
+    -   git rebase origin/${INFRA_BRANCH}
     - done
     - exit 1
