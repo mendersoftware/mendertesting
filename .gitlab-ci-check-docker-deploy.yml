@@ -72,8 +72,7 @@ sync:image:
   script:
     # Prepare temporary workspace
     - cd $(mktemp -d)
-    - git clone --depth 1 ${INFRA_REPOSITORY}
-    - cd ${INFRA_REPOSITORY}
+    - git clone --depth 1 ${INFRA_REPOSITORY} .
     - git fetch origin ${INFRA_BRANCH}:local-sync
     - git checkout local-sync
     # Find and edit spec file(s)
