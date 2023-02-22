@@ -49,7 +49,7 @@ test:govendor-check:
   stage: test
   needs: []
   variables:
-    GOLANG_VERSION: "1.18"
+    GOLANG_VERSION: "1.20"
   image: golang:${GOLANG_VERSION}
   script:
     - if [ -d vendor ]; then

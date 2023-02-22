@@ -122,13 +122,13 @@ publish:acceptance:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
       when: never
     - when: on_success
-  image: golang:1.18-alpine3.16
+  image: golang:1.20-alpine3.17
   dependencies:
     - test:acceptance_tests
   before_script:
     # Install dependencies
     - apk add --no-cache git
-    - GO111MODULE=off go get -u github.com/mattn/goveralls
+    - go install github.com/mattn/goveralls@latest
     # Prepare GOPATH
     - mkdir -p /go/src/github.com/mendersoftware
     - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
