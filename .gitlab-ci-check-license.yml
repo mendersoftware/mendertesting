@@ -47,7 +47,7 @@ test:check-license:
     - git branch -m temp-branch || true
     # Git trick: Fetch directly into our local branches instead of remote
     # branches.
-    - git fetch origin 'refs/heads/*:refs/heads/*'
+    - git fetch -f origin 'refs/heads/*:refs/heads/*'
     # Get last remaining tags, if any.
     - git fetch --tags origin
     - if [ "$CI_PROJECT_NAME" = "mendertesting" ]; then
