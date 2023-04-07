@@ -1,5 +1,5 @@
 #! /bin/bash
-# Copyright 2022 Northern.tech AS
+# Copyright 2023 Northern.tech AS
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -217,12 +217,12 @@ assert "true" \
 Previously a ticket reference embedded in brackets would leave:
 
 * [] Fix sending on closed signal channel
-    ([MEN-4832](https://tracker.mender.io/browse/MEN-4832))
+    ([MEN-4832](https://northerntech.atlassian.net/browse/MEN-4832))
 
 After this fix:
 
 * Fix sending on closed signal channel
-    ([MEN-4832](https://tracker.mender.io/browse/MEN-4832))
+    ([MEN-4832](https://northerntech.atlassian.net/browse/MEN-4832))
 
 Changelog: None
 Ticket: MEN-5143
@@ -236,12 +236,12 @@ assert "true" \
 Previously a ticket reference embedded in brackets would leave:
 
 * [] Fix sending on closed signal channel
-    ([MEN-4832](https://tracker.mender.io/browse/MEN-4832))
+    ([MEN-4832](https://northerntech.atlassian.net/browse/MEN-4832))
 
 After this fix:
 
 * Fix sending on closed signal channel
-    ([MEN-4832](https://tracker.mender.io/browse/MEN-4832))
+    ([MEN-4832](https://northerntech.atlassian.net/browse/MEN-4832))
 
 Ticket: MEN-5143
 Signed-off-by: Ole Petter <ole.orhagen@northern.tech>
