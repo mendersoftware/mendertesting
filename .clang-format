@@ -34,6 +34,7 @@ BreakBeforeBraces: Attach
 BreakBeforeBinaryOperators: NonAssignment
 InsertBraces: true
 BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterColon
 PackConstructorInitializers: Never
 SpaceBeforeCpp11BracedList: true
 ---
