@@ -46,6 +46,23 @@ test:apidocs:verify-swagger:
     # Verify that the Swagger docs are valid
     - npx @apidevtools/swagger-cli validate docs/*.yml
 
+test:validate-open-api:
+  tags:
+    - mender-qa-worker-generic-light
+  stage: test
+  image:
+    name: stoplight/spectral
+    entrypoint: ['']
+  script: |
+    - echo "extends: ['spectral:oas']" > .spectral.yaml
+    - spectral lint -D -f junit -o spectral-report.xml docs/*.yml
+  allow_failure: true
+  artifacts:
+    when: always
+    expire_in: 2 weeks
+    reports:
+      junit: $CI_PROJECT_DIR/spectral-report.xml
+
 trigger:apidocs:rebuild-mender-api-docs:
   tags:
     - mender-qa-worker-generic-light
