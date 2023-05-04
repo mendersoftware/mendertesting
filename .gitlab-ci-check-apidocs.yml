@@ -51,11 +51,15 @@ test:validate-open-api:
     - mender-qa-worker-generic-light
   stage: test
   image:
-    name: stoplight/spectral
-    entrypoint: ['']
-  script: |
-    - echo "extends: ['spectral:oas']" > .spectral.yaml
-    - spectral lint -D -f junit -o spectral-report.xml docs/*.yml
+    name: alpine
+  before_script:
+    - apk --update add curl
+    - curl -L https://raw.github.com/stoplightio/spectral/master/scripts/install.sh -o install.sh
+    - sh install.sh
+  script:
+    - |
+      echo "extends: ['spectral:oas']" > .spectral.yaml
+    - spectral lint -v -D -f junit -o spectral-report.xml docs/*.yml
   allow_failure: true
   artifacts:
     when: always
