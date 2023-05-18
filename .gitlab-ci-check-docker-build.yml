@@ -51,11 +51,31 @@ stages:
   docker login -u "$DOCKER_HUB_USERNAME" -p "$DOCKER_HUB_PASSWORD" || \
     echo "Warning: Docker credentials unavailable or invalid"
 
+.docker_login_ecr_registries: &docker_login_ecr_registries |
+  export AWS_SECRET_ACCESS_KEY=${ECR_USER_AWS_SECRET_ACCESS_KEY_STAGING}
+  export AWS_ACCESS_KEY_ID=${ECR_USER_AWS_ACCESS_KEY_ID_STAGING}
+  aws ecr get-login-password --region ${AWS_ECR_REGION:-eu-central-1} | docker login --username AWS --password-stdin ${ECR_REPOSITORY:-017659451055.dkr.ecr.eu-central-1.amazonaws.com}
+
 .export_docker_vars: &export_docker_vars |
   DOCKER_BUILD_TAG=${CI_COMMIT_REF_SLUG:-local}
   DOCKER_BUILD_SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_BUILD_TAG}
   DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
   DOCKER_PUBLISH_COMMIT_TAG=${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
+
+.export_docker_vars_ecr: &export_docker_vars_ecr |
+  DOCKER_BUILD_TAG=${CI_COMMIT_REF_SLUG:-local}
+  DOCKER_BUILD_SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_BUILD_TAG}
+  DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
+  DOCKER_PUBLISH_COMMIT_TAG=${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
+  
+  # CONTAINER_REGISTRY: the registry path, always 017659451055.dkr.ecr.eu-central-1.amazonaws.com
+  CONTAINER_REGISTRY=017659451055.dkr.ecr.eu-central-1.amazonaws.com
+
+  # CONTAINER_REPOSITORY: the repository path, e.g.:
+  #     DOCKER_REPOSITORY: registry.mender.io/mendersoftware/deployments-enterprise
+  #     CONTAINER_REPOSITORY: mendersoftware/deployments-enterprise
+  CONTAINER_REPOSITORY=$(echo $DOCKER_REPOSITORY | sed "s/registry.mender.io\///g") >> publish.env
+
 
 .get_release_tool_alpine: &get_release_tool_alpine |
   apk add git python3 py3-pip
@@ -113,6 +133,35 @@ publish:image:
     - docker tag $DOCKER_BUILD_SERVICE_IMAGE $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
     - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
     - docker push $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
+    - echo "PUBLISH_IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG)" >> publish.env
+  artifacts:
+    reports:
+      dotenv: publish.env
+
+publish:image:ecr:
+  tags:
+    - mender-qa-worker-generic-light
+  stage: publish
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "MC-6387-helm-staging-poc"'
+  image: docker
+  services:
+    - docker:20.10.21-dind
+  dependencies:
+    - build:docker
+  before_script:
+    - |
+      apk update
+      apk add aws-cli
+    - *export_docker_vars_ecr
+    - *docker_login_ecr_registries
+  script:
+    - docker load -i ${IMAGE_ARTIFACT_FILENAME:-${CI_PROJECT_DIR}/image.tar}
+    - echo "INFO - retagging image from ${DOCKER_BUILD_SERVICE_IMAGE} to ${CONTAINER_REGISTRY}/${CONTAINER_REPOSITORY}:${DOCKER_PUBLISH_TAG}"
+    - docker tag $DOCKER_BUILD_SERVICE_IMAGE ${CONTAINER_REGISTRY}/${CONTAINER_REPOSITORY}:$DOCKER_PUBLISH_TAG
+    - docker tag $DOCKER_BUILD_SERVICE_IMAGE ${CONTAINER_REGISTRY}/${CONTAINER_REPOSITORY}:$DOCKER_PUBLISH_COMMIT_TAG
+    - docker push ${CONTAINER_REGISTRY}/${CONTAINER_REPOSITORY}:$DOCKER_PUBLISH_TAG
+    - docker push ${CONTAINER_REGISTRY}/${CONTAINER_REPOSITORY}:$DOCKER_PUBLISH_COMMIT_TAG
     - echo "PUBLISH_IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG)" >> publish.env
   artifacts:
     reports:
@@ -187,6 +236,44 @@ trigger:saas:sync-staging-component:
           -F variables[SYNC_CONTAINER_NAME]=${container}
           -F variables[SYNC_IMAGE_TAG]=${DOCKER_PUBLISH_COMMIT_TAG}
           https://gitlab.com/api/v4/projects/17809112/trigger/pipeline
+    - done
+
+trigger:helm-version-bump:staging-component:
+  tags:
+    - mender-qa-worker-generic-light
+  stage: .post
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "MC-6387-helm-staging-poc"'
+  image: alpine
+  before_script:
+    - *export_docker_vars_ecr
+    - *get_release_tool_alpine
+    - apk add --no-cache curl
+  script:
+    # If the repo is not recognized, ignore
+    - if ! echo $(release_tool --list git --all) | grep $CI_PROJECT_NAME; then
+    -  echo "Repository $CI_PROJECT_NAME not found in release_tool. Exiting"
+    -  exit 0
+    - fi
+    # Trigger the version bump once per container in this repo
+    - for container in $(release_tool -m git ${CI_PROJECT_NAME} container); do
+    - |
+      echo "INFO - Triggering helm staging version bump for container $container version ${DOCKER_PUBLISH_COMMIT_TAG}"
+      echo "DEBUG - SYNC_CONTAINER_NAME: ${container}"
+      echo "DEBUG - SYNC_IMAGE_TAG: ${DOCKER_PUBLISH_COMMIT_TAG}"
+      echo "DEBUG - HELM_PATCH_VERSION: ${CI_PIPELINE_ID}"
+      echo "DEBUG - CONTAINER_REGISTRY: ${CONTAINER_REGISTRY}"
+      echo "DEBUG - CONTAINER_REPOSITORY: ${CONTAINER_REPOSITORY}"
+    -   curl -v -f -X POST
+          -F token=${MENDER_HELM_TRIGGER_TOKEN}
+          -F ref=MC-6387-helm-staging-poc
+          -F variables[TRIGGER_SYNC_STAGING_COMPONENT]=true
+          -F variables[SYNC_CONTAINER_NAME]=${container}
+          -F variables[SYNC_IMAGE_TAG]=${DOCKER_PUBLISH_COMMIT_TAG}
+          -F variables[HELM_PATCH_VERSION]=${CI_PIPELINE_ID}
+          -F variables[CONTAINER_REGISTRY]=${CONTAINER_REGISTRY}
+          -F variables[CONTAINER_REPOSITORY]=${CONTAINER_REPOSITORY}
+          https://gitlab.com/api/v4/projects/15797421/trigger/pipeline
     - done
 
 # saas-specific job to retag docker images after saas-* tags are pushed to the repository
