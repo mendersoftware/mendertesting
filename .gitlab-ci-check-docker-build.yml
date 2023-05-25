@@ -142,8 +142,8 @@ publish:image:ecr:
   tags:
     - mender-qa-worker-generic-light
   stage: publish
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "MC-6387-helm-staging-poc"'
+    #rules:
+    #  - if: '$CI_COMMIT_BRANCH == "MC-6387-helm-staging-poc"'
   image: docker
   services:
     - docker:20.10.21-dind
@@ -242,8 +242,8 @@ trigger:helm-version-bump:staging-component:
   tags:
     - mender-qa-worker-generic-light
   stage: .post
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "MC-6387-helm-staging-poc"'
+    #rules:
+    #  - if: '$CI_COMMIT_BRANCH == "MC-6387-helm-staging-poc"'
   image: alpine
   before_script:
     - *export_docker_vars_ecr
