@@ -58,7 +58,11 @@ test:validate-open-api:
     - sh install.sh
   script:
     - |
-      echo "extends: ['spectral:oas']" > .spectral.yaml
+      cat > .spectral.yaml << EOF
+      extends: [['spectral:oas', all]]
+      parserOptions:
+        incompatibleValues: 1
+      EOF
     - spectral lint -v -D -f junit -o spectral-report.xml docs/*.yml
   allow_failure: true
   artifacts:
