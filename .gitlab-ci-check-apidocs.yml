@@ -44,6 +44,7 @@ test:apidocs:verify-swagger:
   image: node:alpine
   script:
     # Verify that the Swagger docs are valid
+    - npm i -g @apidevtools/swagger-cli
     - npx @apidevtools/swagger-cli validate docs/*.yml
 
 test:validate-open-api:
