@@ -41,7 +41,7 @@ test:unit:
   needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
-  image: golang:1.20
+  image: golang:1.20.4
   services:
     - mongo:4.4
   variables:
