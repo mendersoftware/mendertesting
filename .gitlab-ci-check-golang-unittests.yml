@@ -49,6 +49,7 @@ test:unit:
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
     MONGODB_DEBIAN_RELEASE: "buster"
     MONGODB_VERSION: "4.4"
+    TEST_MONGO_URL: "mongodb://mongo"
   before_script:
     # Install JUnit test reporting formatter
     - go install github.com/jstemmer/go-junit-report@v1.0.0
