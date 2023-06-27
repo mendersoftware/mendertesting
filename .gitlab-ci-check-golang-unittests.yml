@@ -84,7 +84,7 @@ test:unit:
     - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
   script:
     - go list ./... | grep -v vendor | xargs -n1 -I {} go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} 2>&1 | tee /dev/stderr | go-junit-report > ${CI_PROJECT_DIR}/test-results.xml || exit $?
-    - mkdir -p tests/unit-coverage && find . -name 'coverage.txt' -exec cp --parents {} ./tests/unit-coverage \;
+    - mkdir -p tests/unit-coverage && find . -name 'coverage.txt' -exec rsync -R {} ./tests/unit-coverage \;
     - tar -cvf ${CI_PROJECT_DIR}/unit-coverage.tar tests/unit-coverage
   artifacts:
     expire_in: 2w
