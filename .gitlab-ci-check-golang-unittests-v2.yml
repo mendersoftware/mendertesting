@@ -69,15 +69,12 @@ publish:unittests:
     #  See also https://docs.coveralls.io/api-reference
     - export CI_BRANCH=${CI_COMMIT_BRANCH}
   script:
-    - >-
-      goveralls
-        -repotoken ${COVERALLS_TOKEN}
-        -service gitlab-ci
-        -jobid $CI_PIPELINE_ID
-        -covermode atomic
-        -flagname unittests
-        -parallel
-        -coverprofile coverage.txt
+    - goveralls
+      -coverprofile coverage.txt
+      -service gitlab-ci
+      -jobid $CI_PIPELINE_ID
+      -flagname unittests
+      -parallel
 
 coveralls:finish-build:
   tags:
