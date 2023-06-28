@@ -19,6 +19,9 @@ stages:
 test:unit:
   variables:
     MONGO_VERSION: "4.4"
+    GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
+    GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
+    TEST_MONGO_URL: "mongodb://mongo"
   tags:
     - mender-qa-worker-generic-light
   stage: test
@@ -28,10 +31,6 @@ test:unit:
   image: golang:1.20-alpine3.17
   services:
     - "mongo:${MONGO_VERSION}"
-  variables:
-    GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
-    GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
-    TEST_MONGO_URL: "mongodb://mongo"
   script:
     # Install JUnit test reporting formatter
     - go install github.com/jstemmer/go-junit-report@v1.0.0
