@@ -42,8 +42,21 @@
 #
 #
 # Multiplafrom build:
-# Requires MULTIPLATFORM_BUILD=true variable.
 # Excludes build:docker and publish:image.
+#
+# Required variables:
+# MULTIPLATFORM_BUILD: "true"
+# MULTIPLATFORM_PLATFORMS: "linux/amd64,linux/armv7"
+#
+# Note: since jobs are evaluated before variables,
+# you have to override the build:docker job on the parent .gitlab-ci.yml;
+# otherwise you'll get both build:docker and build:docker-multiplatform jobs.
+# E.g.:
+#
+# build:docker:
+#   rules:
+#     - when: never
+
 
 stages:
   - build
@@ -76,8 +89,6 @@ build:docker:
   variables:
     DOCKER_BUILDKIT: 1
   rules:
-    - if: $MULTIPLATFORM_BUILD == true
-      when: never
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
       when: never
     - when: on_success
@@ -106,14 +117,15 @@ build:docker-multiplatform:
   needs: []
   variables:
     DOCKER_BUILDKIT: 1
-    PLATFORMS: "linux/amd64,linux/arm64"
+    MULTIPLATFORM_PLATFORMS: "linux/amd64,linux/arm64"
   rules:
-    - if: $MULTIPLATFORM_BUILD != true
+    - if: $MULTIPLATFORM_BUILD != "true"
       when: never
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
       when: never
     - when: on_success
-  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
+      #image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-914345587"
   services:
     - docker:20.10.21-dind
   before_script:
@@ -126,7 +138,7 @@ build:docker-multiplatform:
       --tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
-      --platform $PLATFORMS
+      --platform $MULTIPLATFORM_PLATFORMS
       --provenance false
       --push
       ${DOCKER_DIR:-.}
@@ -136,8 +148,6 @@ publish:image:
     - mender-qa-worker-generic-light
   stage: publish
   rules:
-    - if: $MULTIPLATFORM_BUILD == true
-      when: never
     - if: '$CI_COMMIT_BRANCH =~ /^(master|staging|production|feature-.+)$/'
   image: docker
   services:
@@ -163,10 +173,11 @@ publish:image-multiplatform:
     - mender-qa-worker-generic-light
   stage: publish
   rules:
-    - if: $MULTIPLATFORM_BUILD != true
+    - if: $MULTIPLATFORM_BUILD != "true"
       when: never
     - if: '$CI_COMMIT_BRANCH =~ /^(master|staging|production|feature-.+)$/'
-  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
+      #image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-914345587"
   services:
     - docker:20.10.21-dind
   dependencies:
@@ -176,6 +187,7 @@ publish:image-multiplatform:
     - *export_docker_vars
     - *docker_login_registries
   script:
+    - regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} ${CI_REGISTRY_IMAGE}:master
     - regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
     - regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
 
