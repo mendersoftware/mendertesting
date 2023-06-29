@@ -189,8 +189,9 @@ publish:image-multiplatform:
   script:
     - regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
     - regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
-    - docker tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
-    - echo "PUBLISH_IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG)" >> publish.env
+    - FULL_IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID})
+    - IMAGE_DIGEST_HASH=$(echo ${FULL_IMAGE_DIGEST} | cut -f2 -d'@')
+    - echo "PUBLISH_IMAGE_DIGEST=${DOCKER_REPOSITORY}@${IMAGE_DIGEST_HASH}" >> publish.env
   artifacts:
     reports:
       dotenv: publish.env
