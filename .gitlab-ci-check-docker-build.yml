@@ -49,11 +49,15 @@
 # MULTIPLATFORM_PLATFORMS: "linux/amd64,linux/armv7"
 #
 # Note: since jobs are evaluated before variables,
-# you have to override the build:docker job on the parent .gitlab-ci.yml;
+# you have to override the build:docker and publish:image: job on the parent .gitlab-ci.yml;
 # otherwise you'll get both build:docker and build:docker-multiplatform jobs.
 # E.g.:
 #
 # build:docker:
+#   rules:
+#     - when: never
+#
+# publish:image:
 #   rules:
 #     - when: never
 
