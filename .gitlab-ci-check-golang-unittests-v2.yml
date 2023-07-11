@@ -31,6 +31,11 @@ test:unit:
   image: golang:1.20
   services:
     - "mongo:${MONGO_VERSION}"
+  before_script:
+    # Install compile dependencies
+    - if [ -f deb-requirements.txt ]; then
+    -   apt install -yq $(cat deb-requirements.txt)
+    - fi
   script:
     # Install JUnit test reporting formatter
     - go install github.com/jstemmer/go-junit-report@v1.0.0
@@ -58,7 +63,6 @@ publish:unittests:
     - test:unit
   before_script:
     # Install dependencies
-    - apk add --no-cache git
     - go install github.com/mattn/goveralls@v0.0.12
     # Coveralls env variables:
     #  According to https://docs.coveralls.io/supported-ci-services
