@@ -28,7 +28,7 @@ test:unit:
   needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
-  image: golang:1.20-alpine3.17
+  image: golang:1.20
   services:
     - "mongo:${MONGO_VERSION}"
   script:
@@ -53,7 +53,7 @@ publish:unittests:
   stage: publish
   except:
     - /^saas-[a-zA-Z0-9.]+$/
-  image: golang:1.20-alpine3.17
+  image: golang:1.20
   dependencies:
     - test:unit
   before_script:
