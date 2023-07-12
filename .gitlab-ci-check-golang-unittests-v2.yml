@@ -34,7 +34,7 @@ test:unit:
   before_script:
     # Install compile dependencies
     - if [ -f deb-requirements.txt ]; then
-    -   apt install -yq $(cat deb-requirements.txt)
+    -   apt-get -qq update && apt-get install -yq $(cat deb-requirements.txt)
     - fi
   script:
     # Install JUnit test reporting formatter
