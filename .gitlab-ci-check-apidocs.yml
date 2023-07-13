@@ -64,6 +64,7 @@ test:validate-open-api:
       parserOptions:
         incompatibleValues: 1
       EOF
+    - spectral lint -v -D -f text docs/*.yml
     - spectral lint -v -D -f junit -o spectral-report.xml docs/*.yml
   allow_failure: true
   artifacts:
