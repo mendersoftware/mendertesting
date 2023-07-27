@@ -1,0 +1,110 @@
+# .gitlab-ci-check-helm-version-bump.yml
+#
+# This gitlab-ci template updates the Helm Chart versions
+# for a given container
+#
+# Requires DOCKER_REPOSITORY variable to be set in the calling Pipeline.
+# Add it to the project in hand through Gitlab's include functionality
+# variables:
+#   DOCKER_REPOSITORY: <Image FQN, i.e mendersoftware/reponame>
+# include:
+#   - project: 'Northern.tech/Mender/mendertesting'
+#     file: '.gitlab-ci-check-helm-version-bump.yml
+# 
+# It requires that the upstream pipeline specifies:
+#
+# - CONTAINER: alvaldi-gui # the container name that later will be translated into
+#                            values.yaml reference
+# - DOCKER_PUBLISH_COMMIT_TAG: ${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA} 
+# - SYNC_ENVIRONMENT: [staging|prod] # the values-${SYNC_ENVIRONMENT}.yaml to be updated
+# - CHART_DIR: mender # the Helm Chart directory in the helm repo
+# - HELM_PATCH_VERSION: ${CI_PIPELINE_ID} # the Chart.yaml version - use Semver format
+#                                         # prerelases have to be tagged with ${CI_PIPELINE_ID}-staging
+#                                         # to avoid releasing a prerelease to prod (stable semver releases only)
+#
+# The non-production version updates the Chart.yaml with a prerelease version:
+# version: x.y.${CI_PIPELINE_ID}-staging
+# On the downstream, FluxCD is configured to trigger a new Helm deployment every releases and pre-releases on the non-prod envs.
+# At the same way, the production envs are configured to trigger only stable releases.
+
+stages:
+  - version-bump
+
+helm-version-bump:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "pipeline"
+  stage: version-bump
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:aws-k8s-v1-master
+  before_script:
+    - |
+      echo "INFO - setting up git"
+      git config --global user.email "mender@northern.tech"
+      git config --global user.name "Mender Test Bot"
+      export GITHUB_TOKEN=${GITHUB_BOT_TOKEN_REPO_FULL}
+    - |
+      echo "INFO - setting required vars"
+      export CONTAINER_REGISTRY=$(echo ${DOCKER_REPOSITORY%%/*}) # registry.mender.io
+      export CONTAINER_REPOSITORY=$(echo ${DOCKER_REPOSITORY#*/}) # northerntech/alvaldi-gui
+  script:
+    # Adding the GH repo to push back new tags
+    - git remote add github https://${GITHUB_USER}:${GITHUB_TOKEN}@${GITHUB_HELM_REPO}
+    - git fetch github ${MAIN_BRANCH:-master}:overlay-version-bump
+    - git checkout overlay-version-bump
+    # modify this loop to map the source project to an actual values.yaml container definition
+    # e.g.: for the mender-integration/extra/release_tool.py generate-delta-worker becames: generate_delta_worker:
+    # release_tool -m git ${CI_PROJECT_NAME} container
+    - |
+      echo "INFO - mapping source project to values.yaml project:"
+      case $CONTAINER in
+        generate-delta-worker)
+          VALUES_REF="generate_delta_worker"
+          ;;
+        *)
+          VALUES_REF_TMP=${CONTAINER#"alvaldi-"}  #removes prefix: alvaldi-
+          VALUES_REF=${VALUES_REF_TMP//-/_} #replaces - with _
+      esac
+      echo "DEBUG - container name inside values file: ${VALUES_REF}"
+    - |
+      echo "INFO - checking values files"
+      test -e ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml || ( echo "ERROR - ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml doesn't exists" ; exit 1 )
+      test -e ${CHART_DIR}/Chart.yaml || ( echo "ERROR - ${CHART_DIR}/Chart.yaml doesn't exists" ; exit 1 )
+    - |
+      echo "INFO - bumping version ${DOCKER_PUBLISH_COMMIT_TAG} to ${VALUES_REF} container"
+      THIS_KEY=".${VALUES_REF}.image.tag" THIS_VALUE="${DOCKER_PUBLISH_COMMIT_TAG}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+      git add ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+    - |
+      echo "DEBUG - container registry is: $CONTAINER_REGISTRY"
+      if [[ -n "${CONTAINER_REGISTRY}" ]]; then
+        echo "INFO - bumping registry ${CONTAINER_REGISTRY} to ${VALUES_REF} container"
+        THIS_KEY=".${VALUES_REF}.image.registry" THIS_VALUE="${CONTAINER_REGISTRY}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+        git add ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+      fi
+    - |
+      echo "DEBUG - container repository is: $CONTAINER_REPOSITORY"
+      if [[ -n "${CONTAINER_REPOSITORY}" ]]; then
+        echo "INFO - bumping repository ${CONTAINER_REPOSITORY} to ${VALUES_REF} container"
+        THIS_KEY=".${VALUES_REF}.image.repository" THIS_VALUE="${CONTAINER_REPOSITORY}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+        git add ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+      fi
+    - |
+      echo "INFO - bumping helm chart version"
+      FULL_VERSION=$(yq ".version" ${CHART_DIR}/Chart.yaml)
+      MAJOR_VERSION=$(echo $FULL_VERSION | cut -f1 -d.)
+      MINOR_VERSION=$(echo $FULL_VERSION | cut -f2 -d.)
+      THIS_VALUE="${MAJOR_VERSION}.${MINOR_VERSION}.${HELM_PATCH_VERSION}" yq -i '.version = strenv(THIS_VALUE)' ${CHART_DIR}/Chart.yaml
+      git add ${CHART_DIR}/Chart.yaml
+    # Commit
+    - git commit -sm "[CI/CD] bump helm chart"
+    # Push back (5 retries)
+    - |
+      for retry in $(seq 5); do
+        if git push github overlay-version-bump:${MAIN_BRANCH:-master}; then
+          exit 0
+        fi
+        git fetch github ${MAIN_BRANCH:-master}
+        git rebase github/${MAIN_BRANCH:-master}
+        sleep ${TIMEOUT_SECONDS:-5}
+      done
+    - |
+      echo "ERROR - can't push to github"
+      exit 1
