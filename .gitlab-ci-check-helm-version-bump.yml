@@ -64,18 +64,21 @@ helm-version-bump:
           VALUES_REF=${VALUES_REF_TMP//-/_} #replaces - with _
       esac
       echo "DEBUG - container name inside values file: ${VALUES_REF}"
+      test -n ${VALUES_REF} || ( echo "ERROR - container name not found." ; exit 1 )
     - |
       echo "INFO - checking values files"
       test -e ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml || ( echo "ERROR - ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml doesn't exists" ; exit 1 )
       test -e ${CHART_DIR}/Chart.yaml || ( echo "ERROR - ${CHART_DIR}/Chart.yaml doesn't exists" ; exit 1 )
     - |
       echo "INFO - bumping version ${DOCKER_PUBLISH_COMMIT_TAG} to ${VALUES_REF} container"
+      test -n ${DOCKER_PUBLISH_COMMIT_TAG} || ( echo "ERROR - version tag not found." ; exit 1 )
       THIS_KEY=".${VALUES_REF}.image.tag" THIS_VALUE="${DOCKER_PUBLISH_COMMIT_TAG}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
       git add ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
     - |
       echo "DEBUG - container registry is: $CONTAINER_REGISTRY"
       if [[ -n "${CONTAINER_REGISTRY}" ]]; then
         echo "INFO - bumping registry ${CONTAINER_REGISTRY} to ${VALUES_REF} container"
+        test -n ${CONTAINER_REGISTRY} || ( echo "ERROR - CONTAINER_REGISTRY variable is empty." ; exit 1 )
         THIS_KEY=".${VALUES_REF}.image.registry" THIS_VALUE="${CONTAINER_REGISTRY}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
         git add ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
       fi
