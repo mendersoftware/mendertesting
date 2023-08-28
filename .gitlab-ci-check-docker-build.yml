@@ -215,17 +215,19 @@ publish:image:mender:
     - *export_docker_vars
     - *get_release_tool_alpine
     - *docker_login_registries
+  allow_failure:
+    exit_codes: 137
   script:
     # If the repo is not recognized, ignore
     - if ! echo $(release_tool --list git --all) | grep $CI_PROJECT_NAME; then
     -  echo "Repository $CI_PROJECT_NAME not found in release_tool. Exiting"
-    -  exit 0
+    -  exit 137
     - fi
     # If the repo/branch is not part of a Mender release, also ignore
     - integration_versions=$(release_tool --integration-versions-including $CI_PROJECT_NAME --version $CI_COMMIT_REF_NAME | sed -e 's/origin\///')
     - if test -z "$integration_versions"; then
     -  echo "Repository $CI_PROJECT_NAME version $CI_COMMIT_REF_NAME is not part of any Mender release. Exiting"
-    -  exit 0
+    -  exit 137
     - fi
     # Load image
     - docker load -i ${IMAGE_ARTIFACT_FILENAME:-${CI_PROJECT_DIR}/image.tar}
@@ -260,17 +262,19 @@ publish:image-multiplatform:mender:
     - *export_docker_vars
     - *get_release_tool_alpine
     - *docker_login_registries
+  allow_failure:
+    exit_codes: 137
   script:
     # If the repo is not recognized, ignore
     - if ! echo $(release_tool --list git --all) | grep $CI_PROJECT_NAME; then
     -  echo "Repository $CI_PROJECT_NAME not found in release_tool. Exiting"
-    -  exit 0
+    -  exit 137
     - fi
     # If the repo/branch is not part of a Mender release, also ignore
     - integration_versions=$(release_tool --integration-versions-including $CI_PROJECT_NAME --version $CI_COMMIT_REF_NAME | sed -e 's/origin\///')
     - if test -z "$integration_versions"; then
     -  echo "Repository $CI_PROJECT_NAME version $CI_COMMIT_REF_NAME is not part of any Mender release. Exiting"
-    -  exit 0
+    -  exit 137
     - fi
     # Publish the image for all releases
     - for version in $integration_versions; do
@@ -293,11 +297,13 @@ trigger:saas:sync-staging-component:
     - *export_docker_vars
     - *get_release_tool_alpine
     - apk add --no-cache curl
+  allow_failure:
+    exit_codes: 137
   script:
     # If the repo is not recognized, ignore
     - if ! echo $(release_tool --list git --all) | grep $CI_PROJECT_NAME; then
     -  echo "Repository $CI_PROJECT_NAME not found in release_tool. Exiting"
-    -  exit 0
+    -  exit 137
     - fi
     # Trigger the sync once per container in this repo
     - for container in $(release_tool -m git ${CI_PROJECT_NAME} container); do
