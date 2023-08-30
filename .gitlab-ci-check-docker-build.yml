@@ -122,6 +122,7 @@ build:docker-multiplatform:
   variables:
     DOCKER_BUILDKIT: 1
     MULTIPLATFORM_PLATFORMS: "linux/amd64,linux/arm64"
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}'
   rules:
     - if: $MULTIPLATFORM_BUILD != "true"
       when: never
@@ -140,7 +141,7 @@ build:docker-multiplatform:
     - docker buildx build
       --cache-to type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache,mode=max
       --cache-from type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache
-      --tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
+      --tag ${GITLAB_REGISTRY_TAG}
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
       --platform $MULTIPLATFORM_PLATFORMS
@@ -177,6 +178,8 @@ publish:image-multiplatform:
   tags:
     - mender-qa-worker-generic-light
   stage: publish
+  variables:
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}'
   rules:
     - if: $MULTIPLATFORM_BUILD != "true"
       when: never
@@ -191,9 +194,9 @@ publish:image-multiplatform:
     - *export_docker_vars
     - *docker_login_registries
   script:
-    - regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
-    - regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
-    - echo "PUBLISH_IMAGE_DIGEST=${DOCKER_REPOSITORY}@$(regctl image digest ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID})" >> publish.env
+    - regctl image copy ${GITLAB_REGISTRY_TAG} $DOCKER_REPOSITORY:$DOCKER_PUBLISH_TAG
+    - regctl image copy ${GITLAB_REGISTRY_TAG} $DOCKER_REPOSITORY:$DOCKER_PUBLISH_COMMIT_TAG
+    - echo "PUBLISH_IMAGE_DIGEST=${DOCKER_REPOSITORY}@$(regctl image digest ${GITLAB_REGISTRY_TAG})" >> publish.env
   artifacts:
     reports:
       dotenv: publish.env
@@ -247,6 +250,8 @@ publish:image-multiplatform:mender:
   tags:
     - mender-qa-worker-generic-light
   stage: publish
+  variables:
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}'
   rules:
     - if: $MULTIPLATFORM_BUILD != "true"
       when: never
@@ -278,8 +283,8 @@ publish:image-multiplatform:mender:
   script:
     # Publish the image for all releases
     - for version in $integration_versions; do
-    -   regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} ${DOCKER_REPOSITORY}:mender-${version}
-    -   regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} ${DOCKER_REPOSITORY}:mender-${version}_${CI_COMMIT_SHA}
+    -   regctl image copy ${GITLAB_REGISTRY_TAG} ${DOCKER_REPOSITORY}:mender-${version}
+    -   regctl image copy ${GITLAB_REGISTRY_TAG} ${DOCKER_REPOSITORY}:mender-${version}_${CI_COMMIT_SHA}
     - done
     - echo "PUBLISH_IMAGE_DIGEST=${DOCKER_REPOSITORY}@$(regctl image digest $DOCKER_REPOSITORY:mender-${version})" >> publish.env
   artifacts:
