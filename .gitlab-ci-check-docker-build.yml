@@ -215,9 +215,6 @@ publish:image:mender:
     - *export_docker_vars
     - *get_release_tool_alpine
     - *docker_login_registries
-  allow_failure:
-    exit_codes: 137
-  script:
     # If the repo is not recognized, ignore
     - if ! echo $(release_tool --list git --all) | grep $CI_PROJECT_NAME; then
     -  echo "Repository $CI_PROJECT_NAME not found in release_tool. Exiting"
@@ -229,6 +226,9 @@ publish:image:mender:
     -  echo "Repository $CI_PROJECT_NAME version $CI_COMMIT_REF_NAME is not part of any Mender release. Exiting"
     -  exit 137
     - fi
+  allow_failure:
+    exit_codes: 137
+  script:
     # Load image
     - docker load -i ${IMAGE_ARTIFACT_FILENAME:-${CI_PROJECT_DIR}/image.tar}
     # Publish the image for all releases
@@ -262,9 +262,6 @@ publish:image-multiplatform:mender:
     - *export_docker_vars
     - *get_release_tool_alpine
     - *docker_login_registries
-  allow_failure:
-    exit_codes: 137
-  script:
     # If the repo is not recognized, ignore
     - if ! echo $(release_tool --list git --all) | grep $CI_PROJECT_NAME; then
     -  echo "Repository $CI_PROJECT_NAME not found in release_tool. Exiting"
@@ -276,6 +273,9 @@ publish:image-multiplatform:mender:
     -  echo "Repository $CI_PROJECT_NAME version $CI_COMMIT_REF_NAME is not part of any Mender release. Exiting"
     -  exit 137
     - fi
+  allow_failure:
+    exit_codes: 137
+  script:
     # Publish the image for all releases
     - for version in $integration_versions; do
     -   regctl image copy ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} ${DOCKER_REPOSITORY}:mender-${version}
@@ -297,14 +297,14 @@ trigger:saas:sync-staging-component:
     - *export_docker_vars
     - *get_release_tool_alpine
     - apk add --no-cache curl
-  allow_failure:
-    exit_codes: 137
-  script:
     # If the repo is not recognized, ignore
     - if ! echo $(release_tool --list git --all) | grep $CI_PROJECT_NAME; then
     -  echo "Repository $CI_PROJECT_NAME not found in release_tool. Exiting"
     -  exit 137
     - fi
+  allow_failure:
+    exit_codes: 137
+  script:
     # Trigger the sync once per container in this repo
     - for container in $(release_tool -m git ${CI_PROJECT_NAME} container); do
     -   echo "Triggering saas staging sync for container $container version ${DOCKER_PUBLISH_COMMIT_TAG}"
