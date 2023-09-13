@@ -22,6 +22,9 @@ variables:
   MULTIPLATFORM_TARGETS:
     description: "Comma-separated list of target 'os/architecte' to build"
     value: "linux/amd64,linux/arm64"
+  CI_REGISTRY_IMAGE_TAG_PREFIX:
+    description: "Tag prefix to use prefix for cached builds (default tag 'build${CI_PIPELINE_ID}')"
+    value: "build"
 
   DOCKER_VERSION:
     description: "Version of Docker image `docker.io/library/docker` for cli and buildx service"
@@ -64,7 +67,7 @@ build:docker:
         --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}" \
         --platform "$MULTIPLATFORM_TARGETS" \
         --provenance false \
-        --tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} \
+        --tag "${CI_REGISTRY_IMAGE}:${CI_REGISTRY_IMAGE_TAG_PREFIX}${CI_PIPELINE_ID}" \
         --push \
         "${DOCKER_DIR}"
 
