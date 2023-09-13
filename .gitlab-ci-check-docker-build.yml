@@ -126,8 +126,6 @@ build:docker-multiplatform:
   rules:
     - if: $MULTIPLATFORM_BUILD != "true"
       when: never
-    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
-      when: never
     - when: on_success
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
   services:
@@ -183,7 +181,7 @@ publish:image-multiplatform:
   rules:
     - if: $MULTIPLATFORM_BUILD != "true"
       when: never
-    - if: '$CI_COMMIT_BRANCH =~ /^(master|staging|production|feature-.+)$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|staging|production|feature-.+|saas-[a-zA-Z0-9.]+)$/'
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
   services:
     - docker:20.10.21-dind
