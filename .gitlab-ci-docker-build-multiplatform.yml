@@ -1,0 +1,90 @@
+variables:
+  # Required variables
+  DOCKER_REGISTRY:
+    description: "The docker registry for publishing the image (e.g. 'docker.io')"
+  DOCKER_REPOSITORY:
+    description: "The docker registry to publish the image (e.g. 'northerntechhq/northern.tech')"
+  DOCKER_USERNAME:
+    description: "The username for DOCKER_REGISTRY"
+  DOCKER_PASSWORD:
+    description: "The password for DOCKER_REGISTRY"
+
+  # Optional variables
+  BUILDX_DRIVER:
+    description: "The docker buildx builder driver"
+    value: "docker-container"
+  DOCKERFILE:
+    description: "Path to the dockerfile for building relative to DOCKER_DIR"
+    value: "Dockerfile"
+  DOCKER_DIR:
+    description: "The docker build context directory"
+    value: "."
+  MULTIPLATFORM_TARGETS:
+    description: "Comma-separated list of target 'os/architecte' to build"
+    value: "linux/amd64,linux/arm64"
+
+  DOCKER_VERSION:
+    description: "Version of Docker image `docker.io/library/docker` for cli and buildx service"
+    value: "24.0.6"
+  SKOPEO_VERSION:
+    description: "Version of Docker image `quay.io/skopeo/stable` for publishing images"
+    value: "v1.3.1"
+
+
+stages:
+  - build
+  - publish
+
+build:docker:
+  tags:
+    - mender-qa-worker-generic-light
+  stage: build
+  needs: []
+  variables:
+    DOCKER_BUILDKIT: 1
+  image: "docker:${DOCKER_VERSION}"
+  services:
+    - "docker:${DOCKER_VERSION}-dind"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "building ${CI_PROJECT_NAME} for ${DOCKER_BUILD_SERVICE_IMAGE}"
+    - docker context create builder
+    - |-
+      docker buildx create builder --use \
+        --driver "${BUILDX_DRIVER}" \
+        --driver-opt network=host \
+        --buildkitd-flags '--debug --allow-insecure-entitlement network.host' \
+        --platform "$MULTIPLATFORM_TARGETS"
+    - |-
+      docker buildx build \
+        --cache-to "type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache,mode=max" \
+        --cache-from "type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache" \
+        --file "${DOCKER_DIR:-.}/${DOCKERFILE}" \
+        --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}" \
+        --platform "$MULTIPLATFORM_TARGETS" \
+        --provenance false \
+        --tag ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID} \
+        --push \
+        "${DOCKER_DIR}"
+
+publish:docker:
+  stage: publish
+  rules:
+  - if: '$CI_COMMIT_REF_NAME =~ /^main|staging|v[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+)?/'
+    when: always
+  needs: ["build:docker"]
+  image: quay.io/skopeo/stable:${SKOPEO_VERSION}
+  before_script:
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD" "$DOCKER_REGISTRY"
+  script:
+    - export DOCKER_TAG=$(printf "%s" "${CI_COMMIT_REF_NAME}" | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)/\1/')
+    # In case the registry contains the registry as prefix
+    - DOCKER_FQDN="${DOCKER_REGISTRY}/${DOCKER_REPOSITORY#${DOCKER_REGISTRY}/}"
+    - skopeo auth -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD $DOCKER_REPOSITORY
+    - skopeo copy --multi-arch all "docker://${CI_REGISTRY_NAME}:${CI_PIPELINE_ID}" "docker://${DOCKER_REPOSITORY}:${DOCKER_TAG}"
+    - test "$CI_COMMIT_REF_NAME" = "main" &&
+      skopeo copy --multi-arch all "docker://${CI_REGISTRY_NAME}:${CI_PIPELINE_ID}" "docker://${DOCKER_REPOSITORY}:${CI_COMMIT_SHA}"
+    - echo "$CI_COMMIT_REF_NAME" | grep -qE 'v[0-9]+\.[0-9]+\.[0-9]+' &&
+      skopeo copy --multi-arch all "docker://${CI_REGISTRY_NAME}:${CI_PIPELINE_ID}" "docker://${DOCKER_REPOSITORY}:latest"
+
