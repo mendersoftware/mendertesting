@@ -183,7 +183,7 @@ publish:image-multiplatform:
   rules:
     - if: $MULTIPLATFORM_BUILD != "true"
       when: never
-    - if: '$CI_COMMIT_BRANCH =~ /^(master|staging|production|feature-.+)$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|staging|production|feature-.+)$/'
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
   services:
     - docker:20.10.21-dind
@@ -341,3 +341,24 @@ publish:image:saas:
     - docker pull $DOCKER_REPOSITORY:$SOURCE_TAG
     - docker tag $DOCKER_REPOSITORY:$SOURCE_TAG $SERVICE_IMAGE
     - docker push $SERVICE_IMAGE
+
+publish:image-multiplatform:saas:
+  tags:
+    - mender-qa-worker-generic-light
+  stage: publish
+  rules:
+    - if: $MULTIPLATFORM_BUILD != "true"
+      when: never
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
+  services:
+    - docker:20.10.21-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - *export_docker_vars
+    - *docker_login_registries
+    - SOURCE_TAG=staging_${CI_COMMIT_SHA}
+    - DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
+    - SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
+  script:
+    - regctl image copy ${DOCKER_REPOSITORY}:${SOURCE_TAG} ${SERVICE_IMAGE}
