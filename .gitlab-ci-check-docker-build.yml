@@ -361,4 +361,5 @@ publish:image-multiplatform:saas:
     - DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
     - SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
   script:
+    - regctl manifest get ${DOCKER_REPOSITORY}:${SOURCE_TAG} || (echo "ERROR - image ${DOCKER_REPOSITORY}:${SOURCE_TAG} not found"; exit 1)
     - regctl image copy ${DOCKER_REPOSITORY}:${SOURCE_TAG} ${SERVICE_IMAGE}
