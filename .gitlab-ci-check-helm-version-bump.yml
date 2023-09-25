@@ -92,7 +92,7 @@ helm-version-bump:
       FULL_VERSION=$(yq ".version" ${CHART_DIR}/Chart.yaml)
       MAJOR_VERSION=$(echo $FULL_VERSION | cut -f1 -d.)
       MINOR_VERSION=$(echo $FULL_VERSION | cut -f2 -d.)
-      PATCH_VERSION=$(echo $FULL_VERSION | cut -f3 -d.)
+      PATCH_VERSION=$(echo $FULL_VERSION | cut -f3 -d. | cut -f1 -d\-)
       THIS_VALUE="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}-${HELM_PATCH_VERSION}" yq -i '.version = strenv(THIS_VALUE)' ${CHART_DIR}/Chart.yaml
       git add ${CHART_DIR}/Chart.yaml
     # Commit
