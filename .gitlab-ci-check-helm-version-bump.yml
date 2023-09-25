@@ -19,8 +19,6 @@
 # - SYNC_ENVIRONMENT: [staging|prod] # the values-${SYNC_ENVIRONMENT}.yaml to be updated
 # - CHART_DIR: mender # the Helm Chart directory in the helm repo
 # - HELM_PATCH_VERSION: ${CI_PIPELINE_ID} # the Chart.yaml version - use Semver format
-#                                         # prerelases have to be tagged with ${CI_PIPELINE_ID}-staging
-#                                         # to avoid releasing a prerelease to prod (stable semver releases only)
 #
 # The non-production version updates the Chart.yaml with a prerelease version:
 # version: x.y.${CI_PIPELINE_ID}-staging
@@ -48,7 +46,7 @@ helm-version-bump:
   script:
     # Adding the GH repo to push back new tags
     - git remote add github https://${GITHUB_USER}:${GITHUB_TOKEN}@${GITHUB_HELM_REPO}
-    - git fetch github ${MAIN_BRANCH:-master}:overlay-version-bump
+    - git fetch github ${SYNC_ENVIRONMENT:-staging}:overlay-version-bump
     - git checkout overlay-version-bump
     # modify this loop to map the source project to an actual values.yaml container definition
     # e.g.: for the mender-integration/extra/release_tool.py generate-delta-worker becames: generate_delta_worker:
@@ -94,18 +92,19 @@ helm-version-bump:
       FULL_VERSION=$(yq ".version" ${CHART_DIR}/Chart.yaml)
       MAJOR_VERSION=$(echo $FULL_VERSION | cut -f1 -d.)
       MINOR_VERSION=$(echo $FULL_VERSION | cut -f2 -d.)
-      THIS_VALUE="${MAJOR_VERSION}.${MINOR_VERSION}.${HELM_PATCH_VERSION}" yq -i '.version = strenv(THIS_VALUE)' ${CHART_DIR}/Chart.yaml
+      PATCH_VERSION=$(echo $FULL_VERSION | cut -f3 -d.)
+      THIS_VALUE="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}-${HELM_PATCH_VERSION}" yq -i '.version = strenv(THIS_VALUE)' ${CHART_DIR}/Chart.yaml
       git add ${CHART_DIR}/Chart.yaml
     # Commit
     - git commit -sm "[CI/CD] bump helm chart"
     # Push back (5 retries)
     - |
       for retry in $(seq 5); do
-        if git push github overlay-version-bump:${MAIN_BRANCH:-master}; then
+        if git push github overlay-version-bump:${SYNC_ENVIRONMENT:-staging}; then
           exit 0
         fi
-        git fetch github ${MAIN_BRANCH:-master}
-        git rebase github/${MAIN_BRANCH:-master}
+        git fetch github ${SYNC_ENVIRONMENT:-staging}
+        git rebase github/${SYNC_ENVIRONMENT:-staging}
         sleep ${TIMEOUT_SECONDS:-5}
       done
     - |
