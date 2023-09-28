@@ -46,6 +46,7 @@
 #
 # Required variables:
 # MULTIPLATFORM_BUILD: "true"
+# Configurable variables:
 # MULTIPLATFORM_PLATFORMS: "linux/amd64,linux/armv7"
 #
 # Note: since jobs are evaluated before variables,
@@ -60,7 +61,14 @@
 # publish:image:
 #   rules:
 #     - when: never
+#
+#
 
+
+variables:
+  MULTIPLATFORM_PLATFORMS:
+    description: "Comma-separated list of targets to build os/arch[/<version>]"
+    value: "linux/amd64,linux/arm64"
 
 stages:
   - build
@@ -121,7 +129,6 @@ build:docker-multiplatform:
   needs: []
   variables:
     DOCKER_BUILDKIT: 1
-    MULTIPLATFORM_PLATFORMS: "linux/amd64,linux/arm64"
     GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}'
   rules:
     - if: $MULTIPLATFORM_BUILD != "true"
