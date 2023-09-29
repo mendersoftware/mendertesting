@@ -155,6 +155,11 @@ build:docker-multiplatform:
       --provenance false
       --push
       ${DOCKER_DIR:-.}
+    - docker save ${GITLAB_REGISTRY_TAG} > ${IMAGE_ARTIFACT_FILENAME:-${CI_PROJECT_DIR}/image.tar}
+  artifacts:
+    expire_in: 2w
+    paths:
+      - ${IMAGE_ARTIFACT_FILENAME:-image.tar}
 
 publish:image:
   tags:
