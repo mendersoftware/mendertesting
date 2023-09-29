@@ -37,6 +37,7 @@ test:prepare_acceptance:
   tags:
     - mender-qa-worker-generic-light
   stage: test_prep
+  needs: []
   image: docker
   rules:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
@@ -69,6 +70,8 @@ test:acceptance_tests:
   tags:
     - mender-qa-worker-generic-light
   stage: test
+  needs:
+    - test:prepare_acceptance
   rules:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
       when: never

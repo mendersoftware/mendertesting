@@ -24,6 +24,7 @@ test:apidocs:verify-yaml:
   tags:
     - mender-qa-worker-generic-light
   stage: test
+  needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
   image: python:3-alpine
@@ -39,6 +40,7 @@ test:apidocs:verify-swagger:
   tags:
     - mender-qa-worker-generic-light
   stage: test
+  needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
   image: node:alpine
@@ -51,6 +53,7 @@ test:validate-open-api:
   tags:
     - mender-qa-worker-generic-light
   stage: test
+  needs: []
   image:
     name: alpine
   before_script:
