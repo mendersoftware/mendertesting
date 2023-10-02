@@ -93,7 +93,7 @@ test:check-license-source:
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
     # Install dependencies
-    - apk add --no-cache git bash perl-utils
+    - apk add --no-cache git bash perl-utils grep
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
     # branch.
