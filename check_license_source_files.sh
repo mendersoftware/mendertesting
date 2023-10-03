@@ -172,7 +172,7 @@ EOF
         lic_type="Open Source"
     fi
 
-    modified_year=$(git log --follow --format=%ad --date=format:%Y -- "$file" | sort -n | tail -n 1)
+    added_year=$(git log --follow --format=%ad --date=format:%Y --diff-filter=A -- "$file" | sort -n | tail -n 1)
 
     orig_file="${file}"
     file=$(strip_hashbang "${file}")
@@ -188,10 +188,12 @@ EOF
         cat "$license" >&2
         TEST_RESULT=1
     else
-        copyright_modified=$(echo "${CM} Copyright <copyright_year> Northern.tech AS" | sed "s/<copyright_year>/$modified_year/g")
-        copyright_file="$(head -n 1 "$file")"
-        if [ "$copyright_modified" != "$copyright_file" ]; then
-            echo >&2 "!!! FAILED license check on ${orig_file}; make sure copyright year matches last modified year of the file ($modified_year)"
+        copyright_year=$(grep -oP "${CM} Copyright \d{4} Northern.tech AS" "$file" | grep -oP "\d{4}")
+        if [ $copyright_year -ge $added_year ]; then
+            # Success!
+            :
+        else
+            echo >&2 "!!! FAILED license check on ${orig_file}; make sure copyright year is at least the year the file was first added to git ($added_year)"
             TEST_RESULT=1
         fi
     fi
