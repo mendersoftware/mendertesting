@@ -79,7 +79,7 @@ test:check-license:golang:
     - go install github.com/google/go-licenses@latest
     - apk add --no-cache git
   script:
-    - go-licenses report . --ignore github.com/mendersoftware > licenses.csv
+    - go-licenses report . --ignore github.com/mendersoftware --template go_licenses_format.tpl > licenses.csv
     - git diff --exit-code
 
 test:check-license-source:
