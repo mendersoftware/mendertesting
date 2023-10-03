@@ -78,8 +78,9 @@ test:check-license:golang:
   before_script:
     - go install github.com/google/go-licenses@latest
     - apk add --no-cache git
+    - git clone --no-tags --depth=1 --single-branch https://github.com/mendersoftware/mendertesting /tmp/mendertesting
   script:
-    - go-licenses report . --ignore github.com/mendersoftware --template go_licenses_format.tpl > licenses.csv
+    - go-licenses report . --ignore github.com/mendersoftware --template /tmp/mendertesting/go_licenses_format.tpl > licenses.csv
     - git diff --exit-code
 
 test:check-license-source:
