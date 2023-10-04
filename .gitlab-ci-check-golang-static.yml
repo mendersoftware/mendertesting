@@ -55,12 +55,13 @@ test:govendor-check:
     - mender-qa-worker-generic-light
   stage: test
   needs: []
+  rules:
+    - exists:
+      - vendor
   variables:
     GOLANG_VERSION: "1.20"
   image: golang:${GOLANG_VERSION}
   script:
-    - if [ -d vendor ]; then
-    -   go mod tidy
-    -   go mod vendor
-    -   git diff --exit-code
-    - fi
+    - go mod tidy
+    - go mod vendor
+    - git diff --exit-code
