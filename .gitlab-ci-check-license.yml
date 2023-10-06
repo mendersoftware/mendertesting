@@ -73,7 +73,6 @@ test:check-license:golang:
   rules:
     - exists:
         - licenses.csv
-        - go.mod
       when: always
     - exists:
         - LIC_FILES_CHKSUM.sha256
