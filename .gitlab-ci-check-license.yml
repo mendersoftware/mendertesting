@@ -74,6 +74,10 @@ test:check-license:golang:
     - exists:
         - licenses.csv
         - go.mod
+      when: always
+    - exists:
+        - LIC_FILES_CHKSUM.sha256
+      when: never
   needs: []
   before_script:
     - go install github.com/google/go-licenses@latest
