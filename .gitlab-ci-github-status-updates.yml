@@ -11,34 +11,47 @@ stages:
   - .pre
   - .post
 
-github:start:
+.github_status_template:
   tags:
     - mender-qa-worker-generic-light
-  stage: .pre
   # Keep overhead low by using a small image with curl preinstalled.
   image: appropriate/curl
+  before_script:
+    - |
+      send_status() {
+        local status="$1"
+        local message="$2"
+
+        local json="$(printf "$GITHUB_STATUS_API_JSON_F" "$status" "$CI_PIPELINE_URL" "$message")"
+        local ret=0
+        local output="$(curl -f -H "$GITHUB_AUTH" -d "$json" "$GITHUB_STATUS_API_URL")" || ret=$?
+        if [ $ret -ne 0 ]; then
+          if echo "$output" | grep -q "This SHA and context has reached the maximum number of statuses"; then
+            # This can happen for pipelines that keep running on the same master commit over and
+            # over, such as mender-api-docs.
+            return 0
+          fi
+          echo "$output" 1>&2
+        fi
+        return $ret
+      }
+
+github:start:
+  extends: .github_status_template
+  stage: .pre
   script:
-    - 'JSON="$(printf "$GITHUB_STATUS_API_JSON_F" pending "$CI_PIPELINE_URL" "Pipeline running on Gitlab")"'
-    - 'curl -f -H "$GITHUB_AUTH" -d "$JSON" "$GITHUB_STATUS_API_URL"'
+    - send_status pending "Pipeline running on Gitlab"
 
 github:success:
-  tags:
-    - mender-qa-worker-generic-light
+  extends: .github_status_template
   stage: .post
   when: on_success
-  # Keep overhead low by using a small image with curl preinstalled.
-  image: appropriate/curl
   script:
-    - 'JSON="$(printf "$GITHUB_STATUS_API_JSON_F" success "$CI_PIPELINE_URL" "Pipeline passed on Gitlab")"'
-    - 'curl -f -H "$GITHUB_AUTH" -d "$JSON" "$GITHUB_STATUS_API_URL"'
+    - send_status success "Pipeline passed on Gitlab"
 
 github:failure:
-  tags:
-    - mender-qa-worker-generic-light
+  extends: .github_status_template
   stage: .post
   when: on_failure
-  # Keep overhead low by using a small image with curl preinstalled.
-  image: appropriate/curl
   script:
-    - 'JSON="$(printf "$GITHUB_STATUS_API_JSON_F" failure "$CI_PIPELINE_URL" "Pipeline failed on Gitlab")"'
-    - 'curl -f -H "$GITHUB_AUTH" -d "$JSON" "$GITHUB_STATUS_API_URL"'
+    - send_status failure "Pipeline failed on Gitlab"
