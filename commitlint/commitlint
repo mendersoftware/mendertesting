@@ -161,6 +161,22 @@ function _advance() {
         _tok_type = "SIGN_OFF_LINE"
         return _tok
     }
+    if (match(line, CHERRY_PICK)) {
+        _tok = line
+        debugf("Matched CHERRY_PICK: %s", _tok)
+        VAL = _tok;
+        line = ""
+        _tok_type = "CHERRY_PICK"
+        return _tok
+    }
+    if (match(line, CANCEL_CHANGELOG)) {
+        _tok = line
+        debugf("Matched CANCEL_CHANGELOG: %s", _tok)
+        VAL = _tok;
+        line = ""
+        _tok_type = "CANCEL_CHANGELOG"
+        return _tok
+    }
     if (match(line, WORD)) {
         _tok = substr(line, 1, RLENGTH)
          debugf("Matched LINE: %s", _tok)
