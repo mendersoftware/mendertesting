@@ -297,6 +297,7 @@ function parse_footer() {
                 match(tok, CHERRY_PICK) ||
                 match(tok, CANCEL_CHANGELOG) ||
                 match(tok, SIGN_OFF_LINE))) {
+            debugf("Got token: %s\n", tok)
             error("Only Changelogs, Tickets, Sign-offs, cherry pick notes and BREAKING CHANGES allowed in the FOOTER")
         }
         if (match(tok, CHANGELOG)) {
