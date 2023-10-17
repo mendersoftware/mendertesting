@@ -18,8 +18,8 @@ BEGIN {
     ## Header
     COMMIT_TYPE = "^(fix|feat|build|chore|ci|docs|perf|refac|revert|style|test)"
     LINE=".*"
-    WORD = "[[:print:]]+"
-    COMMIT_SCOPE = "^\\("WORD"\\)"
+    WORD = "[-_[:alnum:]]+"
+    COMMIT_SCOPE = "^\\(("WORD")\\)"
     EMPTY_LINE = "^$"
 
     ## Footer

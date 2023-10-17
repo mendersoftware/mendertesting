@@ -257,6 +257,16 @@ Changelog: None
 BREAKING-CHANGE: No more bueno
 "
 
+assert "true" \
+       "fix with scope and function in description" \
+       "fix(client): Some change in Func() made
+
+Changelog: None
+Ticket: None
+
+Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>
+"
+
 
 assert "true" \
        "fix with cherry-pick footer" \
