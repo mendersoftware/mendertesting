@@ -19,6 +19,12 @@
 stages:
   - test
 
+variables:
+  IMAGE_GOLANGCI_VERSION:
+    description: |-
+      Container image tag of golangci/golangci-lint used for static checks.
+    value: "v1.55.1"
+
 test:static:
   tags:
     - mender-qa-worker-generic-light
@@ -26,7 +32,7 @@ test:static:
   needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
-  image: golangci/golangci-lint:v1.47.3
+  image: "golangci/golangci-lint:${IMAGE_GOLANGCI_VERSION}"
   before_script:
     # Install compile dependencies
     - if [ -f deb-requirements.txt ]; then
@@ -52,7 +58,7 @@ test:govendor-check:
     - exists:
       - vendor
   variables:
-    GOLANG_VERSION: "1.20"
+    GOLANG_VERSION: "1.21.3"
   image: golang:${GOLANG_VERSION}
   script:
     - go mod tidy
