@@ -461,5 +461,35 @@ Changelog: none
 Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
 
 
+assert "true" \
+       "Commit with multiline breaking change" \
+       "chore: Commit with multiline breaking change
+
+Ticket: none
+
+Changelog: none
+
+BREAKING CHANGE: Blah blah blah blah
+blah blah
+
+Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
+
+
+assert "false" \
+       "Commit with multiline breaking change and trailing garbage" \
+       "chore: Commit with multiline breaking change and trailing garbage
+
+Ticket: none
+
+Changelog: none
+
+BREAKING CHANGE: Blah blah blah blah
+blah blah
+
+Blah blah
+
+Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
+
+
 
 exit 0

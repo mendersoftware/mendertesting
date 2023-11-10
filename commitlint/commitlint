@@ -320,6 +320,16 @@ function parse_footer() {
         }
         if (match(tok, BREAKING_CHANGE)) {
             BREAKING_CHANGE_VAL=tok
+            # Consume the entire paragraph for the 'BREAKING CHANGE' if it is multiline
+            if (next_tok_type == "LINE" || next_tok_type == "WORD") {
+                while (tok != EOF && next_tok_type != "EMPTY_LINE" ) {
+                    advance()
+                }
+                # Require empty line afterwards in paragraph
+                advance()
+                empty_line("A 'BREAKING CHANGE' over multiple lines needs to have a trailing empty line")
+                continue
+            }
         }
         advance()
     }
