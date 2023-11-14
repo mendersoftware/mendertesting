@@ -24,7 +24,14 @@
 #     FIRST_ENT_COMMIT: "<sha>"
 #     KNOWN_LICENSE_FILES: "path/to/README.md path/to-another/LICENSE.md"
 #     LICENSE_HEADERS_IGNORE_FILES_REGEXP: '\./exclude-this/.*\.py'
-#
+
+
+variables:
+  GOLICENSE_IGNORE:
+    description: >-
+      Go package prefix to exclude from license checks
+      (empty defaults to root module name)
+    value: ""
 
 stages:
   - test
@@ -83,7 +90,14 @@ test:check-license:golang:
     - apk add --no-cache git
     - git clone --no-tags --depth=1 --single-branch https://github.com/mendersoftware/mendertesting /tmp/mendertesting
   script:
-    - go-licenses report . --ignore github.com/mendersoftware --template /tmp/mendertesting/go_licenses_format.tpl > licenses.csv
+    - |-
+      if test -z "$GOLICENSE_IGNORE"; then
+        GOLICENSE_IGNORE=$(go list -m)
+      fi
+    - |-
+      go-licenses report . \
+        --ignore $GOLICENSE_IGNORE \
+        --template /tmp/mendertesting/go_licenses_format.tpl > licenses.csv
     - git diff --exit-code
 
 test:check-license-source:
