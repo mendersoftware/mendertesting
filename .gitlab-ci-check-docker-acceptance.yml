@@ -5,28 +5,23 @@
 #
 # It assumes the following files:
 # * Dockerfile.acceptance-testing: to build the the binary with test coverage.
-# * tests/Dockerfile to build the Python test runner.
+# * tests/Dockerfile (optional) to build a custom Python test runner.
 # * tests/docker-compose-acceptance.yml for the tests composition runtime.
 # * tests/docker-compose-acceptance-enterprise.yml (optional) for Enterprise tests.
 #
-# Requires DOCKER_REPOSITORY variable to be set in the calling Pipeline.
-# Add it to the project in hand through Gitlab's include functionality
-#
-# variables:
-#   DOCKER_REPOSITORY: <Image FQN, i.e mendersoftware/reponame>
-#   INTEGRATION_REV: <integration revision> (optional, defaults to master)
-# include:
-#   - project: 'Northern.tech/Mender/mendertesting'
-#     file: '.gitlab-ci-check-docker-acceptance.yml'
-#
-# Requires the following variables set in the project CI/CD settings:
-#   COVERALLS_TOKEN: Token from coveralls.io for this repository
-#
-# If the tests require access to Mender Registry hosted images, it
-# will require also the following vabiables:
-#   REGISTRY_MENDER_IO_USERNAME: Username for registry.mender.io
-#   REGISTRY_MENDER_IO_PASSWORD: Password for registry.mender.io
-#
+
+variables:
+  DOCKER_REPOSITORY:
+    description: "Full qualified name of the container image"
+  INTEGRATION_REV:
+    description: "Version of integration repository"
+    value: master
+  COVERALLS_TOKEN:
+    description: "Token from coveralls.io for this repository"
+  REGISTRY_MENDER_IO_USERNAME:
+    description: "Username for registry.mender.io, if images are to be pulled"
+  REGISTRY_MENDER_IO_PASSWORD:
+    description: "Password for registry.mender.io, if images are to be pulled"
 
 stages:
   - test_prep
@@ -82,7 +77,7 @@ test:acceptance_tests:
     - docker:20.10.21-dind
   before_script:
     - apk add git bash
-    - git clone -b ${INTEGRATION_REV:-master} --depth=1 https://github.com/mendersoftware/integration.git mender-integration
+    - git clone -b ${INTEGRATION_REV} --depth=1 https://github.com/mendersoftware/integration.git mender-integration
     - mv mender-integration/extra/travis-testing/* tests/
     - mv docs/* tests/
     - mv ${CI_PROJECT_NAME} tests/
