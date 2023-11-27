@@ -99,6 +99,11 @@ test:acceptance_tests:
     - if [ -n "$REGISTRY_MENDER_IO_USERNAME" ]; then
     -   docker login -u "$REGISTRY_MENDER_IO_USERNAME" -p "$REGISTRY_MENDER_IO_PASSWORD" registry.mender.io
     - fi
+    - if [ -n "$MENDER_TEST_CONTAINERS_CANDIDATE_TAG" ]; then
+    -   sed -i.bak -e "s,mendersoftware/mender-test-containers:acceptance-testing,$MENDER_TEST_CONTAINERS_CANDIDATE_TAG," tests/docker-compose-acceptance.yml
+    -   diff -u tests/docker-compose-acceptance.yml.bak tests/docker-compose-acceptance.yml || true
+    -   echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - fi
   script:
     - TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance.yml
     - if [ -f $(pwd)/tests/docker-compose-acceptance-enterprise.yml ]; then
