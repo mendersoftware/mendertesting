@@ -491,5 +491,14 @@ Blah blah
 Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
 
 
+assert "true" \
+       "Commit weird characters in commit scope" \
+       "fix(lots of scope stuff 🙂): Commit weird characters in commit scope
+
+Ticket: none
+Changelog: none
+Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
+
+
 
 exit 0
