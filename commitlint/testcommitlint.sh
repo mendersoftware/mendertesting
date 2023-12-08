@@ -500,5 +500,14 @@ Changelog: none
 Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
 
 
+assert "true" \
+       "Commit with refac in changelog tag" \
+       "fix: Commit with refac in changelog tag
+
+Ticket: none
+Changelog(refac): A changelog for this commit
+Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>"
+
+
 
 exit 0
