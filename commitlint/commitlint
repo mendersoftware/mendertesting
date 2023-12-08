@@ -23,7 +23,7 @@ BEGIN {
     EMPTY_LINE = "^$"
 
     ## Footer
-    CHANGELOG_PREFIX="^Changelog(\\((fix|feat|chore)+\\))?: "
+    CHANGELOG_PREFIX="^Changelog(\\((fix|feat|build|chore|ci|docs|perf|refac|revert|style|test)+\\))?: "
     CHANGELOG=CHANGELOG_PREFIX ".*"
     TICKET="Ticket: .*"
     BREAKING_CHANGE="BREAKING[- ]CHANGE: .*"
