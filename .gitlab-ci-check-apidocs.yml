@@ -91,7 +91,7 @@ trigger:apidocs:rebuild-mender-api-docs:
   before_script:
     - apk add git python3 py3-pip
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
-    - pip3 install -r requirements.txt
+    - pip3 install -r requirements.txt --break-system-packages
     - git clone https://github.com/mendersoftware/integration.git mender-integration
     - alias release_tool=$(realpath mender-integration/extra/release_tool.py)
     - apk add --no-cache curl
