@@ -87,10 +87,11 @@ stages:
   DOCKER_PUBLISH_COMMIT_TAG=${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
 
 .get_release_tool_alpine: &get_release_tool_alpine |
-  apk add git python3 py3-pip
-  wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
-  pip3 install -r requirements.txt
+  apk add git python3 py3-virtualenv py3-pip
   git clone https://github.com/mendersoftware/integration.git mender-integration
+  python3 -m virtualenv .venv
+  source .venv/bin/activate
+  pip3 install -r mender-integration/extra/requirements.txt
   alias release_tool=$(realpath mender-integration/extra/release_tool.py)
 
 build:docker:
