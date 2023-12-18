@@ -18,6 +18,8 @@
 # headers.
 LICENSE_HEADERS_IGNORE_FILES_REGEXP="${LICENSE_HEADERS_IGNORE_FILES_REGEXP:-none}"
 
+git --version 2>&1
+
 usage() {
     cat <<EOF
 $(basename "$0") [--ent-start-commit=COMMIT]
@@ -172,7 +174,7 @@ EOF
         lic_type="Open Source"
     fi
 
-    added_year=$(git log --follow --format=%ad --date=format:%Y --diff-filter=A -- "$file" | sort -n | tail -n 1)
+    added_year=$(git log --follow --format=%ad --date=format:%Y --diff-filter=A "$file" | sort -n | tail -n 1)
 
     orig_file="${file}"
     file=$(strip_hashbang "${file}")
@@ -193,6 +195,8 @@ EOF
             # Success!
             :
         else
+            echo git log --follow --date=format:%Y --diff-filter=A "$orig_file" >&2
+            git log --follow --date=format:%Y --diff-filter=A "$orig_file" >&2
             echo >&2 "!!! FAILED license check on ${orig_file}; make sure copyright year is at least the year the file was first added to git ($added_year)"
             TEST_RESULT=1
         fi
