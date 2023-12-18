@@ -10,6 +10,9 @@ variables:
   UNVERSIONED_REPOSITORY: "true"
 
 test:unit:
+  variables:
+    GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
+    GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   tags:
     - mender-qa-worker-generic-light
   image: golang:1.20
