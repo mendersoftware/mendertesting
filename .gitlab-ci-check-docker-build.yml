@@ -150,6 +150,7 @@ build:docker-multiplatform:
       --cache-to type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache,mode=max
       --cache-from type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache
       --tag ${GITLAB_REGISTRY_TAG}
+      --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
       --platform $MULTIPLATFORM_PLATFORMS
