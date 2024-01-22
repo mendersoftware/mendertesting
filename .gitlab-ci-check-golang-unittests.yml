@@ -43,7 +43,7 @@ test:unit:
     - /^saas-[a-zA-Z0-9.]+$/
   image: golang:1.20.4
   services:
-    - mongo:4.4
+    - mongo:6.0
   variables:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
