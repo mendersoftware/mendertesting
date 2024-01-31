@@ -40,7 +40,7 @@ function cleanup() {
     rm -f ${tfile}
 }
 
-if  ! black --check --verbose . >& ${tfile}; then
+if  ! black --check --exclude 'vendor/.*' --verbose . >& ${tfile}; then
     cat ${tfile} | grep -v "good job" | grep -v "wasn't modified on disk since last run" >&2 || true
     echo >&2 ""
     echo >&2 "Please fix your code locally with: black ."
