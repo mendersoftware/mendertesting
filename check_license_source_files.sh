@@ -229,23 +229,23 @@ echo >&2 "LICENSE_HEADERS_IGNORE_FILES_REGEXP: ${LICENSE_HEADERS_IGNORE_FILES_RE
 
 echo >&2 "Checking licenses on all Go files"
 GO_FILES="\
-$(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path './vendor/*' -name '*.go')
+$(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path '*/vendor/*' -name '*.go')
 "
 check_files "${GO_FILES}"
 
 echo >&2 "Checking licenses on all Python files"
 PYTHON_FILES="\
-$(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path './vendor/*' ! -regex '.*\.venv.*' ! -regex '.*build/.*' -name '*.py')"
+$(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path '*/vendor/*' ! -regex '.*\.venv.*' ! -regex '.*build/.*' -name '*.py')"
 check_files "${PYTHON_FILES}"
 
 echo >&2 "Checking licenses on all Shell files"
 SHELL_FILES="\
-$(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path './vendor/*' -name '*.sh')"
+$(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path '*/vendor/*' -name '*.sh')"
 check_files "${SHELL_FILES}"
 
 echo >&2 "Checking licenses on all C/C++ files"
 C_FILES="\
-$(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path './vendor/*' \( -name '*.[ch]' -o -name '*.[ch]pp' \))"
+$(find . -type f ! -regex "${LICENSE_HEADERS_IGNORE_FILES_REGEXP}" ! -path '*/vendor/*' \( -name '*.[ch]' -o -name '*.[ch]pp' \))"
 check_files "${C_FILES}"
 
 exit ${TEST_RESULT}
