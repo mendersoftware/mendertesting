@@ -38,12 +38,16 @@ stages:
 
 github:start:
   extends: .github_status_template
+  dependencies: []
   stage: .pre
   script:
     - send_status pending "Pipeline running on Gitlab"
 
 github:success:
   extends: .github_status_template
+  # Remove dependencies so that we don't download all previous jobs artifacts
+  # Note that we cannot use "needs" as this job has to be run in the correct stage
+  dependencies: []
   stage: .post
   when: on_success
   script:
@@ -51,6 +55,9 @@ github:success:
 
 github:failure:
   extends: .github_status_template
+  # Remove dependencies so that we don't download all previous jobs artifacts
+  # Note that we cannot use "needs" as this job has to be run in the correct stage
+  dependencies: []
   stage: .post
   when: on_failure
   script:
