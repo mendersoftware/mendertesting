@@ -49,7 +49,7 @@ stages:
 
 test:check-python3-formatting:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   image: python:3.8-alpine
   stage: test
   needs: []

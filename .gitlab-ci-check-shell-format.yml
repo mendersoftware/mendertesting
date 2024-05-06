@@ -27,7 +27,7 @@ stages:
 
 test:check-shell-formatting:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: test
   needs: []
   image: alpine:3.13

@@ -31,7 +31,7 @@ stages:
 
 test:check-license:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: test
   needs: []
   rules:
@@ -68,7 +68,7 @@ test:check-license:
 test:check-license:golang:
   image: golang:1.21-alpine
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: test
   rules:
     - exists:
@@ -88,7 +88,7 @@ test:check-license:golang:
 
 test:check-license-source:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: test
   needs: []
   image: alpine
