@@ -13,7 +13,7 @@ stages:
 
 .github_status_template:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   # Keep overhead low by using a small image with curl preinstalled.
   image: appropriate/curl
   before_script:

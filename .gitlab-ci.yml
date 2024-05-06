@@ -65,7 +65,7 @@ test:unit:
 
 test:unit:commitlint:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   image: alpine
   stage: test
   before_script:

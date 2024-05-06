@@ -4,7 +4,7 @@ stages:
 
 test:check-commits:
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   stage: test
   needs: []
   except:
