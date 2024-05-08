@@ -50,7 +50,7 @@ stages:
 test:check-python3-formatting:
   tags:
     - hetzner-amd-beefy
-  image: python:3.8-alpine
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.8-alpine
   stage: test
   needs: []
   variables:
