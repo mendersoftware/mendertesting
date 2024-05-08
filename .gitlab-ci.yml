@@ -66,7 +66,7 @@ test:unit:
 test:unit:commitlint:
   tags:
     - hetzner-amd-beefy
-  image: alpine
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/alpine
   stage: test
   before_script:
     - apk add --no-cache bash gawk
