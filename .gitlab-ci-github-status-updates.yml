@@ -15,7 +15,7 @@ stages:
   tags:
     - hetzner-amd-beefy
   # Keep overhead low by using a small image with curl preinstalled.
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/appropriate/curl
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/appropriate/curl
   before_script:
     - |
       send_status() {

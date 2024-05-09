@@ -30,7 +30,7 @@ test:check-shell-formatting:
     - hetzner-amd-beefy
   stage: test
   needs: []
-  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/alpine:3.13
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine:3.13
   before_script:
     - SHELL_SCRIPTS=$(find . -type f -name "*.sh")
   script:
