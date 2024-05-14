@@ -33,7 +33,7 @@ helm-version-bump:
     - if: $CI_PIPELINE_SOURCE == "pipeline"
   stage: version-bump
   tags:
-    - mender-qa-worker-generic-light
+    - hetzner-amd-beefy
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers:aws-k8s-v1-master
   before_script:
     - |
@@ -45,10 +45,11 @@ helm-version-bump:
       echo "INFO - setting required vars"
       export CONTAINER_REGISTRY=$(echo ${DOCKER_REPOSITORY%%/*}) # registry.mender.io
       export CONTAINER_REPOSITORY=$(echo ${DOCKER_REPOSITORY#*/}) # northerntech/alvaldi-gui
+    - export TS_SUFFIX=$(date +%s)
   script:
     # Adding the GH repo to push back new tags
-    - git remote add github https://${GITHUB_USER}:${GITHUB_TOKEN}@${GITHUB_HELM_REPO}
-    - git fetch github ${SYNC_ENVIRONMENT:-staging}:overlay-version-bump
+    - git remote add github-${TS_SUFFIX} https://${GITHUB_USER}:${GITHUB_TOKEN}@${GITHUB_HELM_REPO}
+    - git fetch github-${TS_SUFFIX} ${SYNC_ENVIRONMENT:-staging}:overlay-version-bump
     - git checkout overlay-version-bump
     # modify this loop to map the source project to an actual values.yaml container definition
     # e.g.: for the mender-integration/extra/release_tool.py generate-delta-worker becames: generate_delta_worker:
@@ -102,11 +103,11 @@ helm-version-bump:
     # Push back (5 retries)
     - |
       for retry in $(seq 5); do
-        if git push github overlay-version-bump:${SYNC_ENVIRONMENT:-staging}; then
+        if git push github-${TS_SUFFIX} overlay-version-bump:${SYNC_ENVIRONMENT:-staging}; then
           exit 0
         fi
-        git fetch github ${SYNC_ENVIRONMENT:-staging}
-        git rebase github/${SYNC_ENVIRONMENT:-staging}
+        git fetch github-${TF_SUFFIX} ${SYNC_ENVIRONMENT:-staging}
+        git rebase github-${TF_SUFFIX}/${SYNC_ENVIRONMENT:-staging}
         sleep ${TIMEOUT_SECONDS:-5}
       done
     - |
