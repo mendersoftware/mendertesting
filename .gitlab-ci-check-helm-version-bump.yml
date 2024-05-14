@@ -49,8 +49,8 @@ helm-version-bump:
   script:
     # Adding the GH repo to push back new tags
     - git remote add github-${TS_SUFFIX} https://${GITHUB_USER}:${GITHUB_TOKEN}@${GITHUB_HELM_REPO}
-    - git fetch github-${TS_SUFFIX} ${SYNC_ENVIRONMENT:-staging}:overlay-version-bump
-    - git checkout overlay-version-bump
+    - git fetch github-${TS_SUFFIX} ${SYNC_ENVIRONMENT:-staging}:overlay-version-bump-${TS_SUFFIX}
+    - git checkout overlay-version-bump-${TS_SUFFIX}
     # modify this loop to map the source project to an actual values.yaml container definition
     # e.g.: for the mender-integration/extra/release_tool.py generate-delta-worker becames: generate_delta_worker:
     # release_tool -m git ${CI_PROJECT_NAME} container
@@ -103,7 +103,7 @@ helm-version-bump:
     # Push back (5 retries)
     - |
       for retry in $(seq 5); do
-        if git push github-${TS_SUFFIX} overlay-version-bump:${SYNC_ENVIRONMENT:-staging}; then
+        if git push github-${TS_SUFFIX} overlay-version-bump-${TS_SUFFIX}:${SYNC_ENVIRONMENT:-staging}; then
           exit 0
         fi
         git fetch github-${TF_SUFFIX} ${SYNC_ENVIRONMENT:-staging}
