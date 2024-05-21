@@ -61,7 +61,7 @@ mender_ci_save_tmp_artifact() {
 # checksum (see mender_ci_save_tmp_artifact).
 mender_ci_load_tmp_artifact() {
     if [ -z "$1" ]; then
-        echo "Usage $0 file-to-save [project-name] [pipeline-id]"
+        echo "Usage $0 file-to-load [project-name] [pipeline-id]"
         exit 1
     fi
     user_file="$1"
