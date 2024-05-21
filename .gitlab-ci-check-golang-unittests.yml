@@ -138,7 +138,7 @@ coveralls:finish-build:
   variables:
     COVERALLS_WEBHOOK_URL: "https://coveralls.io/webhook"
     COVERALLS_RERUN_BUILD_URL: "https://coveralls.io/rerun_build"
-  image: appropriate/curl
+  image: curlimages/curl-base
   script:
     - 'curl -k ${COVERALLS_WEBHOOK_URL}?repo_token=${COVERALLS_TOKEN} -d "payload[build_num]=$CI_PIPELINE_ID&payload[status]=done"'
     - 'curl -k "${COVERALLS_RERUN_BUILD_URL}?repo_token=${COVERALLS_TOKEN}&build_num=${CI_PIPELINE_ID}"'
