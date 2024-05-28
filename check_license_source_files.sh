@@ -13,6 +13,10 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+if [ -n "$DEBUG_MENDERTESTING" ]; then
+    set -x
+fi
+
 # This regular expression can be set in the '.gitlab-ci.yml' file, and is passed
 # on to the find expression used to aggregate all the files to check for license
 # headers.
