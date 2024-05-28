@@ -15,6 +15,10 @@
 
 set -e
 
+if [ -n "$DEBUG_MENDERTESTING" ]; then
+    set -x
+fi
+
 while [[ $# -gt 0 ]]
 do
     case "$1" in
