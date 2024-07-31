@@ -16,7 +16,6 @@ run:
 linters:
   enable:
     - bodyclose
-    - deadcode
     - errcheck
     - gocyclo
     - gofmt
@@ -26,10 +25,8 @@ linters:
     - ineffassign
     - lll
     - staticcheck
-    - structcheck
     - typecheck
     - unused
-    - varcheck
 
 linters-settings:
   gocyclo:
