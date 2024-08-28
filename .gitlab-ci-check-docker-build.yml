@@ -69,6 +69,9 @@ variables:
   MULTIPLATFORM_PLATFORMS:
     description: "Comma-separated list of targets to build os/arch[/<version>]"
     value: "linux/amd64,linux/arm64"
+  EXTRA_DOCKER_ARGS:
+    description: "User specified extra arguments for docker build command"
+    value: ""
 
 stages:
   - build
@@ -148,7 +151,7 @@ build:docker-multiplatform:
     - *dind-login
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - echo "building ${CI_PROJECT_NAME} for ${DOCKER_BUILD_SERVICE_IMAGE}"
+    - echo "building ${CI_PROJECT_NAME} with tags ${GITLAB_REGISTRY_TAG} and ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}"
     - docker context create builder
     - docker buildx create builder --use --driver-opt network=host --buildkitd-flags '--debug --allow-insecure-entitlement network.host'
     - docker buildx build
@@ -161,6 +164,7 @@ build:docker-multiplatform:
       --platform $MULTIPLATFORM_PLATFORMS
       --provenance false
       --push
+      ${EXTRA_DOCKER_ARGS}
       ${DOCKER_DIR:-.}
 
 publish:image:
