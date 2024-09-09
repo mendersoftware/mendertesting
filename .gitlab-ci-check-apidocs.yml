@@ -29,8 +29,9 @@ test:apidocs:verify-yaml:
     - /^saas-[a-zA-Z0-9.]+$/
   image: python:3-alpine
   before_script:
+    # https://github.com/python/cpython/issues/95299
+    - pip3 install pyyaml setuptools
     # Get our own Swagger verifier
-    - pip3 install pyyaml
     - wget https://raw.githubusercontent.com/mendersoftware/autodocs/master/verify_docs.py
   script:
     # Verify that the Swagger docs follow the autodeployment requirements
