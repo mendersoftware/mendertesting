@@ -28,6 +28,7 @@ BEGIN {
     TICKET="Ticket: .*"
     BREAKING_CHANGE="BREAKING[- ]CHANGE: .*"
     SIGN_OFF_LINE="Signed-off-by: .*"
+    CO_AUTHORED_LINE="Co-authored-by: .*"
     CHERRY_PICK="(cherry picked from commit .*)"
     CANCEL_CHANGELOG="Cancel-changelog: *([0-9a-f]+).*"
 
@@ -159,6 +160,14 @@ function _advance() {
         VAL = _tok;
         line = ""
         _tok_type = "SIGN_OFF_LINE"
+        return _tok
+    }
+    if (match(line, CO_AUTHORED_LINE)) {
+        _tok = line
+        debugf("Matched CO AUTHORED: %s", _tok)
+        VAL = _tok;
+        line = ""
+        _tok_type = "CO_AUTHORED_LINE"
         return _tok
     }
     if (match(line, CHERRY_PICK)) {
@@ -296,6 +305,7 @@ function parse_footer() {
                 match(tok, EMPTY_LINE) ||
                 match(tok, CHERRY_PICK) ||
                 match(tok, CANCEL_CHANGELOG) ||
+                match(tok, CO_AUTHORED_LINE) ||
                 match(tok, SIGN_OFF_LINE))) {
             debugf("Got token: %s\n", tok)
             error("Only Changelogs, Tickets, Sign-offs, cherry pick notes and BREAKING CHANGES allowed in the FOOTER")
