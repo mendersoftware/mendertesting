@@ -3,22 +3,23 @@
 # This gitlab-ci template updates the Helm Chart versions
 # for a given container
 #
-# Requires DOCKER_REPOSITORY variable to be set in the calling Pipeline.
+# Requires DOCKER_REGISTRY_ADDRESS variable to be set in the calling Pipeline.
 # Add it to the project in hand through Gitlab's include functionality
 # variables:
-#   DOCKER_REPOSITORY: <Image FQN, i.e mendersoftware/reponame>
+#   DOCKER_REGISTRY_ADDRESS: registry.mender.io
 # include:
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-helm-version-bump.yml
-# 
+#
 # It requires that the upstream pipeline specifies:
 #
-# - CONTAINER: alvaldi-gui # the container name that later will be translated into
-#                            values.yaml reference
-# - DOCKER_PUBLISH_COMMIT_TAG: ${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA} 
+# - CONTAINERS: alvaldi-gui # space-separated container names that later will
+#                            be translated into  values.yaml reference
+# - DOCKER_PUBLISH_COMMIT_TAG: ${CI_COMMIT_REF_NAME}_${CI_COMMIT_SHA}
 # - SYNC_ENVIRONMENT: [staging|prod] # the values-${SYNC_ENVIRONMENT}.yaml to be updated
 # - CHART_DIR: mender # the Helm Chart directory in the helm repo
 # - HELM_PATCH_VERSION: ${CI_PIPELINE_ID} # the Chart.yaml version - use Semver format
+# - DRY_RUN: [true|false] # if true, it will not push back the changes to the repo
 #
 # The non-production version updates the Chart.yaml with a prerelease version:
 # version: x.y.${CI_PIPELINE_ID}-staging
@@ -41,55 +42,34 @@ helm-version-bump:
       git config --global user.email "mender@northern.tech"
       git config --global user.name "Mender Test Bot"
       export GITHUB_TOKEN=${GITHUB_BOT_TOKEN_REPO_FULL}
-    - |
-      echo "INFO - setting required vars"
-      export CONTAINER_REGISTRY=$(echo ${DOCKER_REPOSITORY%%/*}) # registry.mender.io
-      export CONTAINER_REPOSITORY=$(echo ${DOCKER_REPOSITORY#*/}) # northerntech/alvaldi-gui
     - export TS_SUFFIX=$(date +%s)
   script:
     # Adding the GH repo to push back new tags
-    - git remote add github-${TS_SUFFIX} https://${GITHUB_USER}:${GITHUB_TOKEN}@${GITHUB_HELM_REPO}
-    - git fetch github-${TS_SUFFIX} ${SYNC_ENVIRONMENT:-staging}:overlay-version-bump-${TS_SUFFIX}
-    - git checkout overlay-version-bump-${TS_SUFFIX}
-    # modify this loop to map the source project to an actual values.yaml container definition
-    # e.g.: for the mender-integration/extra/release_tool.py generate-delta-worker becames: generate_delta_worker:
-    # release_tool -m git ${CI_PROJECT_NAME} container
     - |
-      echo "INFO - mapping source project to values.yaml project:"
-      case $CONTAINER in
-        generate-delta-worker)
-          VALUES_REF="generate_delta_worker"
-          ;;
-        *)
-          VALUES_REF_TMP=${CONTAINER#"alvaldi-"}  #removes prefix: alvaldi-
-          VALUES_REF=${VALUES_REF_TMP//-/_} #replaces - with _
-      esac
-      echo "DEBUG - container name inside values file: ${VALUES_REF}"
-      test -n ${VALUES_REF} || ( echo "ERROR - container name not found." ; exit 1 )
+      git remote add github-${TS_SUFFIX} https://${GITHUB_USER}:${GITHUB_TOKEN}@${GITHUB_HELM_REPO}
+      git fetch github-${TS_SUFFIX} ${SYNC_ENVIRONMENT:-staging}:overlay-version-bump-${TS_SUFFIX}
+      git checkout overlay-version-bump-${TS_SUFFIX}
     - |
       echo "INFO - checking values files"
       test -e ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml || ( echo "ERROR - ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml doesn't exists" ; exit 1 )
       test -e ${CHART_DIR}/Chart.yaml || ( echo "ERROR - ${CHART_DIR}/Chart.yaml doesn't exists" ; exit 1 )
     - |
-      echo "INFO - bumping version ${DOCKER_PUBLISH_COMMIT_TAG} to ${VALUES_REF} container"
-      test -n ${DOCKER_PUBLISH_COMMIT_TAG} || ( echo "ERROR - version tag not found." ; exit 1 )
-      THIS_KEY=".${VALUES_REF}.image.tag" THIS_VALUE="${DOCKER_PUBLISH_COMMIT_TAG}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+      for CONTAINER in ${CONTAINERS}; do
+        echo "INFO - bumping version ${DOCKER_PUBLISH_COMMIT_TAG} to ${CONTAINER} image tag"
+        test -n ${DOCKER_PUBLISH_COMMIT_TAG} || ( echo "ERROR - version tag not found." ; exit 1 )
+        THIS_KEY=".${CONTAINER}.image.tag" THIS_VALUE="${DOCKER_PUBLISH_COMMIT_TAG}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+
+        echo "DEBUG - container registry is: $CONTAINER_REGISTRY"
+        if [[ -n "${CONTAINER_REGISTRY}" ]]; then
+          echo "INFO - bumping registry ${CONTAINER_REGISTRY} to ${CONTAINER} container"
+          test -n ${CONTAINER_REGISTRY} || ( echo "ERROR - CONTAINER_REGISTRY variable is empty." ; exit 1 )
+          THIS_KEY=".${CONTAINER}.image.registry" THIS_VALUE="${CONTAINER_REGISTRY}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+        fi
+
+        echo "INFO - bumping registry ${DOCKER_REGISTRY_ADDRESS:-registry.mender.io} to ${CONTAINER} container"
+        THIS_KEY=".${CONTAINER}.image.registry" THIS_VALUE="${DOCKER_REGISTRY_ADDRESS:-registry.mender.io}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+      done
       git add ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
-    - |
-      echo "DEBUG - container registry is: $CONTAINER_REGISTRY"
-      if [[ -n "${CONTAINER_REGISTRY}" ]]; then
-        echo "INFO - bumping registry ${CONTAINER_REGISTRY} to ${VALUES_REF} container"
-        test -n ${CONTAINER_REGISTRY} || ( echo "ERROR - CONTAINER_REGISTRY variable is empty." ; exit 1 )
-        THIS_KEY=".${VALUES_REF}.image.registry" THIS_VALUE="${CONTAINER_REGISTRY}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
-        git add ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
-      fi
-    - |
-      echo "DEBUG - container repository is: $CONTAINER_REPOSITORY"
-      if [[ -n "${CONTAINER_REPOSITORY}" ]]; then
-        echo "INFO - bumping repository ${CONTAINER_REPOSITORY} to ${VALUES_REF} container"
-        THIS_KEY=".${VALUES_REF}.image.repository" THIS_VALUE="${CONTAINER_REPOSITORY}" yq -i 'eval(strenv(THIS_KEY)) = strenv(THIS_VALUE)' ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
-        git add ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
-      fi
     - |
       echo "INFO - bumping helm chart version"
       FULL_VERSION=$(yq ".version" ${CHART_DIR}/Chart.yaml)
@@ -99,17 +79,23 @@ helm-version-bump:
       THIS_VALUE="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}-${HELM_PATCH_VERSION}" yq -i '.version = strenv(THIS_VALUE)' ${CHART_DIR}/Chart.yaml
       git add ${CHART_DIR}/Chart.yaml
     # Commit
-    - git commit -sm "[CI/CD] bump helm chart"
-    # Push back (5 retries)
     - |
-      for retry in $(seq 5); do
-        if git push github-${TS_SUFFIX} overlay-version-bump-${TS_SUFFIX}:${SYNC_ENVIRONMENT:-staging}; then
-          exit 0
-        fi
-        git fetch github-${TF_SUFFIX} ${SYNC_ENVIRONMENT:-staging}
-        git rebase github-${TF_SUFFIX}/${SYNC_ENVIRONMENT:-staging}
-        sleep ${TIMEOUT_SECONDS:-5}
-      done
-    - |
-      echo "ERROR - can't push to github"
-      exit 1
+      if [[ "${DRY_RUN}" == "false" ]]; then
+        git commit --signoff --message "[CI/CD] bump helm chart"
+        for retry in $(seq 5); do
+          if git push github-${TS_SUFFIX} overlay-version-bump-${TS_SUFFIX}:${SYNC_ENVIRONMENT:-staging}; then
+            exit 0
+          fi
+          git fetch github-${TF_SUFFIX} ${SYNC_ENVIRONMENT:-staging}
+          git rebase github-${TF_SUFFIX}/${SYNC_ENVIRONMENT:-staging}
+          sleep ${TIMEOUT_SECONDS:-5}
+        done
+        echo "ERROR - can't push to github"
+        exit 1
+      else
+        echo "INFO - dry-run mode enabled: skipping git push"
+        echo "DEBUG - printing the resulted values file"
+        git diff --staged
+        cat ${CHART_DIR}/values-${SYNC_ENVIRONMENT}.yaml
+        cat ${CHART_DIR}/Chart.yaml
+      fi
