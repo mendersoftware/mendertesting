@@ -23,45 +23,41 @@ body = """
     ## [unreleased]
 {% endif %}\
 
+{% macro render_commit_body(commit) %}
+    {% if commit.links %}\
+        ({% for link in commit.links | unique(attribute="text") %}\
+            [{{ link.text }}]({{ link.href }})\
+        {% endfor -%})\
+    {% endif %} \
+    ([{{ commit.id | truncate(length=7, end="") }}]\
+    (https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/commit/{{ commit.id }})) \
+    {% if commit.github.username %} by @{{ commit.github.username }}{%- endif %}\
+    {% if commit.github.pr_number %} in #{{ commit.github.pr_number }}{%- endif %}
+    {% if commit.breaking -%}
+        {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
+    {% endif -%}
+    {% if commit.body -%}
+        {% raw %}  \n{% endraw %}
+        {% for line in commit.body | split(pat="\n") -%}
+            {% raw %}  {% endraw %}{{ line }}
+        {% endfor -%}
+    {% endif -%}
+{% endmacro render_commit_body %}\
+
 {% macro render_commits(commits) %}
     {% for commit in commits
     | filter(attribute="scope")
     | unique(attribute="message")
     | sort(attribute="scope") %}
         - *({{commit.scope}})* {{ commit.message | upper_first }}
-        {%- if commit.breaking %}
-        {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
-        {%- endif -%}
-            {% if commit.body -%}
-              {% raw %}  \n{% endraw %}
-              {% for line in commit.body | split(pat="\n") -%}
-                {% raw %}  {% endraw %}{{ line }}
-              {% endfor -%}
-            {% endif -%}
+            {{ self::render_commit_body(commit=commit) }}\
     {%- endfor -%}
     {% raw %}\n{% endraw %}\
     {%- for commit in commits | unique(attribute="message") %}
         {%- if commit.scope -%}
         {% else -%}
             - {{ commit.message | upper_first }}\
-                  {% if commit.links %}\
-                    ({% for link in commit.links | unique(attribute="text") %}\
-                        [{{ link.text }}]({{ link.href }})\
-                    {% endfor -%})\
-                  {% endif %} \
-                  ([{{ commit.id | truncate(length=7, end="") }}]\
-                  (https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/commit/{{ commit.id }})) \
-                  {% if commit.github.username %} by @{{ commit.github.username }}{%- endif %}\
-                  {% if commit.github.pr_number %} in #{{ commit.github.pr_number }}{%- endif %}
-            {% if commit.breaking -%}
-            {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
-            {% endif -%}
-            {% if commit.body -%}
-              {% raw %}  \n{% endraw %}
-              {% for line in commit.body | split(pat="\n") -%}
-                {% raw %}  {% endraw %}{{ line }}
-              {% endfor -%}
-            {% endif -%}
+                {{ self::render_commit_body(commit=commit) }}\
         {% endif -%}
     {% endfor -%}
 {% endmacro input %}\
