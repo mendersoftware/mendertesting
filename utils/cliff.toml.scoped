@@ -26,12 +26,18 @@ body = """
 {% macro render_commits(commits) %}
     {% for commit in commits
     | filter(attribute="scope")
-    | unique(attribute="message") 
+    | unique(attribute="message")
     | sort(attribute="scope") %}
         - *({{commit.scope}})* {{ commit.message | upper_first }}
         {%- if commit.breaking %}
         {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
         {%- endif -%}
+            {% if commit.body -%}
+              {% raw %}  \n{% endraw %}
+              {% for line in commit.body | split(pat="\n") -%}
+                {% raw %}  {% endraw %}{{ line }}
+              {% endfor -%}
+            {% endif -%}
     {%- endfor -%}
     {% raw %}\n{% endraw %}\
     {%- for commit in commits | unique(attribute="message") %}
@@ -50,12 +56,13 @@ body = """
             {% if commit.breaking -%}
             {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
             {% endif -%}
-        {% endif -%}
             {% if commit.body -%}
+              {% raw %}  \n{% endraw %}
               {% for line in commit.body | split(pat="\n") -%}
                 {% raw %}  {% endraw %}{{ line }}
               {% endfor -%}
             {% endif -%}
+        {% endif -%}
     {% endfor -%}
 {% endmacro input %}\
 
