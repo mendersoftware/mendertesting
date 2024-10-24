@@ -91,16 +91,16 @@ filter_unconventional = true
 split_commits = false
 # regex for parsing and grouping commits
 commit_parsers = [
+    { message = ".*Changelog: None", skip = true },
+    { message = "^chore|^ci", skip = true },
+    { message = "^test", group = "Testing", skip = true },
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug Fixes" },
     { message = "^doc", group = "Documentation" },
     { message = "^perf", group = "Performance" },
     { message = "^refactor", group = "Refactor" },
     { message = "^style", group = "Styling" },
-    { message = "^test", group = "Testing", skip = true },
-    { message = ".*Changelog: None", skip = true },
     { message = "^chore: bump", group = "Security" },
-    { message = "^chore|^ci", skip = true },
     { body = ".*security", group = "Security" },
 ]
 link_parsers = [
@@ -127,4 +127,3 @@ sort_commits = "oldest"
 [bump]
 features_always_bump_minor = true
 breaking_always_bump_major = true
-
