@@ -31,8 +31,8 @@ body = """
     {% endif %} \
     ([{{ commit.id | truncate(length=7, end="") }}]\
     (https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/commit/{{ commit.id }})) \
-    {% if commit.github.username %} by @{{ commit.github.username }}{%- endif %}\
-    {% if commit.github.pr_number %} in #{{ commit.github.pr_number }}{%- endif %}
+    {% if commit.remote.username %} by @{{ commit.remote.username }}{%- endif %}\
+    {% if commit.remote.pr_number %} in #{{ commit.remote.pr_number }}{%- endif %}
     {% if commit.breaking -%}
         {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
     {% endif -%}
