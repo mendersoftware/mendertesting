@@ -78,6 +78,9 @@ body = """
     ### Dependabot bumps
     {{ self::render_commits(commits=dependencies) }}
 {% endif %}
+{% if not commit %}
+    No Changelog found.
+{% endif %}"""
 """
 # template for the changelog footer
 footer = """---"""
