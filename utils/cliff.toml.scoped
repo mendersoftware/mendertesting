@@ -81,12 +81,12 @@ body = """
 {% if not commit %}
     No Changelog found.
 {% endif %}"""
-"""
+
 # template for the changelog footer
 footer = """---"""
+
 # remove the leading and trailing whitespace from the templates
 trim = true
-
 
 [git]
 # parse the commits based on https://www.conventionalcommits.org
