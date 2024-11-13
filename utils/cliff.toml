@@ -72,7 +72,7 @@ body = """
     ### Dependabot bumps
     {{ self::render_commits(commits=dependencies) }}
 {% endif %}
-{% if not commit %}
+{% if not commits %}
     No Changelog found.
 {% endif %}
 """
