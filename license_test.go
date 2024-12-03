@@ -342,5 +342,5 @@ func TestMisformedLicenseChecksumLines(t *testing.T) {
 
 	err = checkMenderCompliance()
 	assert.Error(t, err, err.Error())
-	assert.Contains(t, err.Error(), "Some line(s) in the LIC_FILE_CHKSUM.sha256 file are misformed")
+	assert.Contains(t, err.Error(), "shasum: WARNING: 1 line is improperly formatted")
 }

@@ -75,17 +75,8 @@ cleanup() {
 }
 sed '/^$/d' $CHKSUM_FILE > $TMP_CHKSUM_FILE
 
-# Collect only stderr from the subcommand
-output="$(
-          exec 3>&1
-          shasum --warn --algorithm 256 --check $TMP_CHKSUM_FILE > /dev/null 2>&3
-)"
-
-if echo "$output" | grep -q 'line is improperly formatted' -; then
-    echo >&2 "Some line(s) in the LIC_FILE_CHKSUM.sha256 file are misformed"
-    cat $TMP_CHKSUM_FILE
-    exit 1
-fi
+# Check shasum
+shasum --warn --algorithm 256 --check $TMP_CHKSUM_FILE --quiet --strict || exit 1
 
 # Unlisted licenses not allowed.
 while read -r file; do
