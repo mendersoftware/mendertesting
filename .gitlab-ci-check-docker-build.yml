@@ -161,7 +161,7 @@ build:docker-multiplatform:
   script:
     - echo "building ${CI_PROJECT_NAME} with tags ${GITLAB_REGISTRY_TAG} and ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}"
     - docker context create builder
-    - docker buildx create builder --use --driver-opt network=host --buildkitd-flags '--debug --allow-insecure-entitlement network.host'
+    - docker buildx create builder --use --driver-opt "image=moby/buildkit:v0.17.3,network=host" --buildkitd-flags '--debug --allow-insecure-entitlement network.host'
     - docker buildx build
       --cache-to type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache,mode=max
       --cache-from type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache
