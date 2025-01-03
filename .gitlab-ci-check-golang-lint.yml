@@ -23,7 +23,7 @@ variables:
   IMAGE_GOLANGCI_VERSION:
     description: |-
       Container image tag of golangci/golangci-lint used for static checks.
-    value: "v1.55.1"
+    value: "v1.63.3"
 
 test:static:
   tags:
@@ -58,7 +58,7 @@ test:govendor-check:
     - exists:
       - vendor
   variables:
-    GOLANG_VERSION: "1.21.3"
+    GOLANG_VERSION: "1.23.4"
   image: golang:${GOLANG_VERSION}
   script:
     - go mod tidy
