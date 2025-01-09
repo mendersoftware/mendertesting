@@ -47,8 +47,8 @@ test:unit:
   variables:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
-    MONGODB_DEBIAN_RELEASE: "buster"
-    MONGODB_VERSION: "4.4"
+    MONGODB_DEBIAN_RELEASE: "bookworm"
+    MONGODB_VERSION: "8.0"
     TEST_MONGO_URL: "mongodb://mongo"
   before_script:
     # Install JUnit test reporting formatter
