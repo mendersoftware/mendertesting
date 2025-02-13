@@ -33,6 +33,8 @@
 #   * GIT_COMMIT_TAG
 #     * SHA of git commit at which build ocurred
 #     * passed via: --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
+#   * DOCKER_BUILD_ARGS 
+#     * Contains additional --build-arg parameters that should be passed to the build
 #
 # Saves in a dotenv file the published image digests. These env variables
 # can be used by later jobs that have publish:image or publish:image:mender
@@ -130,6 +132,7 @@ build:docker:
         --tag $DOCKER_BUILD_SERVICE_IMAGE
         --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
         --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
+        ${DOCKER_BUILD_ARGS}
         ${DOCKER_DIR:-.}
     - docker save $DOCKER_BUILD_SERVICE_IMAGE > ${IMAGE_ARTIFACT_FILENAME:-${CI_PROJECT_DIR}/image.tar}
   artifacts:
