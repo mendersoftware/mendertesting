@@ -23,7 +23,7 @@ variables:
   IMAGE_GOLANGCI_VERSION:
     description: |-
       Container image tag of golangci/golangci-lint used for static checks.
-    value: "v1.63.3"
+    value: "v1.64.7"
 
 test:static:
   tags:
