@@ -108,6 +108,7 @@ link_parsers = [
     { pattern = "MEN-(\\d+)", href = "https://northerntech.atlassian.net/browse/MEN-$1" },
     { pattern = "SEC-(\\d+)", href = "https://northerntech.atlassian.net/browse/SEC-$1" },
     { pattern = "QA-(\\d+)", href = "https://northerntech.atlassian.net/browse/QA-$1" },
+    { pattern = "ME-(\\d+)", href = "https://northerntech.atlassian.net/browse/ME-$1" },
 ]
 
 # protect breaking changes from being skipped due to matching a skipping commit_parser
