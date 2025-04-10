@@ -26,6 +26,12 @@
 #     LICENSE_HEADERS_IGNORE_FILES_REGEXP: '\./exclude-this/.*\.py'
 #
 
+variables:
+  # Variables defined here are fallbacks if not defined elsewhere.
+  GOLANG_VERSION:
+    description: "Container image version for golang used in jobs"
+    value: "1.24"
+
 stages:
   - test
 
@@ -66,7 +72,7 @@ test:check-license:
     - $SCRIPT_PATH/check_license.sh
 
 test:check-license:golang:
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/golang:${GOLANG_VERSION:-1.24}
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/golang:${GOLANG_VERSION}
   tags:
     - hetzner-amd-beefy
   stage: test
