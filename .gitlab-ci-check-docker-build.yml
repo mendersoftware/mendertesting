@@ -71,9 +71,6 @@ variables:
   MULTIPLATFORM_PLATFORMS:
     description: "Comma-separated list of targets to build os/arch[/<version>]"
     value: "linux/amd64,linux/arm64"
-  EXTRA_DOCKER_ARGS:
-    description: "User specified extra arguments for docker build command"
-    value: ""
 
 stages:
   - build
