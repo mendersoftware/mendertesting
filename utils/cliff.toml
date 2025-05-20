@@ -93,7 +93,7 @@ split_commits = false
 commit_parsers = [
     { message = "^[^:]+\\(internal\\):", skip = true }, # Skip "internal" scope
     { message = ".*Changelog: None", skip = true },
-    { message = "^chore|^ci", skip = true },
+    { message = "^chore: bump", group = "Security" },
     { message = "^test", group = "Testing", skip = true },
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug Fixes" },
@@ -101,8 +101,8 @@ commit_parsers = [
     { message = "^perf", group = "Performance" },
     { message = "^refactor", group = "Refactor" },
     { message = "^style", group = "Styling" },
-    { message = "^chore: bump", group = "Security" },
     { body = ".*security", group = "Security" },
+    { message = "^chore|^ci", skip = true },
 ]
 link_parsers = [
     { pattern = "MEN-(\\d+)", href = "https://northerntech.atlassian.net/browse/MEN-$1" },
