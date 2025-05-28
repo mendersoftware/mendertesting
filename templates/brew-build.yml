@@ -1,0 +1,58 @@
+spec:
+  inputs:
+    stage:
+      description: The pipeline stage where to do brew build test
+      default: test
+    runner:
+      description: GitLab CI runner tag (must be MacOS with brew available)
+      default: mac-runner
+    formula:
+      description: The path of the formula in the homebrew repository (e.g. m/mender-artifact.rb)
+    repo:
+      description: Repository which the tested revision lives in (determined from the formula by default)
+      default: ""
+---
+
+$[[ inputs.stage ]]:build:brew:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  needs: []
+  rules:
+    # Exclude production branches
+    - if: $CI_COMMIT_BRANCH =~ "/^(master|main|hosted|staging|production)$/"
+      when: never
+    # Exclude maintenance branches
+    - if: $CI_COMMIT_BRANCH =~ "/^([0-9]+\.[0-9]+\.x|v[0-9]+\.[0-9]+\.x)$/"
+      when: never
+    # Exclude tags
+    - if: $CI_COMMIT_TAG
+      when: never
+    # Run for every other case
+    - when: always
+  before_script:
+    - brew install gnu-sed
+  script:
+    - FORMULA_FILE="$(basename $[[ inputs.formula ]])"
+    - FORMULA_NAME="${FORMULA_FILE%%.*}"
+    - REPO="$FORMULA_NAME"
+    - test -z "$[[ inputs.repo ]]" || REPO="$[[ inputs.repo ]]"
+    - TEMP_BUILD_DIR="/tmp/brew_build_${CI_PIPELINE_ID}"
+    - mkdir "$TEMP_BUILD_DIR"
+    - cd "$TEMP_BUILD_DIR"
+    # 1. get the custom download strategy for brew so that we can fetch a PR revision from GH
+    - wget -O $FORMULA_FILE https://raw.githubusercontent.com/mendersoftware/mendertesting/master/gh_pr_brew_dl_strategy.rb
+    - echo >> $FORMULA_FILE # Make sure there's a newline after download strategy class
+    # 2. fetch the upstream brew formula
+    - wget -O ${FORMULA_NAME}_upstream.rb "https://github.com/Homebrew/homebrew-core/raw/refs/heads/master/Formula/$[[ inputs.formula ]]"
+    # 3. adapt the formula to use the PR revision instead of a release tarball
+    - |
+        gsed -e /sha256/d -e "/url /s|\".*\"|\"https://github.com/mendersoftware/${REPO}.git\",|" -e "/url \"https/a\ \ \ \ revision: \"${CI_COMMIT_SHA}\",\n    using: GitHubPRDownloadStrategy\n  version \"1234\"" < ${FORMULA_NAME}_upstream.rb >> $FORMULA_FILE
+    # 4. run brew build and test
+    - HOMEBREW_NO_INSTALL_FROM_API=1 brew reinstall --build-from-source --verbose --debug --formula ./${FORMULA_FILE}
+    - brew test ./${FORMULA_FILE}
+  after_script:
+    - FORMULA_FILE="$(basename $[[ inputs.formula ]])"
+    - FORMULA_NAME="${FORMULA_FILE%%.*}"
+    - brew remove $FORMULA_NAME
+    - rm -rf "/tmp/brew_build_${CI_PIPELINE_ID}"
