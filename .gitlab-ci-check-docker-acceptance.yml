@@ -142,12 +142,12 @@ publish:acceptance:
     - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
     - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
     # Coveralls env variables:
-    #  According to https://docs.coveralls.io/supported-ci-services
+    #  According to https://docs.coveralls.io/ci-services
     #  we should set CI_NAME, CI_BUILD_NUMBER, etc. But according
     #  to goveralls source code (https://github.com/mattn/goveralls)
     #  many of these are not supported. Set CI_BRANCH
     #  and pass few others as command line arguments.
-    #  See also https://docs.coveralls.io/api-reference
+    #  See also https://docs.coveralls.io/api-introduction
     - export CI_BRANCH=${CI_COMMIT_BRANCH}
   script:
     - goveralls
@@ -163,7 +163,7 @@ coveralls:finish-build:
   tags:
     - mender-qa-worker-generic-light
   stage: .post
-  # See https://docs.coveralls.io/parallel-build-webhook
+  # See https://docs.coveralls.io/api-parallel-build-webhook
   variables:
     COVERALLS_WEBHOOK_URL: "https://coveralls.io/webhook"
     COVERALLS_RERUN_BUILD_URL: "https://coveralls.io/rerun_build"
