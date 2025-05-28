@@ -37,7 +37,8 @@ $[[ inputs.stage ]]:build:brew:
     - FORMULA_NAME="${FORMULA_FILE%%.*}"
     - REPO="$FORMULA_NAME"
     - test -z "$[[ inputs.repo ]]" || REPO="$[[ inputs.repo ]]"
-    - TEMP_BUILD_DIR="$(mktemp -d /tmp/brew_build_XXXXXX)"
+    - TEMP_BUILD_DIR="/tmp/brew_build_${CI_PIPELINE_ID}"
+    - mkdir "$TEMP_BUILD_DIR"
     - cd "$TEMP_BUILD_DIR"
     # 1. get the custom download strategy for brew so that we can fetch a PR revision from GH
     - wget -O $FORMULA_FILE https://raw.githubusercontent.com/mendersoftware/mendertesting/master/gh_pr_brew_dl_strategy.rb
@@ -54,4 +55,4 @@ $[[ inputs.stage ]]:build:brew:
     - FORMULA_FILE="$(basename $[[ inputs.formula ]])"
     - FORMULA_NAME="${FORMULA_FILE%%.*}"
     - brew remove $FORMULA_NAME
-    - rm -rf "$TEMP_BUILD_DIR"
+    - rm -rf "/tmp/brew_build_${CI_PIPELINE_ID}"
