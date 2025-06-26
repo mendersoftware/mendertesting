@@ -102,7 +102,7 @@ commit_parsers = [
     { message = "^chore: bump", group = "Security" },
     { message = "^test", group = "Testing", skip = true },
     { message = "^feat", group = "Features" },
-    { message = "^fix", group = "Bug Fixes" },
+    { message = "^fix", group = "Bug fixes" },
     { message = "^doc", group = "Documentation" },
     { message = "^perf", group = "Performance" },
     { message = "^refactor", group = "Refactor" },
