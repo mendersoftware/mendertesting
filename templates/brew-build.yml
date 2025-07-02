@@ -58,5 +58,5 @@ $[[ inputs.stage ]]:build:brew:
   after_script:
     - FORMULA_FILE="$(basename $[[ inputs.formula ]])"
     - FORMULA_NAME="${FORMULA_FILE%%.*}"
-    - brew remove $FORMULA_NAME
+    - brew remove $FORMULA_NAME || true
     - rm -rf "/tmp/brew_build_${CI_PIPELINE_ID}"
