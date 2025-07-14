@@ -57,7 +57,7 @@ sync:image:
   dependencies:
     - publish:image
   stage: sync
-  image: debian:buster
+  image: debian:bookworm
   before_script:
     - apt update && apt install -yyq git
     # Prepare SSH key
