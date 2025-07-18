@@ -18,7 +18,7 @@ stages:
 
 test:unit:
   variables:
-    MONGO_VERSION: "6.0"
+    MONGO_VERSION: "8.0"
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
     TEST_MONGO_URL: "mongodb://mongo"
