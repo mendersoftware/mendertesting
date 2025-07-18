@@ -28,7 +28,7 @@ test:unit:
   needs: []
   except:
     - /^saas-[a-zA-Z0-9.]+$/
-  image: golang:1.23.4
+  image: golang:1.24
   services:
     - "mongo:${MONGO_VERSION}"
   before_script:
