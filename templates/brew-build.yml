@@ -18,6 +18,8 @@ $[[ inputs.stage ]]:build:brew:
   tags:
     - $[[ inputs.runner ]]
   needs: []
+  variables:
+    HOMEBREW_DEVELOPER: 1
   rules:
     # Manually run job. Note that this variable is not shown by default
     # in the pipelines that include this component.
