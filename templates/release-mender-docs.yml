@@ -1,0 +1,67 @@
+spec:
+  inputs:
+    stage:
+      description: The pipeline stage where to perform the docs release
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: hetzner-amd-beefy
+    component:
+      description: The component name to update versions for
+    alpine-git-tag:
+      description: Tag for alpine/git container image
+      default: latest
+---
+
+release:mender-docs:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  needs: []
+  image:
+    name: alpine/git:$[[ inputs.alpine-git-tag ]]
+    entrypoint: [""]
+  rules:
+    # Only on production tags (with or without 'v' prefix)
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/''
+      allow_failure: true
+  variables:
+    GITHUB_DOCS_REPO_URL: "mendersoftware/mender-docs"
+  before_script:
+    # Check required input parameters
+    - |
+      if [ -z "$[[ inputs.component ]]" ]; then
+        echo "ERROR: Missing required input parameter 'component'"
+        echo "Please specify the component name in your include section:"
+        echo "  inputs:"
+        echo "    component: your-component-name"
+        exit 1
+      fi
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_USER_EMAIL" ] || [ -z "$GITHUB_USER_NAME" ] || [ -z "$GITHUB_CLI_TOKEN" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - GITHUB_USER_EMAIL: ${GITHUB_USER_EMAIL:-'NOT SET'}"
+        echo "  - GITHUB_USER_NAME: ${GITHUB_USER_NAME:-'NOT SET'}"
+        echo "  - GITHUB_CLI_TOKEN: $([ -z "$GITHUB_CLI_TOKEN" ] && echo 'NOT SET' || echo 'SET')"
+        echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+    # Install required tools
+    - apk add --no-cache python3 curl
+    - curl -fsSL https://cli.github.com/packages/alpine/install.sh | sh
+    # Setting up git
+    - git config --global user.email "${GITHUB_USER_EMAIL}"
+    - git config --global user.name "${GITHUB_USER_NAME}"
+    # GITHUB_TOKEN for Github cli authentication
+    - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
+  script:
+    - git clone https://${GITHUB_USER_NAME}:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/${GITHUB_DOCS_REPO_URL}
+    - cd ${GITHUB_DOCS_REPO_URL#*/}
+    - git checkout -b autoversion-${CI_JOB_ID}
+    - python3 ./autoversion.py --update --component $[[ inputs.component ]] --version ${CI_COMMIT_TAG}
+    - git add .
+    - |
+      git commit -s -m "chore: update $[[ inputs.component ]] versions with autoversion"
+    - git push origin autoversion-${CI_JOB_ID}
+    - gh pr create --title "${CI_COMMIT_TAG} Release - update versions for $[[ inputs.component ]]" --body "Automated change to the $[[ inputs.component ]] versions during ${CI_COMMIT_TAG} release" --base master --head autoversion-${CI_JOB_ID}
