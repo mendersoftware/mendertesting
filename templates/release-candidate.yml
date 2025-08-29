@@ -1,0 +1,112 @@
+spec:
+  inputs:
+    stage:
+      description: The pipeline stage where to do the release candidate
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: hetzner-amd-beefy
+    github_repo:
+      description: GitHub repository URL (e.g., "mendersoftware/mender-artifact")
+    enable_git_cliff:
+      description: Enable git-cliff for enhanced changelog generation
+      default: "false"
+---
+
+release:candidate:changelog:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  image:
+    name: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
+    entrypoint: [""]
+  rules:
+    # Run on maintenance branches (1.0.x or v1.0.x format)
+    - if: $CI_COMMIT_BRANCH =~ "/^v?\\d+\\.\\d+\\.x$/"
+    # Run on default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    # Never run on tags
+    - if: $CI_COMMIT_TAG
+      when: never
+  variables:
+    GIT_DEPTH: 0
+    GIT_STRATEGY: clone
+  before_script:
+    # Check required input parameters
+    - |
+      if [ -z "$[[ inputs.github_repo ]]" ]; then
+        echo "ERROR: Missing required input parameter 'github_repo'"
+        echo "Please specify the GitHub repository URL in your include section:"
+        echo "  inputs:"
+        echo "    github_repo: your-org/your-repo"
+        exit 1
+      fi
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_USER_EMAIL" ] || [ -z "$GITHUB_USER_NAME" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - GITHUB_USER_EMAIL: ${GITHUB_USER_EMAIL:-'NOT SET'}"
+        echo "  - GITHUB_USER_NAME: ${GITHUB_USER_NAME:-'NOT SET'}"
+        echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+    # Setup git configuration
+    - git config --global user.email "${GITHUB_USER_EMAIL}"
+    - git config --global user.name "${GITHUB_USER_NAME}"
+    - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
+  script:
+    - release-please release-pr --token=${GITHUB_BOT_TOKEN_REPO_FULL} --repo-url=$[[ inputs.github_repo ]] --target-branch=${CI_COMMIT_REF_NAME}
+    - |
+      if [ "$[[ inputs.enable_git_cliff ]]" = "true" ]; then
+        echo "Git-cliff enabled, generating enhanced changelog..."
+        # Get the PR number from release-please output
+        PR_NUMBER=$(gh pr list --repo $[[ inputs.github_repo ]] --head release-please--branches--${CI_COMMIT_REF_NAME} --json number --jq '.[0].number' || echo "")
+        if [ -n "$PR_NUMBER" ]; then
+          echo "Found release PR #${PR_NUMBER}, updating with git-cliff changelog..."
+          # Checkout the release-please PR
+          gh pr checkout ${PR_NUMBER} --repo $[[ inputs.github_repo ]]
+          # Generate changelog with git-cliff
+          git-cliff --output CHANGELOG.md
+          # Update the PR body with the new changelog content
+          gh pr edit ${PR_NUMBER} --repo $[[ inputs.github_repo ]] --body-file CHANGELOG.md
+          echo "Updated PR #${PR_NUMBER} with git-cliff generated changelog"
+        else
+          echo "No release PR found, git-cliff will not be applied"
+        fi
+      fi
+
+release:candidate:publish:
+  stage: .post
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
+  tags:
+    - $[[ inputs.runner ]]
+  needs:
+    - release:candidate:changelog
+  rules:
+    # Manual trigger on maintenance branches (1.0.x or v1.0.x format)
+    - if: $CI_COMMIT_BRANCH =~ "/^v?\\d+\\.\\d+\\.x$/"
+      when: manual
+      allow_failure: true
+    # Manual trigger on default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+    # Never run on tags
+    - if: $CI_COMMIT_TAG
+      when: never
+  before_script:
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_USER_EMAIL" ] || [ -z "$GITHUB_USER_NAME" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - GITHUB_USER_EMAIL: ${GITHUB_USER_EMAIL:-'NOT SET'}"
+        echo "  - GITHUB_USER_NAME: ${GITHUB_USER_NAME:-'NOT SET'}"
+        echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+    # Setup git configuration
+    - git config --global user.email "${GITHUB_USER_EMAIL}"
+    - git config --global user.name "${GITHUB_USER_NAME}"
+    - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
+  script:
+    - release-please github-release --token=${GITHUB_BOT_TOKEN_REPO_FULL} --repo-url=$[[ inputs.github_repo ]] --target-branch=${CI_COMMIT_REF_NAME}
