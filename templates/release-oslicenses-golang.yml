@@ -1,0 +1,106 @@
+spec:
+  inputs:
+    remote_license_file:
+      description: Remote license file to be used (e.g., "302.Release-information/03.Open-source-licenses/30.mender-artifact/docs.md")
+    golang_version:
+      description: Golang version image to be used
+      default: 1.24
+    golang_flags:
+      description: Golang flags to be used
+      default: ""
+    stage:
+      description: The pipeline stage where to perform the license release
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: hetzner-amd-beefy
+    github_user_name:
+      description: GitHub user name
+      default: mender-test-bot
+    github_user_email:
+      description: GitHub user e-mail address
+      default: mender@northern.tech
+---
+
+release:golanglicenses:generate:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  rules:
+    - changes:
+        paths: ["**/*"]
+        compare_to: $DEFAULT_BRANCH
+    - if: '$CI_COMMIT_REF_PROTECTED == "true"'
+      when: on_success
+  image: golang:$[[ inputs.golang_version ]]
+  needs: []
+  variables:
+    GOFLAGS: $[[ inputs.golang_flags ]]
+  before_script:
+    - go install github.com/google/go-licenses@v1.6.0
+    - if [ ! -f go-licenses.gotpl ]; then
+    -   curl --fail --output go-licenses.gotpl
+          https://raw.githubusercontent.com/mendersoftware/mendertesting/refs/heads/master/go-licenses.gotpl
+    - fi
+
+  script:
+    - go-licenses check --disallowed_types=forbidden,restricted,unknown --ignore=github.com/mendersoftware/$CI_PROJECT_NAME ./...
+    - go-licenses report --template=./go-licenses.gotpl --ignore=github.com/mendersoftware/$CI_PROJECT_NAME ./... > licenses.md
+  artifacts:
+    when: on_success
+    expire_in: "1w"
+    paths:
+      - licenses.md
+
+release:golanglicenses:publish:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  rules:
+    # Only make available for stable tags
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
+      allow_failure: true
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
+  needs:
+    - job: release:golanglicenses:generate
+      artifacts: true
+  variables:
+    GITHUB_DOCS_REPO_NAME: "mender-docs"
+  before_script:
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+    # Setup git configuration
+    - git config --global user.name "$[[ inputs.github_user_name ]]"
+    - git config --global user.email "$[[ inputs.github_user_email ]]"
+    - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
+    - git remote add github-${CI_JOB_ID}
+      https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/mendersoftware/$GITHUB_DOCS_REPO_NAME
+      || true  # Ignore already existing remote
+    - gh repo set-default
+      https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/mendersoftware/$GITHUB_DOCS_REPO_NAME
+  script:
+    - git clone https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/mendersoftware/${GITHUB_DOCS_REPO_NAME}
+    - cd ${GITHUB_DOCS_REPO_NAME}
+    - |
+      if [ ! -e $[[ inputs.remote_license_file ]] ]; then
+        echo "ERROR: Remote license file $[[ inputs.remote_license_file ]] must exist"
+        exit 1
+      fi
+    - git checkout -b licenses-${CI_JOB_ID}
+    - |
+      if [ ! -e ../.licenses_header.md ]; then
+        echo "ERROR: ../.licenses_header.md must exist"
+        exit 1
+      fi
+    - cat ../.licenses_header.md > $[[ inputs.remote_license_file ]]
+    - cat ../licenses.md >> $[[ inputs.remote_license_file ]]
+    - git add $[[ inputs.remote_license_file ]]
+    - |
+      git commit -s -m "chore: add $CI_PROJECT_NAME open source licenses"
+    - git push origin licenses-${CI_JOB_ID}
+    - gh pr create --title "${CI_COMMIT_TAG} Release - update $CI_PROJECT_NAME licenses" --body "Automated change to the $CI_PROJECT_NAME Licenses during ${CI_COMMIT_TAG} release" --base master --head licenses-${CI_JOB_ID}
