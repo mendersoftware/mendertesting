@@ -1,0 +1,502 @@
+spec:
+  inputs:
+    stage:
+      description: The pipeline stage where docker images are created and released
+      default: publish
+---
+
+variables:
+  DOCKER_REPOSITORY: mendersoftware/mender-convert
+  MULTIPLATFORM_BUILD: "true"
+  MULTIPLATFORM_PLATFORMS: "linux/amd64,linux/arm64"
+  S3_BUCKET_NAME: mender-convert-images
+
+  AWS_CLI_V2_VERSION: "2.27.56"
+  AWS_CLI_V2_CHECKSUM: "48c7a449b6bbb1f679ca25fe32dca9bc410b4abd2622d4640ccee922f504458f"
+
+  # These variables are present elsewhere in the repository too. Make sure to
+  # search for and change them too.
+  MENDER_ARTIFACT_VERSION:
+    value: "4.1.0"
+    description: |-
+      Version of mender-artifact for the builder image - a specific version
+  MENDER_CLIENT_VERSION:
+    value: "latest"
+    description: |-
+      Version of mender for the converted image - 'latest', 'auto', 'master' or a specific version
+  MENDER_FLASH_VERSION:
+    value: "latest"
+    description: |-
+      Version of mender-flash for the converted image - 'latest', 'master' or a specific version
+  MENDER_ADDON_CONNECT_VERSION:
+    value: "latest"
+    description: |-
+      Version of mender-connect for the converted image - 'latest', 'master' or a specific version
+  MENDER_ADDON_CONFIGURE_VERSION:
+    value: "latest"
+    description: |-
+      Version of mender-configure for the converted image - 'latest', 'master' or a specific version
+
+  # Which version of mender-convert to use in published image name. Normally
+  # empty, in which case the branch or tag name will be used, but this variable
+  # is available so that it's possible to make small build fixes on an already
+  # tagged version.
+  MENDER_CONVERT_PUBLISH_VERSION: ""
+
+  TEST_MENDER_CONVERT:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: |-
+      Whether to run acceptance tests
+
+  PUBLISH_MENDER_CONVERT_AUTOMATIC:
+    value: "false"
+    options:
+      - "true"
+      - "false"
+    description: |-
+      Whether to publish packages automatically - they can always be published manually
+
+  TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE: "4"
+
+  DEBIAN_FRONTEND: noninteractive
+
+  # Docker dind configuration.
+  # To use dind, make sure gitlab-runner's configuration
+  # has a common mount for /certs (i.e. runners.docker.volumes) directory
+  # and that the dind service name is always docker (default hostname).
+  DOCKER_HOST: "tcp://docker:2376"
+  DOCKER_CERT_PATH: "/certs/client"
+  DOCKER_TLS_VERIFY: "1"
+  DOCKER_TLS_CERTDIR: "/certs"
+
+  # Ubuntu distribution to use in test_acceptance jobs
+  # Jammy Jellyfish is Ubuntu 22.04
+  ACC_TESTS_UBUNTU_DISTRO: "jammy"
+
+include:
+  - project: 'Northern.tech/Mender/mendertesting'
+    file:
+      - '.gitlab-ci-check-commits.yml'
+      - '.gitlab-ci-check-license.yml'
+      - '.gitlab-ci-github-status-updates.yml'
+      - '.gitlab-ci-check-shell-format.yml'
+      - '.gitlab-ci-check-docker-build.yml'
+
+stages:
+  - test
+  - build
+  - convert
+  - flash
+  - test_acceptance
+  - publish
+
+test:check-commits:
+  only:
+    variables:
+      - '$TEST_MENDER_CONVERT == "true"'
+
+test:check-license:
+  rules:
+    - if: '$TEST_MENDER_CONVERT == "true"'
+
+test:check-shell-formatting:
+  rules:
+    - if: '$TEST_MENDER_CONVERT == "true"'
+  before_script:
+    - SHELL_SCRIPTS=$(find mender-convert* modules configs scripts
+            -type f
+            -not -name "*.md"
+            -not -path "scripts/linkbot/*"
+            -not -wholename "scripts/test/*"
+            -not -path "*/files/*")
+
+build:docker-multiplatform:
+  variables:
+    DOCKER_BUILDKIT: 1
+    GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}'
+    EXTRA_DOCKER_ARGS: "--build-arg MENDER_ARTIFACT_VERSION=${MENDER_ARTIFACT_VERSION}"
+
+.template_convert_raspbian: &convert_raspbian
+  stage: convert
+  needs:
+    - job: build:docker-multiplatform
+      artifacts: false
+  image: ubuntu:22.04
+  services:
+    - docker:dind
+  tags:
+    - mender-qa-worker-generic
+  before_script:
+    - apt update && apt install -yy bash wget xz-utils awscli docker.io curl
+
+    - docker pull ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
+    - export IMAGE_NAME=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
+
+    - export RASPBERRYPI_CONFIG_NAME="$(basename "$RASPBERRYPI_PLATFORM")"
+
+    - mkdir -p input
+    - cd input
+    - wget -q ${RASPBIAN_DOWNLOAD_CONVERT}
+    - unxz ${RASPBIAN_NAME_CONVERT}.img.xz
+    - cd ..
+
+    - eval "$(curl https://raw.githubusercontent.com/mendersoftware/mendertesting/master/mender-ci-common.sh)"
+
+  script:
+    - env MENDER_ARTIFACT_NAME=${RASPBIAN_NAME_CONVERT}-mender
+      ./docker-mender-convert --disk-image input/${RASPBIAN_NAME_CONVERT}.img
+      --config configs/raspberrypi/${RASPBERRYPI_PLATFORM}_config
+      --config configs/images/raspberrypi_raspbian_config
+
+    # Collect artifacts.
+    - mv deploy ${RASPBERRYPI_CONFIG_NAME}
+    - tar czf ${RASPBERRYPI_CONFIG_NAME}.tar.gz ${RASPBERRYPI_CONFIG_NAME}
+    # Upload to temporary S3 bucket
+    - mender_ci_save_tmp_artifact ${RASPBERRYPI_CONFIG_NAME}.tar.gz
+
+  artifacts:
+    paths:
+      - checksums
+
+convert_raspbian_raspberrypi4_bookworm_64bit:
+  <<: *convert_raspbian
+  variables:
+    RASPBERRYPI_PLATFORM: uboot/debian/raspberrypi4_bookworm_64bit
+    RASPBIAN_NAME_CONVERT: 2024-10-22-raspios-bookworm-arm64-lite
+    ## Important: when updating the upstream image update also RASPBERRY_PI_OS_PREFIX in the publish jobs
+    RASPBIAN_DOWNLOAD_CONVERT: https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2024-10-28/2024-10-22-raspios-bookworm-arm64-lite.img.xz
+
+convert_raspbian_raspberrypi3_bookworm_64bit:
+  <<: *convert_raspbian
+  variables:
+    RASPBERRYPI_PLATFORM: uboot/debian/raspberrypi3_bookworm_64bit
+    RASPBIAN_NAME_CONVERT: 2024-10-22-raspios-bookworm-arm64-lite
+    ## Important: when updating the upstream image update also RASPBERRY_PI_OS_PREFIX in the publish jobs
+    RASPBIAN_DOWNLOAD_CONVERT: https://downloads.raspberrypi.com/raspios_lite_arm64/images/raspios_lite_arm64-2024-10-28/2024-10-22-raspios-bookworm-arm64-lite.img.xz
+
+.bash_helpers: &bash_helpers |
+  # Bash function to check if the string is a final tag
+  function is_final_tag () {
+    version="$1"
+    [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && return 0 || return $?
+  }
+  # Bash function to check if the string is a build tag
+  function is_build_tag () {
+    version="$1"
+    [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-build[0-9]+$ ]] && return 0 || return $?
+  }
+
+.template_test_acceptance: &test_acceptance
+  stage: test_acceptance
+  needs:
+    - job: build:docker-multiplatform
+      artifacts: false
+  image: ubuntu:${ACC_TESTS_UBUNTU_DISTRO}
+  services:
+    - docker:dind
+  tags:
+    - mender-qa-worker-mender-convert-tests
+  timeout: 2h
+  before_script:
+    - *bash_helpers
+    # Install dependencies
+    - apt update
+    - apt install -qyy bash wget git util-linux mtools python3 python3-pip lmdb-utils
+      gcc python3-dev libffi-dev liblzo2-dev libc-dev libssl-dev make sudo
+      unzip qemu-system-x86 ovmf curl docker.io s3cmd fdisk gnupg-agent
+
+    # Install awscliv2 - https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+    - curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWS_CLI_V2_VERSION}.zip" -o "awscliv2.zip"
+    - echo "${AWS_CLI_V2_CHECKSUM}  awscliv2.zip" |  sha256sum -c
+    - unzip awscliv2.zip
+    - ./aws/install --bin-dir /usr/bin
+
+    # Python3 dependencies
+    - python3 -m pip install -U pip
+    - pip3 install --ignore-installed -r tests/requirements_py3.txt
+    # Load image under test
+    - docker pull ${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
+    - export IMAGE_NAME=${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}
+    - export RASPBERRYPI_CONFIG_NAME="$(basename "$RASPBERRYPI_PLATFORM")"
+    # Set mender-image-tests submodule to correct version
+    - git submodule update --init --recursive
+    # Get mender-artifact for the tests
+    - wget "https://downloads.mender.io/repos/workstation-tools/pool/main/m/mender-artifact/mender-artifact_${MENDER_ARTIFACT_VERSION}-1%2Bubuntu%2B${ACC_TESTS_UBUNTU_DISTRO}_amd64.deb"
+    - dpkg --install mender-artifact_${MENDER_ARTIFACT_VERSION}-1+ubuntu+${ACC_TESTS_UBUNTU_DISTRO}_amd64.deb
+    - rm mender-artifact_${MENDER_ARTIFACT_VERSION}-1+ubuntu+${ACC_TESTS_UBUNTU_DISTRO}_amd64.deb
+    # Prepare versions file for mender-convert
+    - echo "MENDER_CLIENT_VERSION=${MENDER_CLIENT_VERSION}" > versions_override_config
+    - echo "MENDER_FLASH_VERSION=${MENDER_FLASH_VERSION}" >> versions_override_config
+    - echo "MENDER_ADDON_CONNECT_VERSION=${MENDER_ADDON_CONNECT_VERSION}" >> versions_override_config
+    - echo "MENDER_ADDON_CONFIGURE_VERSION=${MENDER_ADDON_CONFIGURE_VERSION}" >> versions_override_config
+    # Get Update Modules Artifact generators for the tests
+    - if [ "${MENDER_CLIENT_VERSION}" = "latest" ]; then
+    -   mender_version=master
+    - else
+    -   mender_version="${MENDER_CLIENT_VERSION}"
+    - fi
+    - curl -f -O https://raw.githubusercontent.com/mendersoftware/mender/${mender_version}/support/modules-artifact-gen/directory-artifact-gen
+    - curl -f -O https://raw.githubusercontent.com/mendersoftware/mender/${mender_version}/support/modules-artifact-gen/single-file-artifact-gen
+    - chmod ugo+x directory-artifact-gen single-file-artifact-gen
+    - mv directory-artifact-gen single-file-artifact-gen /usr/bin/
+  artifacts:
+    expire_in: 2w
+    when: always
+    paths:
+      - results_*.xml
+      - report_*.html
+    reports:
+      junit: results_*.xml
+  rules:
+    - if: '$TEST_MENDER_CONVERT == "true"'
+
+.template_test_acceptance_prebuilt_raspberrypi: &test_acceptance_prebuilt_raspberrypi
+  <<: *test_acceptance
+  script:
+    - eval "$(curl https://raw.githubusercontent.com/mendersoftware/mendertesting/master/mender-ci-common.sh)"
+    # Fetch artifacts from temporary S3 bucket
+    - mender_ci_load_tmp_artifact ${RASPBERRYPI_CONFIG_NAME}.tar.gz
+    - tar xzf ${RASPBERRYPI_CONFIG_NAME}.tar.gz
+    - mv ${RASPBERRYPI_CONFIG_NAME} deploy
+    # Extract converted Raspbian artifacts
+    - unxz deploy/${RASPBIAN_NAME_ACCEPTANCE}-${MENDER_DEVICE_TYPE}-mender.img.xz
+    - ./scripts/test/run-tests.sh
+      --prebuilt-image ${MENDER_DEVICE_TYPE}
+      ${RASPBIAN_NAME_ACCEPTANCE}-${MENDER_DEVICE_TYPE}-mender
+      --
+      -n $TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE
+
+test_acceptance_prebuilt_raspberrypi4_bookworm_64bit:
+  <<: *test_acceptance_prebuilt_raspberrypi
+  needs:
+    - job: build:docker-multiplatform
+      artifacts: false
+    - job: convert_raspbian_raspberrypi4_bookworm_64bit
+      artifacts: true
+  variables:
+    RASPBERRYPI_PLATFORM: uboot/debian/raspberrypi4_bookworm_64bit
+    RASPBIAN_NAME_ACCEPTANCE: 2024-10-22-raspios-bookworm-arm64-lite
+    MENDER_DEVICE_TYPE: raspberrypi4_64
+
+test_acceptance_prebuilt_raspberrypi3_bookworm_64bit:
+  <<: *test_acceptance_prebuilt_raspberrypi
+  needs:
+    - job: build:docker-multiplatform
+      artifacts: false
+    - job: convert_raspbian_raspberrypi3_bookworm_64bit
+      artifacts: true
+  variables:
+    RASPBERRYPI_PLATFORM: uboot/debian/raspberrypi3_bookworm_64bit
+    RASPBIAN_NAME_ACCEPTANCE: 2024-10-22-raspios-bookworm-arm64-lite
+    MENDER_DEVICE_TYPE: raspberrypi3_64
+
+test_acceptance_ubuntu_qemux86_64:
+  <<: *test_acceptance
+  script:
+    - mkdir -p input/config
+    - cp versions_override_config input/config/versions_override_config
+    - ./scripts/test/run-tests.sh
+      --config input/config/versions_override_config
+      --only ubuntu-qemux86-64
+      --
+      -n $TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE
+
+test_acceptance_ubuntu_qemux86_64_no_grub_d:
+  <<: *test_acceptance
+  script:
+    - mkdir -p input/config
+    - cp versions_override_config input/config/versions_override_config
+    - ./scripts/test/run-tests.sh
+      --config input/config/versions_override_config
+      --only ubuntu-qemux86-64-no-grub-d
+      --
+      -n $TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE
+
+test_acceptance_debian_qemux86_64:
+  <<: *test_acceptance
+  script:
+    - mkdir -p input/config
+    - cp versions_override_config input/config/versions_override_config
+    - ./scripts/test/run-tests.sh
+      --config input/config/versions_override_config
+      --only debian-qemux86-64
+      --
+      -n $TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE
+
+test_acceptance_raspberrypi4_bookworm_64bit:
+  <<: *test_acceptance
+  script:
+    - mkdir -p input/config
+    - cp versions_override_config input/config/versions_override_config
+    - ./scripts/test/run-tests.sh
+      --config input/config/versions_override_config
+      --only raspberrypi4_bookworm_64bit
+      --
+      -n $TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE
+
+test_acceptance_raspberrypi4_uefi_bookworm_64bit:
+  <<: *test_acceptance
+  script:
+    - mkdir -p input/config
+    - cp versions_override_config input/config/versions_override_config
+    - ./scripts/test/run-tests.sh
+      --config input/config/versions_override_config
+      --only raspberrypi4_uefi_bookworm_64bit
+      --
+      -n $TESTS_IN_PARALLEL_CLIENT_ACCEPTANCE
+
+# Override rules to publish from Git tags for Mender Convert 4.3 onwards
+# Once Mender 3.7 LTS is EOL, we can instead publish from all Git tags always from mendertesting
+publish:image-multiplatform:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|staging|production|feature-.+)$/'
+    - if: '$CI_COMMIT_TAG =~ /^4\.[012]\.[0-9]+(?:-build[0-9]+)?$/'
+      when: never
+    - if: $CI_COMMIT_TAG
+
+.template:publish:s3:
+  stage: publish
+  needs:
+    - job: convert_raspbian_raspberrypi4_bookworm_64bit
+      artifacts: true
+    - job: convert_raspbian_raspberrypi3_bookworm_64bit
+      artifacts: true
+  image: debian:buster
+  before_script:
+    - apt update && apt install -yyq awscli curl
+    - eval "$(curl https://raw.githubusercontent.com/mendersoftware/mendertesting/master/mender-ci-common.sh)"
+    - IMAGE_VERSION=${MENDER_CONVERT_PUBLISH_VERSION:-${CI_COMMIT_REF_NAME}}
+  script:
+    # One by one, fetch artifacts from temporary S3 bucket and publish to production S3 bucket
+    - for RASPBERRYPI_CONFIG_NAME in raspberrypi4_bookworm_64bit raspberrypi3_bookworm_64bit; do
+    -   mender_ci_load_tmp_artifact ${RASPBERRYPI_CONFIG_NAME}.tar.gz
+    -   tar xzf ${RASPBERRYPI_CONFIG_NAME}.tar.gz
+    -   PUBLISH_NAME=${RASPBERRY_PI_OS_PREFIX}-${RASPBERRYPI_CONFIG_NAME}-mender-convert-${IMAGE_VERSION}.img.xz
+    -   echo "Publishing ${PUBLISH_NAME} version to S3"
+    #   It is not possible deduce filename from RASPBERRY_PI_OS_PREFIX and RASPBERRYPI_CONFIG_NAME,
+    #   so use a wildcard and assume that there is only one conversion per directory (same below)
+    -   aws s3 cp ${RASPBERRYPI_CONFIG_NAME}/*-mender.img.xz
+          s3://$S3_BUCKET_NAME/${RASPBERRY_PI_OS_PREFIX}/arm/${PUBLISH_NAME}
+    -   aws s3api put-object-acl --acl public-read --bucket $S3_BUCKET_NAME
+          --key ${RASPBERRY_PI_OS_PREFIX}/arm/${PUBLISH_NAME}
+
+    -   PUBLISH_NAME=${RASPBERRY_PI_OS_PREFIX}-${RASPBERRYPI_CONFIG_NAME}-mender-convert-${IMAGE_VERSION}.mender
+    -   echo "Publishing ${PUBLISH_NAME} version to S3"
+    -   aws s3 cp ${RASPBERRYPI_CONFIG_NAME}/*-mender.mender
+          s3://$S3_BUCKET_NAME/${RASPBERRY_PI_OS_PREFIX}/arm/${PUBLISH_NAME}
+    -   aws s3api put-object-acl --acl public-read --bucket $S3_BUCKET_NAME
+          --key ${RASPBERRY_PI_OS_PREFIX}/arm/${PUBLISH_NAME}
+
+    #   Remove after upload to free disk space for the next board
+    -   rm -rf ${RASPBERRYPI_CONFIG_NAME}.tar.gz ${RASPBERRYPI_CONFIG_NAME}/
+    - done
+
+publish:s3:manual:
+  when: manual
+  extends: .template:publish:s3
+  variables:
+    RASPBERRY_PI_OS_PREFIX: 2024-10-22-raspios-lite
+
+publish:s3:automatic:
+  rules:
+    - if: '$PUBLISH_MENDER_CONVERT_AUTOMATIC == "true"'
+  extends: .template:publish:s3
+  variables:
+    RASPBERRY_PI_OS_PREFIX: 2024-10-22-raspios-lite
+
+# excludes non multiplatform build job
+build:docker:
+  rules:
+    - when: never
+
+# excludes non multiplatform build job
+publish:image:
+  rules:
+    - when: never
+
+# excludes non multiplatform build job
+publish:image:mender:
+  rules:
+    - when: never
+
+# excludes non multiplatform build job
+publish:image:saas:
+  rules:
+    - when: never
+
+####################
+# Hardware testing #
+####################
+
+test:hardware:convert:
+  <<: *convert_raspbian
+  variables:
+    RASPBERRYPI_PLATFORM: uboot/debian/raspberrypi4_bookworm_64bit
+  when: manual
+  stage: convert
+  script:
+    # Convert the image for the hardware tester
+    - env MENDER_ARTIFACT_NAME=${RASPBIAN_NAME}-mender
+      ./docker-mender-convert --disk-image input/${RASPBIAN_NAME}.img
+      --config configs/raspberrypi/${RASPBERRYPI_PLATFORM}_config
+      --config configs/images/raspberrypi_raspbian_config
+      --config configs/testing/hardware-testing
+      --overlay tests/ssh-public-key-overlay
+    # Collect artifacts.
+    - mv deploy ${RASPBERRYPI_CONFIG_NAME}-hardware-test
+    - tar czf ${RASPBERRYPI_CONFIG_NAME}-hardware-test.tar.gz ${RASPBERRYPI_CONFIG_NAME}-hardware-test
+    # Upload to temporary S3 bucket
+    - mender_ci_save_tmp_artifact ${RASPBERRYPI_CONFIG_NAME}-hardware-test.tar.gz
+  artifacts:
+    paths:
+      - checksums
+
+test:hardware:flash:
+  needs:
+    - job: test:hardware:convert
+      artifacts: true
+  variables:
+    RASPBERRYPI_PLATFORM: uboot/debian/raspberrypi4_bookworm_64bit
+  tags:
+    - hw
+  stage: flash
+  script:
+    - eval "$(curl https://raw.githubusercontent.com/mendersoftware/mendertesting/master/mender-ci-common.sh)"
+    # Fetch artifacts from temporary S3 bucket
+    - mender_ci_load_tmp_artifact ${RASPBERRYPI_CONFIG_NAME}-hardware-test.tar.gz
+    # Flash and boot the device under test
+    - slave-control mode flash
+    - tar -xvzf ${RASPBERRYPI_CONFIG_NAME}-hardware-test.tar.gz --wildcards --no-anchored '*.img' --to-stdout | dd of=/dev/sdmux bs=8M
+    - slave-control mode test
+
+test:hardware:acceptance:
+  <<: *test_acceptance
+  variables:
+    RASPBERRYPI_PLATFORM: uboot/debian/raspberrypi4_bookworm_64bit
+  stage: test_acceptance
+  needs:
+    - job: build:docker-multiplatform
+      artifacts: false
+    - job: test:hardware:convert
+      artifacts: true
+    - job: test:hardware:flash
+  script:
+    # Fetch artifacts from temporary S3 bucket
+    - eval "$(curl https://raw.githubusercontent.com/mendersoftware/mendertesting/master/mender-ci-common.sh)"
+    - mender_ci_load_tmp_artifact ${RASPBERRYPI_CONFIG_NAME}-hardware-test.tar.gz
+    # Extract the configuration
+    - tar xzf ${RASPBERRYPI_CONFIG_NAME}-hardware-test.tar.gz
+    - mv ${RASPBERRYPI_CONFIG_NAME}-hardware-test deploy
+    # Run the tests
+    - ./scripts/test/run-tests.sh
+      --prebuilt-image raspberrypi4_64
+      ${RASPBIAN_NAME}-${RASPBERRYPI_CONFIG_NAME}-mender
+      --
+      --hardware-testing
+      --host ${SSH_JUMP_HOST_IP}:${SSH_JUMP_HOST_PORT}
+      -k "'not test_network_based_image_update and not test_image_update_broken_kernel'"
+      -n 1
+
