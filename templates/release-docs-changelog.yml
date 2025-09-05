@@ -1,0 +1,67 @@
+spec:
+  inputs:
+    stage:
+      description: The pipeline stage where to perform the docs release
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: hetzner-amd-beefy
+    alpine-git-tag:
+      description: Tag for alpine/git container image
+      default: latest
+    remote_changelog_file:
+      description: Remote changelog file
+      default: CHANGELOG.md
+---
+
+
+release:mender-docs-changelog:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  needs: []
+  image:
+    name: alpine/git:$[[ inputs.alpine-git-tag ]]
+    entrypoint: [""]
+  rules:
+    # Only make available for stable branches
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
+      allow_failure: true
+  before_script:
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_USER_EMAIL" ] || [ -z "$GITHUB_USER_NAME" ] || [ -z "$GITHUB_CLI_TOKEN" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - GITHUB_USER_EMAIL: ${GITHUB_USER_EMAIL:-'NOT SET'}"
+        echo "  - GITHUB_USER_NAME: ${GITHUB_USER_NAME:-'NOT SET'}"
+        echo "  - GITHUB_CLI_TOKEN: $([ -z "$GITHUB_CLI_TOKEN" ] && echo 'NOT SET' || echo 'SET')"
+        echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+    # Install required tools
+    - apk add --no-cache python3 curl
+    - curl -fsSL https://cli.github.com/packages/alpine/install.sh | sh
+    # Setting up git
+    - git config --global user.email "${GITHUB_USER_EMAIL}"
+    - git config --global user.name "${GITHUB_USER_NAME}"
+    # GITHUB_TOKEN for Github cli authentication
+    - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
+  script:
+    - git clone https://${GITHUB_USER_NAME}:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/${GITHUB_CHANGELOG_REPO_URL}
+    - cd ${GITHUB_CHANGELOG_REPO_URL#*/}
+    - git checkout -b changelog-${CI_JOB_ID}
+    - if [ ! -e ../docs_header.md ]; then
+        echo "ERROR: docs_header.md not exists"
+        exit 1
+      fi
+    - cat ../.docs_header.md > $[[ inputs.remote_changelog_file ]]
+    - if [ ! -e ../CHANGELOG.md ]; then
+        echo "ERROR: CHANGELOG.md not exists"
+        exit 1
+      fi
+    - cat ../CHANGELOG.md | grep -v -E '^---' >> $[[ inputs.remote_changelog_file ]]
+    - git add $[[ inputs.remote_changelog_file ]]
+    - 'git commit -s -m "chore: add $CI_PROJECT_NAME changelog"'
+    - git push origin changelog-${CI_JOB_ID}
+    - gh pr create --title "Update CHANGELOG.md for $CI_PROJECT_NAME" --body "Automated change to the CHANGELOG.md file" --base master --head changelog-${CI_JOB_ID}
+
