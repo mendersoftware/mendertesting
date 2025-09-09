@@ -35,15 +35,6 @@ release:candidate:update-changelog:
     GIT_DEPTH: 0
     GIT_STRATEGY: clone
   before_script:
-    # Check required input parameters
-    - |
-      if [ -z "$[[ inputs.github_repo ]]" ]; then
-        echo "ERROR: Missing required input parameter 'github_repo'"
-        echo "Please specify the GitHub repository URL in your include section:"
-        echo "  inputs:"
-        echo "    github_repo: your-org/your-repo"
-        exit 1
-      fi
     # Check required environment variables
     - |
       if [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then

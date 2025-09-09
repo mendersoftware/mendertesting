@@ -34,15 +34,6 @@ release:mender-docs:
   variables:
     GITHUB_DOCS_REPO_URL: "mendersoftware/mender-docs"
   before_script:
-    # Check required input parameters
-    - |
-      if [ -z "$[[ inputs.component ]]" ]; then
-        echo "ERROR: Missing required input parameter 'component'"
-        echo "Please specify the component name in your include section:"
-        echo "  inputs:"
-        echo "    component: your-component-name"
-        exit 1
-      fi
     # Check required environment variables
     - |
       if [ -z "$GITHUB_CLI_TOKEN" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
