@@ -6,6 +6,12 @@ spec:
     runner:
       description: GitLab CI runner tag
       default: hetzner-amd-beefy
+    github_user_name:
+      description: GitHub user name
+      default: mender-test-bot
+    github_user_email:
+      description: GitHub user e-mail address
+      default: mender@northern.tech
     github_repo:
       description: GitHub repository URL (e.g., "mendersoftware/mender-artifact")
 ---
@@ -40,10 +46,8 @@ release:candidate:update-changelog:
       fi
     # Check required environment variables
     - |
-      if [ -z "$GITHUB_USER_EMAIL" ] || [ -z "$GITHUB_USER_NAME" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+      if [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
         echo "ERROR: Missing required environment variables:"
-        echo "  - GITHUB_USER_EMAIL: ${GITHUB_USER_EMAIL:-'NOT SET'}"
-        echo "  - GITHUB_USER_NAME: ${GITHUB_USER_NAME:-'NOT SET'}"
         echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
         exit 1
       fi
@@ -54,20 +58,20 @@ release:candidate:update-changelog:
         exit 1
       fi
     # Setup git configuration
-    - git config --global user.email "${GITHUB_USER_EMAIL}"
-    - git config --global user.name "${GITHUB_USER_NAME}"
+    - git config --global user.email "$[[ inputs.github_user_email ]]"
+    - git config --global user.name "$[[ inputs.github_user_name ]]"
     - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
     - git remote add github-${CI_JOB_ID}
-      https://${GITHUB_USER_NAME}:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/$[[ inputs.github_repo ]]
+      https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/$[[ inputs.github_repo ]]
       || true  # Ignore already existing remote
     - gh repo set-default
-      https://${GITHUB_USER_NAME}:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/$[[ inputs.github_repo ]]
+      https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/$[[ inputs.github_repo ]]
   script:
     - release-please release-pr
       --token=${GITHUB_BOT_TOKEN_REPO_FULL}
       --repo-url=$[[ inputs.github_repo ]]
       --target-branch=${CI_COMMIT_REF_NAME} || echo "INFO - release already exists"
-    - RELEASE_PLEASE_PR=$(gh pr list --author "${GITHUB_USER_NAME}" --head "release-please--branches--${CI_COMMIT_REF_NAME}" --json number | jq -r '.[0].number // empty')
+    - RELEASE_PLEASE_PR=$(gh pr list --author "$[[ inputs.github_user_name ]]" --head "release-please--branches--${CI_COMMIT_REF_NAME}" --json number | jq -r '.[0].number // empty')
     - if [ -n "$RELEASE_PLEASE_PR" ]; then
     -   cp CHANGELOG.md CHANGELOG.md.${CI_COMMIT_SHA}
     -   gh pr checkout --force $RELEASE_PLEASE_PR
@@ -108,16 +112,14 @@ release:candidate:publish-changelog:
   before_script:
     # Check required environment variables
     - |
-      if [ -z "$GITHUB_USER_EMAIL" ] || [ -z "$GITHUB_USER_NAME" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+      if [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
         echo "ERROR: Missing required environment variables:"
-        echo "  - GITHUB_USER_EMAIL: ${GITHUB_USER_EMAIL:-'NOT SET'}"
-        echo "  - GITHUB_USER_NAME: ${GITHUB_USER_NAME:-'NOT SET'}"
         echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
         exit 1
       fi
     # Setup git configuration
-    - git config --global user.email "${GITHUB_USER_EMAIL}"
-    - git config --global user.name "${GITHUB_USER_NAME}"
+    - git config --global user.email "$[[ inputs.github_user_email ]]"
+    - git config --global user.name "$[[ inputs.github_user_name ]]"
     - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
   script:
     - release-please github-release
