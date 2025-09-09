@@ -92,7 +92,7 @@ release:candidate:publish-changelog:
   tags:
     - $[[ inputs.runner ]]
   needs:
-    - release:candidate:changelog
+    - release:candidate:update-changelog
   rules:
     # Manual trigger on maintenance branches (1.0.x or v1.0.x format)
     - if: $CI_COMMIT_BRANCH =~ "/^v?\\d+\\.\\d+\\.x$/"
