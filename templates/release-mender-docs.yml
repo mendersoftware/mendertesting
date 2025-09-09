@@ -23,7 +23,7 @@ release:mender-docs:
     entrypoint: [""]
   rules:
     # Only on production tags (with or without 'v' prefix)
-    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/''
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
       allow_failure: true
   variables:
     GITHUB_DOCS_REPO_URL: "mendersoftware/mender-docs"
