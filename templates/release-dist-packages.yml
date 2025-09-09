@@ -21,7 +21,7 @@ spec:
       default: true
 ---
 
-release:dist-packages:trigger:
+release:dist-packages:check:
   stage: $[[ inputs.stage ]]
   tags:
     - $[[ inputs.runner ]]
@@ -31,7 +31,7 @@ release:dist-packages:trigger:
   rules:
     # Only on production tags (with or without 'v' prefix)
     - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
-  before_script:
+  script:
     # Check required input parameters
     - |
       if [ -z "$[[ inputs.package ]]" ]; then
@@ -51,10 +51,20 @@ release:dist-packages:trigger:
         grep -o 'MENDER_[A-Z_]*_VERSION' /tmp/mender-dist-packages-ci.yml | sort -u
         exit 1
       fi
+
+release:dist-packages:trigger:
+  stage: $[[ inputs.stage ]]
+  inherit:
+    variables: false
+  needs:
+    - release:dist-packages:check
+  rules:
+    # Only on production tags (with or without 'v' prefix)
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
   variables:
     $[[ inputs.package ]]_VERSION: $CI_COMMIT_BRANCH
     TEST_MENDER_DIST_PACKAGES: $[[ inputs.test-mender-dist-packages ]]
-    PUBLISH_MENDER_DIST_PACKAGES_AUTOMATIC: $[[ inputs.publish-mender-dist-packages-automatic ]]
+    PUBLISH_MENDER_DIST_PACKAGES_AUTOMATIC: $[[ inputs.publish-mender-dist-packages ]]
   trigger:
     project: Northern.tech/Mender/mender-dist-packages
     branch: $[[ inputs.mender-dist-packages-branch ]]
