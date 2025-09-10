@@ -78,7 +78,7 @@ release:candidate:update-changelog:
     -   gh pr edit $RELEASE_PLEASE_PR --body-file tmp_pr_body.md
     -   rm tmp_pr_body.md
     - else
-      - echo "No release PR found, git-cliff will not be applied"
+    -   echo "No release PR found, git-cliff will not be applied"
     - fi
 
 release:candidate:publish-changelog:
