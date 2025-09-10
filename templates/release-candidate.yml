@@ -20,6 +20,7 @@ release:candidate:update-changelog:
   stage: $[[ inputs.stage ]]
   tags:
     - $[[ inputs.runner ]]
+  needs: []
   image:
     name: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
     entrypoint: [""]

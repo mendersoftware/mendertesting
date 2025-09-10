@@ -22,11 +22,11 @@ spec:
 ---
 
 release:dist-packages:check:
+  inherit:
+    variables: false
   stage: $[[ inputs.stage ]]
   tags:
     - $[[ inputs.runner ]]
-  inherit:
-    variables: false
   needs: []
   rules:
     # Only on production tags (with or without 'v' prefix)
@@ -44,9 +44,9 @@ release:dist-packages:check:
       fi
 
 release:dist-packages:trigger:
-  stage: $[[ inputs.stage ]]
   inherit:
     variables: false
+  stage: $[[ inputs.stage ]]
   needs:
     - release:dist-packages:check
   rules:
