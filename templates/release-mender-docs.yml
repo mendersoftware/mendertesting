@@ -8,9 +8,6 @@ spec:
       default: hetzner-amd-beefy
     component:
       description: The component name to update versions for
-    alpine-git-tag:
-      description: Tag for alpine/git container image
-      default: latest
     github_user_name:
       description: GitHub user name
       default: mender-test-bot
@@ -25,7 +22,7 @@ release:mender-docs:
     - $[[ inputs.runner ]]
   needs: []
   image:
-    name: alpine/git:$[[ inputs.alpine-git-tag ]]
+    name: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
     entrypoint: [""]
   rules:
     # Only on production tags (with or without 'v' prefix)
@@ -42,9 +39,6 @@ release:mender-docs:
         echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
         exit 1
       fi
-    # Install required tools
-    - apk add --no-cache python3 curl
-    - curl -fsSL https://cli.github.com/packages/alpine/install.sh | sh
     # Setting up git
     - git config --global user.email "$[[ inputs.github_user_email ]]"
     - git config --global user.name "$[[ inputs.github_user_name ]]"
