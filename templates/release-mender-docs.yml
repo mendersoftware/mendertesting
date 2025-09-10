@@ -1,13 +1,13 @@
 spec:
   inputs:
+    component:
+      description: The component name to update versions for (e.g., "mender-artifact")
     stage:
       description: The pipeline stage where to perform the docs release
       default: publish
     runner:
       description: GitLab CI runner tag
       default: hetzner-amd-beefy
-    component:
-      description: The component name to update versions for
     github_user_name:
       description: GitHub user name
       default: mender-test-bot

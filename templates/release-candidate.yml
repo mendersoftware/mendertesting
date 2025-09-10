@@ -1,5 +1,7 @@
 spec:
   inputs:
+    github_repo:
+      description: GitHub repository URL (e.g., "mendersoftware/mender-artifact")
     stage:
       description: The pipeline stage where to do the release candidate
       default: publish
@@ -12,8 +14,6 @@ spec:
     github_user_email:
       description: GitHub user e-mail address
       default: mender@northern.tech
-    github_repo:
-      description: GitHub repository URL (e.g., "mendersoftware/mender-artifact")
 ---
 
 release:candidate:update-changelog:

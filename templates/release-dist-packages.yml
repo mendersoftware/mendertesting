@@ -1,16 +1,7 @@
 spec:
   inputs:
-    stage:
-      description: The pipeline stage where to trigger the distribution packages pipeline
-      default: publish
-    runner:
-      description: GitLab CI runner tag
-      default: hetzner-amd-beefy
-    mender-dist-packages-branch:
-      description: Branch to trigger in mender-dist-packages repository
-      default: master
     package:
-      description: The name of the package to build, must be uppercase. See mender-dist-packages variables
+      description: The name of the package to build (e.g., "MENDER_ARTIFACT"). Must be uppercase, see mender-dist-packages variables
     test-mender-dist-packages:
       description: Run tests
       type: boolean
@@ -19,6 +10,15 @@ spec:
       description: Publish packages
       type: boolean
       default: true
+    mender-dist-packages-branch:
+      description: Branch to trigger in mender-dist-packages repository
+      default: master
+    stage:
+      description: The pipeline stage where to trigger the distribution packages pipeline
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: hetzner-amd-beefy
 ---
 
 release:dist-packages:check:
