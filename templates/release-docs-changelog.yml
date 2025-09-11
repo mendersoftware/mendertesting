@@ -1,0 +1,74 @@
+spec:
+  inputs:
+    remote_changelog_file:
+      description: Remote changelog file to be updated from mender-docs-changelog (e.g., "30.mender-artifact/docs.md")
+    stage:
+      description: The pipeline stage where to perform the docs release
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: hetzner-amd-beefy
+    alpine-git-tag:
+      description: Tag for alpine/git container image
+      default: latest
+    github_user_name:
+      description: GitHub user name
+      default: mender-test-bot
+    github_user_email:
+      description: GitHub user e-mail address
+      default: mender@northern.tech
+---
+
+
+release:mender-docs-changelog:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  needs: []
+  image:
+    name: alpine/git:$[[ inputs.alpine-git-tag ]]
+    entrypoint: [""]
+  rules:
+    # Only make available for stable tags
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
+      allow_failure: true
+  variables:
+    GITHUB_CHANGELOG_REPO_URL: "mender-docs-changelog"
+  before_script:
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_CLI_TOKEN" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - GITHUB_CLI_TOKEN: $([ -z "$GITHUB_CLI_TOKEN" ] && echo 'NOT SET' || echo 'SET')"
+        echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+    # Install required tools
+    - apk add --no-cache python3 curl github-cli
+    # Setting up git
+    - git config --global user.name "$[[ inputs.github_user_name ]]"
+    - git config --global user.email "$[[ input.github_user_email ]]"
+    # GITHUB_TOKEN for Github cli authentication
+    - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
+  script:
+    - git clone https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/mendersoftware/${GITHUB_CHANGELOG_REPO_URL}
+    - cd ${GITHUB_CHANGELOG_REPO_URL}
+    - |
+      if [ ! -e $[[ inputs.remote_changelog_file ]] ]; then
+        echo "ERROR: Remote changelog file $[[ inputs.remote_changelog_file ]] must exist"
+        exit 1
+      fi
+
+    - git checkout -b changelog-${CI_JOB_ID}
+    - |
+      if [ ! -e ../.docs_header.md ] || [ ! -e ../CHANGELOG.md ]; then
+        echo "ERROR: ../.docs_header.md and ../CHANGELOG.md must exist"
+        exit 1
+      fi
+    - cat ../.docs_header.md > $[[ inputs.remote_changelog_file ]]
+    - cat ../CHANGELOG.md | grep -v -E '^---' >> $[[ inputs.remote_changelog_file ]]
+    - git add $[[ inputs.remote_changelog_file ]]
+    - 'git commit -s -m "chore: add $CI_PROJECT_NAME changelog"'
+    - git push origin changelog-${CI_JOB_ID}
+    - gh pr create --title "Update CHANGELOG.md for $CI_PROJECT_NAME" --body "Automated change to the CHANGELOG.md file" --base master --head changelog-${CI_JOB_ID}
+

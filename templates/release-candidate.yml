@@ -1,0 +1,120 @@
+spec:
+  inputs:
+    github_repo:
+      description: GitHub repository URL (e.g., "mendersoftware/mender-artifact")
+    stage:
+      description: The pipeline stage where to do the release candidate
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: hetzner-amd-beefy
+    github_user_name:
+      description: GitHub user name
+      default: mender-test-bot
+    github_user_email:
+      description: GitHub user e-mail address
+      default: mender@northern.tech
+---
+
+release:candidate:update-changelog:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  needs: []
+  image:
+    name: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
+    entrypoint: [""]
+  rules:
+    # Run on maintenance branches (1.0.x or v1.0.x format)
+    - if: $CI_COMMIT_BRANCH =~ "/^v?\\d+\\.\\d+\\.x$/"
+    # Run on default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    # Never run on tags
+    - if: $CI_COMMIT_TAG
+      when: never
+  variables:
+    GIT_DEPTH: 0
+    GIT_STRATEGY: clone
+  before_script:
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+    # Check repository requirements
+    - |
+      if [ ! -f CHANGELOG.md ]; then
+        echo "ERROR: CHANGELOG.md not found in the repository."
+        exit 1
+      fi
+    # Setup git configuration
+    - git config --global user.email "$[[ inputs.github_user_email ]]"
+    - git config --global user.name "$[[ inputs.github_user_name ]]"
+    - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
+    - git remote add github-${CI_JOB_ID}
+      https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/$[[ inputs.github_repo ]]
+      || true  # Ignore already existing remote
+    - gh repo set-default
+      https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/$[[ inputs.github_repo ]]
+  script:
+    - release-please release-pr
+      --token=${GITHUB_BOT_TOKEN_REPO_FULL}
+      --repo-url=$[[ inputs.github_repo ]]
+      --target-branch=${CI_COMMIT_REF_NAME} || echo "INFO - release already exists"
+    - RELEASE_PLEASE_PR=$(gh pr list --author "$[[ inputs.github_user_name ]]" --head "release-please--branches--${CI_COMMIT_REF_NAME}" --json number | jq -r '.[0].number // empty')
+    - if [ -n "$RELEASE_PLEASE_PR" ]; then
+    -   cp CHANGELOG.md CHANGELOG.md.${CI_COMMIT_SHA}
+    -   gh pr checkout --force $RELEASE_PLEASE_PR
+    -   mv CHANGELOG.md.${CI_COMMIT_SHA} CHANGELOG.md
+    -   wget --output-document cliff.toml https://raw.githubusercontent.com/mendersoftware/mendertesting/master/utils/cliff.toml
+    -   RELEASE_VERSION="$(jq -r '.["."]' .release-please-manifest.json)"
+    -   git cliff --unreleased --prepend CHANGELOG.md --github-repo $[[ inputs.github_repo ]] --use-branch-tags --tag ${RELEASE_VERSION}
+    -   git add CHANGELOG.md
+    -   git commit --amend -s --no-edit
+    -   git push github-${CI_JOB_ID} --force
+        # Update the PR body
+    -   git cliff --unreleased --bump -o tmp_pr_body.md --github-repo $[[ inputs.github_repo ]] --use-branch-tags
+    -   gh pr edit $RELEASE_PLEASE_PR --body-file tmp_pr_body.md
+    -   rm tmp_pr_body.md
+    - else
+    -   echo "No release PR found, git-cliff will not be applied"
+    - fi
+
+release:candidate:publish-changelog:
+  stage: .post
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
+  tags:
+    - $[[ inputs.runner ]]
+  needs:
+    - release:candidate:update-changelog
+  rules:
+    # Manual trigger on maintenance branches (1.0.x or v1.0.x format)
+    - if: $CI_COMMIT_BRANCH =~ "/^v?\\d+\\.\\d+\\.x$/"
+      when: manual
+      allow_failure: true
+    # Manual trigger on default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+      allow_failure: true
+    # Never run on tags
+    - if: $CI_COMMIT_TAG
+      when: never
+  before_script:
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+    # Setup git configuration
+    - git config --global user.email "$[[ inputs.github_user_email ]]"
+    - git config --global user.name "$[[ inputs.github_user_name ]]"
+    - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
+  script:
+    - release-please github-release
+      --token=${GITHUB_BOT_TOKEN_REPO_FULL}
+      --repo-url=$[[ inputs.github_repo ]]
+      --target-branch=${CI_COMMIT_REF_NAME}

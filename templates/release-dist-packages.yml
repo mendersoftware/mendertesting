@@ -1,0 +1,62 @@
+spec:
+  inputs:
+    package:
+      description: The name of the package to build (e.g., "MENDER_ARTIFACT"). Must be uppercase, see mender-dist-packages variables
+    test-mender-dist-packages:
+      description: Run tests
+      type: boolean
+      default: true
+    publish-mender-dist-packages:
+      description: Publish packages
+      type: boolean
+      default: true
+    mender-dist-packages-branch:
+      description: Branch to trigger in mender-dist-packages repository
+      default: master
+    stage:
+      description: The pipeline stage where to trigger the distribution packages pipeline
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: hetzner-amd-beefy
+---
+
+release:dist-packages:check:
+  inherit:
+    variables: false
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  needs: []
+  rules:
+    # Only on production tags (with or without 'v' prefix)
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
+  script:
+    # Verify the package corresponds to a valid version variable in mender-dist-packages
+    - |
+      wget -q -O /tmp/mender-dist-packages-ci.yml "https://raw.githubusercontent.com/mendersoftware/mender-dist-packages/$[[ inputs.mender-dist-packages-branch ]]/.gitlab-ci.yml"
+      if ! grep -q "\$[[ inputs.package ]]_VERSION" /tmp/mender-dist-packages-ci.yml; then
+        echo "ERROR: Variable '$[[ inputs.package ]]_VERSION' not found in mender-dist-packages GitLab CI"
+        echo "Please check that '$[[ inputs.package ]]' is a valid package name"
+        echo "Available *_VERSION variables in the pipeline:"
+        grep -o 'MENDER_[A-Z_]*_VERSION' /tmp/mender-dist-packages-ci.yml | sort -u
+        exit 1
+      fi
+
+release:dist-packages:trigger:
+  inherit:
+    variables: false
+  stage: $[[ inputs.stage ]]
+  needs:
+    - release:dist-packages:check
+  rules:
+    # Only on production tags (with or without 'v' prefix)
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
+  variables:
+    $[[ inputs.package ]]_VERSION: $CI_COMMIT_TAG
+    TEST_MENDER_DIST_PACKAGES: $[[ inputs.test-mender-dist-packages ]]
+    PUBLISH_MENDER_DIST_PACKAGES_AUTOMATIC: $[[ inputs.publish-mender-dist-packages ]]
+  trigger:
+    project: Northern.tech/Mender/mender-dist-packages
+    branch: $[[ inputs.mender-dist-packages-branch ]]
+    strategy: depend
