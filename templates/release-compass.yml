@@ -1,0 +1,78 @@
+spec:
+  inputs:
+    compass_component_id:
+      description: The id suffix for the Atlassian Compass component (e.g., "12345abcd..."). Look for it in the Compass website URL
+    stage:
+      description: The pipeline stage where to perform the docs release
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: hetzner-amd-beefy
+---
+
+release:compass:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  image:
+    name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/curlimages/curl-base
+    entrypoint: [""]
+  rules:
+    # Only on production tags (with or without 'v' prefix)
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
+      allow_failure: true
+  variables:
+    COMPASS_CLOUD_URL: "https://northerntech.atlassian.net/gateway/api/compass/v1/events"
+    COMPASS_CLOUD_ID: "415471ec-5532-42bf-b7dc-acc88186742b"
+    COMPASS_CLOUD_COMPONENT_FULL_ID: ari:cloud:compass:415471ec-5532-42bf-b7dc-acc88186742b:component/049b3d55-89b7-47a2-9d7d-52f5f578e3b8/$[[ inputs.compass_component_id ]]
+  before_script:
+    - apk add --no-cache jq
+    # Check required environment variables
+    - |
+      if [ -z "$COMPASS_JIRA_USER" ] || [ -z "$COMPASS_JIRA_API_TOKEN" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - COMPASS_JIRA_USER: $([ -z "$COMPASS_JIRA_USER" ] && echo 'NOT SET' || echo 'SET')"
+        echo "  - COMPASS_JIRA_API_TOKEN: $([ -z "$COMPASS_JIRA_API_TOKEN" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+  script:
+    - RELEASE_VERSION="$(jq -r '.["."]' .release-please-manifest.json)"
+    - if [ -z "${RELEASE_VERSION}" ]; then
+    -   echo "ERROR - RELEASE_VERSION is empty"
+    -   exit 1
+    - fi
+    - SEQ_NUM="$(date +%s)"
+    - THIS_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+    - |
+      curl --request POST --fail-with-body --url "$COMPASS_CLOUD_URL" \
+        --user ${COMPASS_JIRA_USER}:${COMPASS_JIRA_API_TOKEN} \
+        --header 'Accept: application/json' \
+        --header 'Content-Type: application/json' \
+        --data '{
+          "cloudId": "'$COMPASS_CLOUD_ID'",
+          "componentId": "'$COMPASS_CLOUD_COMPONENT_FULL_ID'",
+          "event": {
+            "deployment": {
+              "displayName": "'$RELEASE_VERSION' release",
+              "updateSequenceNumber": "'$SEQ_NUM'",
+              "url": "'$CI_PIPELINE_URL'",
+              "description": "Release of '$RELEASE_VERSION'",
+              "lastUpdated": "'$THIS_DATE'",
+              "externalEventSourceId": "none",
+              "deploymentProperties": {
+                "sequenceNumber": "'$SEQ_NUM'",
+                "state": "SUCCESSFUL",
+                "pipeline": {
+                  "pipelineId": "'$CI_PIPELINE_ID'",
+                  "url": "'$CI_PIPELINE_URL'",
+                  "displayName": "unknown"
+                },
+                "environment": {
+                  "category": "PRODUCTION",
+                  "displayName": "unknown",
+                  "environmentId": "unknown"
+                }
+              }
+            }
+          }
+        }'
