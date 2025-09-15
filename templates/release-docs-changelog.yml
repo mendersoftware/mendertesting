@@ -47,7 +47,7 @@ release:mender-docs-changelog:
     - apk add --no-cache python3 curl github-cli
     # Setting up git
     - git config --global user.name "$[[ inputs.github_user_name ]]"
-    - git config --global user.email "$[[ input.github_user_email ]]"
+    - git config --global user.email "$[[ inputs.github_user_email ]]"
     # GITHUB_TOKEN for Github cli authentication
     - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
   script:
