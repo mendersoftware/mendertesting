@@ -33,7 +33,7 @@ release:mender-docs-changelog:
     - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
       allow_failure: true
   variables:
-    GITHUB_CHANGELOG_REPO_URL: "mender-docs-changelog"
+    GITHUB_CHANGELOG_REPO_NAME: "mender-docs-changelog"
   before_script:
     # Check required environment variables
     - |
@@ -51,8 +51,8 @@ release:mender-docs-changelog:
     # GITHUB_TOKEN for Github cli authentication
     - export GITHUB_TOKEN=${GITHUB_CLI_TOKEN}
   script:
-    - git clone https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/mendersoftware/${GITHUB_CHANGELOG_REPO_URL}
-    - cd ${GITHUB_CHANGELOG_REPO_URL}
+    - git clone https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/mendersoftware/${GITHUB_CHANGELOG_REPO_NAME}
+    - cd ${GITHUB_CHANGELOG_REPO_NAME}
     - |
       if [ ! -e $[[ inputs.remote_changelog_file ]] ]; then
         echo "ERROR: Remote changelog file $[[ inputs.remote_changelog_file ]] must exist"
