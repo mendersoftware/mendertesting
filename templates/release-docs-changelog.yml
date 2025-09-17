@@ -55,8 +55,9 @@ release:mender-docs-changelog:
     - cd ${GITHUB_CHANGELOG_REPO_NAME}
     - |
       if [ ! -e $[[ inputs.remote_changelog_file ]] ]; then
-        echo "ERROR: Remote changelog file $[[ inputs.remote_changelog_file ]] must exist"
-        exit 1
+        echo "Remote changelog file $[[ inputs.remote_changelog_file ]] does not exist, creating it"
+        mkdir -p "$(dirname "$[[ inputs.remote_changelog_file ]]")"
+        touch "$[[ inputs.remote_changelog_file ]]"
       fi
 
     - git checkout -b changelog-${CI_JOB_ID}
