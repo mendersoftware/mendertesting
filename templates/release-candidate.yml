@@ -32,6 +32,9 @@ release:candidate:update-changelog:
     # Never run on tags
     - if: $CI_COMMIT_TAG
       when: never
+    # Don't run on schedules, when there are no new commits
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
   variables:
     GIT_DEPTH: 0
     GIT_STRATEGY: clone
