@@ -27,10 +27,10 @@ release:golanglicenses:generate:
   tags:
     - $[[ inputs.runner ]]
   rules:
+    - if: '$CI_COMMIT_REF_PROTECTED == "true"'
     - changes:
         paths: ["**/*"]
         compare_to: $DEFAULT_BRANCH
-    - if: '$CI_COMMIT_REF_PROTECTED == "true"'
   image: golang:$[[ inputs.golang_version ]]
   needs: []
   variables:
