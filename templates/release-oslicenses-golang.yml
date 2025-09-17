@@ -102,4 +102,8 @@ release:golanglicenses:publish:
     - |
       git commit -s -m "chore: add $CI_PROJECT_NAME open source licenses"
     - git push origin licenses-${CI_JOB_ID}
-    - gh pr create --title "${CI_COMMIT_TAG} Release - update $CI_PROJECT_NAME licenses" --body "Automated change to the $CI_PROJECT_NAME Licenses during ${CI_COMMIT_TAG} release" --base master --head licenses-${CI_JOB_ID}
+    - gh pr create
+      --title "Update OS licenses manifest for ${CI_PROJECT_NAME} ${CI_COMMIT_TAG}"
+      --body "Automated change to $[[ inputs.remote_license_file ]]"
+      --base master
+      --head licenses-${CI_JOB_ID}

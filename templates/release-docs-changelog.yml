@@ -71,5 +71,9 @@ release:mender-docs-changelog:
     - git add $[[ inputs.remote_changelog_file ]]
     - 'git commit -s -m "chore: add $CI_PROJECT_NAME changelog"'
     - git push origin changelog-${CI_JOB_ID}
-    - gh pr create --title "Update CHANGELOG.md for $CI_PROJECT_NAME" --body "Automated change to the CHANGELOG.md file" --base master --head changelog-${CI_JOB_ID}
-
+    - gh pr create
+      --title "Update changelog for ${CI_PROJECT_NAME} ${CI_COMMIT_TAG}"
+      --body "Automated change to $[[ inputs.remote_changelog_file ]]"
+      --base master
+      --head changelog-${CI_JOB_ID}
+# TODO something similar to the license
