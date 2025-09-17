@@ -85,7 +85,7 @@ release:candidate:update-changelog:
     -   echo "No release PR found, git-cliff will not be applied"
     - fi
 
-release:candidate:publish-changelog:
+release:candidate:tag-and-release:
   stage: .post
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
   tags:
