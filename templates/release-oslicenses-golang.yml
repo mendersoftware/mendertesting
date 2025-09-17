@@ -86,8 +86,9 @@ release:golanglicenses:publish:
     - cd ${GITHUB_DOCS_REPO_NAME}
     - |
       if [ ! -e $[[ inputs.remote_license_file ]] ]; then
-        echo "ERROR: Remote license file $[[ inputs.remote_license_file ]] must exist"
-        exit 1
+        echo "Remote license file $[[ inputs.remote_license_file ]] does not exist, creating it"
+        mkdir -p "$(dirname "$[[ inputs.remote_license_file ]]")"
+        touch "$[[ inputs.remote_license_file ]]"
       fi
     - git checkout -b licenses-${CI_JOB_ID}
     - |
