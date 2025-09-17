@@ -86,7 +86,7 @@ release:candidate:update-changelog:
     - fi
 
 release:candidate:tag-and-release:
-  stage: .post
+  stage: $[[ inputs.stage ]]
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
   tags:
     - $[[ inputs.runner ]]
@@ -95,11 +95,9 @@ release:candidate:tag-and-release:
   rules:
     # Manual trigger on maintenance branches (1.0.x or v1.0.x format)
     - if: $CI_COMMIT_BRANCH =~ "/^v?\\d+\\.\\d+\\.x$/"
-      when: manual
       allow_failure: true
     # Manual trigger on default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
       allow_failure: true
     # Never run on tags
     - if: $CI_COMMIT_TAG
