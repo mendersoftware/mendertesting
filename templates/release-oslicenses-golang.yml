@@ -31,7 +31,6 @@ release:golanglicenses:generate:
         paths: ["**/*"]
         compare_to: $DEFAULT_BRANCH
     - if: '$CI_COMMIT_REF_PROTECTED == "true"'
-      when: on_success
   image: golang:$[[ inputs.golang_version ]]
   needs: []
   variables:
@@ -47,7 +46,6 @@ release:golanglicenses:generate:
     - go-licenses check --disallowed_types=forbidden,restricted,unknown --ignore=github.com/mendersoftware/$CI_PROJECT_NAME ./...
     - go-licenses report --template=./go-licenses.gotpl --ignore=github.com/mendersoftware/$CI_PROJECT_NAME ./... > licenses.md
   artifacts:
-    when: on_success
     expire_in: "1w"
     paths:
       - licenses.md
