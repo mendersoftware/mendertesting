@@ -76,4 +76,3 @@ release:mender-docs-changelog:
       --body "Automated change to $[[ inputs.remote_changelog_file ]]"
       --base master
       --head changelog-${CI_JOB_ID}
-# TODO something similar to the license
