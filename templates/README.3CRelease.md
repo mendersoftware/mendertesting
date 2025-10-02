@@ -28,8 +28,8 @@ Before initiating a release, verify that all prerequisites are met:
 
 ### 🧨 Second Click: Run the Show
 Execute the release preparation and validation:
-- **Review and merge Release Candidate** Review generated changelog PR `https://github.com/mendersoftware/<reposistory>/pulls?q=is%3Apr+is%3Aopen+label%3A%22autorelease%3A+pending%22`
-- **Tag and publish the Release** - Trigger the manual job from `https://gitlab.com/Northern.tech/Mender/<reposistory>/-/jobs?statuses=MANUAL`
+- **Review and merge Release Candidate** Review generated changelog PR `https://github.com/mendersoftware/<repository>/pulls?q=is%3Apr+is%3Aopen+label%3A%22autorelease%3A+pending%22`
+- **Tag and publish the Release** - Trigger the manual job from `https://gitlab.com/Northern.tech/Mender/<repository>/-/jobs?statuses=MANUAL`
 
 ### 📦 Third Click: Deliver It
 Review that all the Git-tag triggered actions complete successfully:
