@@ -1,6 +1,6 @@
 # GitLab CI/CD Components for Mender
 
-<!-- Last updated: 2025-09-23 -->
+<!-- Last updated: 2025-10-03 -->
 
 This directory contains reusable GitLab CI/CD components for Mender projects. These components streamline common CI/CD tasks and implement the standardized release process.
 
@@ -27,7 +27,9 @@ include:
   - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/commit-lint@~latest
     inputs:
       stage: test  # optional, default: test
-      runner: hetzner-amd-beefy  # optional
+      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      registry: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}  # optional
+      commitlint-tag: latest  # optional, default: latest
 ```
 
 #### brew-build
@@ -40,6 +42,8 @@ include:
     inputs:
       formula: m/mender-artifact.rb  # required
       repo: mender-artifact  # optional, defaults to formula name
+      stage: test  # optional, default: test
+      runner: mac-runner  # optional, default: mac-runner
 ```
 
 ### Release Process Components (Click Click Click)
@@ -55,12 +59,19 @@ The Click Click Click (CCC) release process provides automated, consistent relea
 #### release-candidate
 Creates and manages release candidates using release-please and git-cliff for changelog generation.
 
+**Requirements:**
+- `CHANGELOG.md` - Changelog file in the source repository
+
 **Usage:**
 ```yaml
 include:
   - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/release-candidate@~latest
     inputs:
       github_repo: mendersoftware/mender-artifact  # required
+      stage: publish  # optional, default: publish
+      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      github_user_name: mender-test-bot  # optional, default: mender-test-bot
+      github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
 ```
 
 #### release-compass
@@ -72,6 +83,8 @@ include:
   - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/release-compass@~latest
     inputs:
       compass_component_id: 12345abcd...  # required, find in Compass URL
+      stage: publish  # optional, default: publish
+      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
 ```
 
 #### release-dist-packages
@@ -85,10 +98,17 @@ include:
       package: MENDER_ARTIFACT  # required, uppercase package name
       test-mender-dist-packages: true  # optional, default: true
       publish-mender-dist-packages: true  # optional, default: true
+      mender-dist-packages-branch: master  # optional, default: master
+      stage: publish  # optional, default: publish
+      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
 ```
 
 #### release-docs-changelog
-Updates changelog documentation in the mender-docs-changelog repository. Requires `.docs_header.md` and `CHANGELOG.md` in source repo.
+Updates changelog documentation in the mender-docs-changelog repository.
+
+**Requirements:**
+- `.docs_header.md` - Header content for the documentation
+- `CHANGELOG.md` - Changelog file in the source repository
 
 **Usage:**
 ```yaml
@@ -96,6 +116,11 @@ include:
   - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/release-docs-changelog@~latest
     inputs:
       remote_changelog_file: 30.mender-artifact/docs.md  # required
+      stage: publish  # optional, default: publish
+      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      alpine-git-tag: latest  # optional, default: latest
+      github_user_name: mender-test-bot  # optional, default: mender-test-bot
+      github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
 ```
 
 #### release-mender-docs
@@ -107,17 +132,30 @@ include:
   - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/release-mender-docs@~latest
     inputs:
       component: mender-artifact  # required
+      stage: publish  # optional, default: publish
+      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      github_user_name: mender-test-bot  # optional, default: mender-test-bot
+      github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
 ```
 
 #### release-oslicenses-golang
 Generates and publishes Open Source license manifest for Go projects. Scans dependencies and creates license information for compliance purposes.
+
+**Requirements:**
+- `.licenses_header.md` - Header content for the license documentation
 
 **Usage:**
 ```yaml
 include:
   - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/release-oslicenses-golang@~latest
     inputs:
-      github_repo: mendersoftware/mender-artifact  # required
+      remote_license_file: 302.Release-information/03.Open-source-licenses/30.mender-artifact/docs.md  # required
+      golang_version: 1.24  # optional, default: 1.24
+      golang_flags: ""  # optional, default: ""
+      stage: publish  # optional, default: publish
+      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      github_user_name: mender-test-bot  # optional, default: mender-test-bot
+      github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
 ```
 
 ## Other Components
@@ -149,7 +187,7 @@ include:
       compass_component_id: abc123-your-component-id-here
   - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/release-oslicenses-golang@~latest
     inputs:
-      github_repo: mendersoftware/mender-artifact
+      remote_license_file: 302.Release-information/03.Open-source-licenses/30.mender-artifact/docs.md
 
 stages:
   - test
