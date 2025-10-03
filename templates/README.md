@@ -59,6 +59,9 @@ The Click Click Click (CCC) release process provides automated, consistent relea
 #### release-candidate
 Creates and manages release candidates using release-please and git-cliff for changelog generation.
 
+**Requirements:**
+- `CHANGELOG.md` - Changelog file in the source repository
+
 **Usage:**
 ```yaml
 include:
@@ -101,7 +104,11 @@ include:
 ```
 
 #### release-docs-changelog
-Updates changelog documentation in the mender-docs-changelog repository. Requires `.docs_header.md` and `CHANGELOG.md` in source repo.
+Updates changelog documentation in the mender-docs-changelog repository.
+
+**Requirements:**
+- `.docs_header.md` - Header content for the documentation
+- `CHANGELOG.md` - Changelog file in the source repository
 
 **Usage:**
 ```yaml
@@ -133,6 +140,9 @@ include:
 
 #### release-oslicenses-golang
 Generates and publishes Open Source license manifest for Go projects. Scans dependencies and creates license information for compliance purposes.
+
+**Requirements:**
+- `.licenses_header.md` - Header content for the license documentation
 
 **Usage:**
 ```yaml
