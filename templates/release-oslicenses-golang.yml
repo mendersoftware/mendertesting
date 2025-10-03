@@ -30,7 +30,7 @@ release:golanglicenses:generate:
     - if: '$CI_COMMIT_REF_PROTECTED == "true"'
     - changes:
         paths: ["**/*"]
-        compare_to: $DEFAULT_BRANCH
+        compare_to: $CI_DEFAULT_BRANCH
   image: golang:$[[ inputs.golang_version ]]
   needs: []
   variables:
