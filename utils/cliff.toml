@@ -94,6 +94,7 @@ commit_parsers = [
     { message = "^[^:]+\\(internal\\):", skip = true }, # Skip "internal" scope
     { message = ".*Changelog: None", skip = true },
     { message = "^chore: bump", group = "Security" },
+    { message = "^chore(deps): update", group = "Security" },
     { message = "^test", group = "Testing", skip = true },
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug fixes" },
