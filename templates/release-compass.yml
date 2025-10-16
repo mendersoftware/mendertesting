@@ -7,7 +7,7 @@ spec:
       default: publish
     runner:
       description: GitLab CI runner tag
-      default: hetzner-amd-beefy
+      default: k8s
 ---
 
 release:compass:

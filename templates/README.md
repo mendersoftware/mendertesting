@@ -27,7 +27,7 @@ include:
   - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/commit-lint@~latest
     inputs:
       stage: test  # optional, default: test
-      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      runner: hetzner-amd-beefy  # optional, default: k8s
       registry: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}  # optional
       commitlint-tag: latest  # optional, default: latest
 ```
@@ -69,7 +69,7 @@ include:
     inputs:
       github_repo: mendersoftware/mender-artifact  # required
       stage: publish  # optional, default: publish
-      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      runner: hetzner-amd-beefy  # optional, default: k8s
       github_user_name: mender-test-bot  # optional, default: mender-test-bot
       github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
 ```
@@ -84,7 +84,7 @@ include:
     inputs:
       compass_component_id: 12345abcd...  # required, find in Compass URL
       stage: publish  # optional, default: publish
-      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      runner: hetzner-amd-beefy  # optional, default: k8s
 ```
 
 #### release-dist-packages
@@ -100,7 +100,7 @@ include:
       publish-mender-dist-packages: true  # optional, default: true
       mender-dist-packages-branch: master  # optional, default: master
       stage: publish  # optional, default: publish
-      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      runner: hetzner-amd-beefy  # optional, default: k8s
 ```
 
 #### release-docs-changelog
@@ -117,7 +117,7 @@ include:
     inputs:
       remote_changelog_file: 30.mender-artifact/docs.md  # required
       stage: publish  # optional, default: publish
-      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      runner: hetzner-amd-beefy  # optional, default: k8s
       alpine-git-tag: latest  # optional, default: latest
       github_user_name: mender-test-bot  # optional, default: mender-test-bot
       github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
@@ -133,7 +133,7 @@ include:
     inputs:
       component: mender-artifact  # required
       stage: publish  # optional, default: publish
-      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      runner: hetzner-amd-beefy  # optional, default: k8s
       github_user_name: mender-test-bot  # optional, default: mender-test-bot
       github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
 ```
@@ -153,7 +153,7 @@ include:
       golang_version: 1.24  # optional, default: 1.24
       golang_flags: ""  # optional, default: ""
       stage: publish  # optional, default: publish
-      runner: hetzner-amd-beefy  # optional, default: hetzner-amd-beefy
+      runner: hetzner-amd-beefy  # optional, default: k8s
       github_user_name: mender-test-bot  # optional, default: mender-test-bot
       github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
 ```
@@ -193,4 +193,3 @@ stages:
   - test
   - publish
 ```
-

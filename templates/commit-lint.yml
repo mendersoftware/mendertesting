@@ -5,7 +5,7 @@ spec:
       default: test
     runner:
       description: GitLab CI runner tag
-      default: hetzner-amd-beefy
+      default: k8s
     registry:
       description: Container images registry
       default: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}
