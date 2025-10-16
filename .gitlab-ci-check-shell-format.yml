@@ -27,7 +27,7 @@ stages:
 
 test:check-shell-formatting:
   tags:
-    - hetzner-amd-beefy
+    - k8s
   stage: test
   needs: []
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine:3.13
