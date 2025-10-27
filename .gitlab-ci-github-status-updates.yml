@@ -13,7 +13,7 @@ stages:
 
 .github_status_template:
   tags:
-    - hetzner-amd-beefy
+    - k8s
   # Keep overhead low by using a small image with curl preinstalled.
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/curlimages/curl-base
   before_script:

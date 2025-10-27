@@ -37,7 +37,7 @@ stages:
 
 test:check-license:
   tags:
-    - hetzner-amd-beefy
+    - k8s
   stage: test
   needs: []
   rules:
@@ -74,7 +74,7 @@ test:check-license:
 test:check-license:golang:
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/golang:${GOLANG_VERSION}
   tags:
-    - hetzner-amd-beefy
+    - k8s
   stage: test
   rules:
     - exists:
@@ -93,7 +93,7 @@ test:check-license:golang:
 
 test:check-license-source:
   tags:
-    - hetzner-amd-beefy
+    - k8s
   stage: test
   needs: []
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine
