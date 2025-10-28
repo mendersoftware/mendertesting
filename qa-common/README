@@ -1,0 +1,5 @@
+This directory has been created to contain common CI templates
+shared across multiple CI jobs in multiple repos.
+
+Those templates can be self contained or use helper scripts located
+in the `utils` directory.
