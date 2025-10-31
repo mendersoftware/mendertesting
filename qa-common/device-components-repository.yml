@@ -1,14 +1,7 @@
-spec:
-  inputs:
-    repo_channel:
-      description: Which channel of the repository to use. Use `experimental` to get bleeding edge version of the tools, otherwise use `stable`.
-      default: stable
----
-
 variables:
-  DEVICE_COMPONENTS_REPOSITORY_DISTRO_ID: ""
-  DEVICE_COMPONENTS_REPOSITORY_REPO_CHANNEL: ""
-  DEVICE_COMPONENTS_REPOSITORY_DISTRO_VERSION_CODENAME: ""
+  DEVICE_COMPONENTS_DISTRO_ID: ""
+  DEVICE_COMPONENTS_REPO_CHANNEL: ""
+  DEVICE_COMPONENTS_DISTRO_VERSION_CODENAME: ""
   DEVICE_COMPONENTS_EXPECTED_GPG_FINGERPRINT: E6C857345575F9218396566224072B80A1B29B00
 
 # This can also be directly used in files that include this component with '!reference [.add_workstation_tools_repository]'
@@ -16,10 +9,10 @@ variables:
     # Get default values
     - id=$(grep -E '^ID=' /etc/os-release | cut -d'=' -f2)
     - version_codename=$(grep -E '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2)
-    # The DEVICE_COMPONENTS_REPOSITORY_* variables take precedence
-    - distro_id=${DEVICE_COMPONENTS_REPOSITORY_DISTRO_ID:-$id}
-    - distro_version_codename=${DEVICE_COMPONENTS_REPOSITORY_DISTRO_VERSION_CODENAME:-$version_codename}
-    - repo_channel=${DEVICE_COMPONENTS_REPOSITORY_REPO_CHANNEL:-$[[ inputs.repo_channel ]]}
+    # The DEVICE_COMPONENTS_* variables take precedence
+    - distro_id=${DEVICE_COMPONENTS_DISTRO_ID:-$id}
+    - distro_version_codename=${DEVICE_COMPONENTS_DISTRO_VERSION_CODENAME:-$version_codename}
+    - repo_channel=${DEVICE_COMPONENTS_REPO_CHANNEL:-"stable"}
     # Add repo
     - apt-get update --assume-yes
     - apt-get install --assume-yes curl gpg
