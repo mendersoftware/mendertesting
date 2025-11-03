@@ -24,6 +24,11 @@ release:mender-docs:
   image:
     name: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
     entrypoint: [""]
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   rules:
     # Only on production tags (with or without 'v' prefix)
     - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'

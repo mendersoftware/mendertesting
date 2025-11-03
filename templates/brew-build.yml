@@ -20,6 +20,11 @@ $[[ inputs.stage ]]:build:brew:
   needs: []
   variables:
     HOMEBREW_DEVELOPER: 1
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   rules:
     # Manually run job. Note that this variable is not shown by default
     # in the pipelines that include this component.

@@ -17,6 +17,11 @@ release:compass:
   image:
     name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/curlimages/curl-base
     entrypoint: [""]
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   rules:
     # Only on production tags (with or without 'v' prefix)
     - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'

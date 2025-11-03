@@ -53,6 +53,11 @@ test:check-python3-formatting:
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/python:3.8-alpine
   stage: test
   needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   variables:
       BLACK_FORMATTER_VERSION: "19.10b0" # Hard-coded and unconfigurable
   before_script:

@@ -26,6 +26,11 @@ test:unit:
     - mender-qa-worker-generic-light
   stage: test
   needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   except:
     - /^saas-[a-zA-Z0-9.]+$/
   image: golang:1.24
@@ -56,6 +61,11 @@ publish:unittests:
   tags:
     - mender-qa-worker-generic-light
   stage: publish
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   except:
     - /^saas-[a-zA-Z0-9.]+$/
   image: golang:1.23.4
@@ -88,6 +98,11 @@ coveralls:finish-build:
   variables:
     COVERALLS_WEBHOOK_URL: "https://coveralls.io/webhook"
     COVERALLS_RERUN_BUILD_URL: "https://coveralls.io/rerun_build"
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   image: curlimages/curl-base
   script:
     - 'curl -k ${COVERALLS_WEBHOOK_URL}?repo_token=${COVERALLS_TOKEN} -d "payload[build_num]=$CI_PIPELINE_ID&payload[status]=done"'
