@@ -40,6 +40,11 @@ test:check-license:
     - k8s
   stage: test
   needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   rules:
     - exists:
       - licenses.csv
@@ -76,6 +81,11 @@ test:check-license:golang:
   tags:
     - k8s
   stage: test
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   rules:
     - exists:
         - licenses.csv
@@ -96,6 +106,11 @@ test:check-license-source:
     - k8s
   stage: test
   needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine
   variables:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace

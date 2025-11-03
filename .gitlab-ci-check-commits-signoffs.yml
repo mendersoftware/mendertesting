@@ -7,6 +7,11 @@ test:check-commits:
     - k8s
   stage: test
   needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   except:
     - /^(master|hosted|staging|production|saas-v[0-9.]+|[0-9]+\.[0-9]+\.x)$/
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine

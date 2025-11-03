@@ -23,6 +23,11 @@ test:format:
     - k8s
   stage: test
   needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine:3.17
   before_script:
     # Install compile dependencies

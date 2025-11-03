@@ -30,6 +30,11 @@ test:static:
     - mender-qa-worker-generic-light
   stage: test
   needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   except:
     - /^saas-[a-zA-Z0-9.]+$/
   image: "golangci/golangci-lint:${IMAGE_GOLANGCI_VERSION}"
@@ -54,6 +59,11 @@ test:govendor-check:
     - mender-qa-worker-generic-light
   stage: test
   needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
   rules:
     - exists:
       - vendor
