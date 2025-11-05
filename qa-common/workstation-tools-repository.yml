@@ -4,8 +4,8 @@ variables:
   WORKSTATION_TOOLS_DISTRO_VERSION_CODENAME: ""
   WORKSTATION_TOOLS_EXPECTED_GPG_FINGERPRINT: E6C857345575F9218396566224072B80A1B29B00
 
-# This can also be directly used in files that include this component with '!reference [.add_workstation_tools_repository]'
-.add_workstation_tools_repository: &add_workstation_tools_repository
+# This can also be directly used in files that include this component with '!reference [.add-workstation-tools-repository]'
+.add-workstation-tools-repository: &add-workstation-tools-repository
     # Get default values
     - id=$(grep -E '^ID=' /etc/os-release | cut -d'=' -f2)
     - version_codename=$(grep -E '^VERSION_CODENAME=' /etc/os-release | cut -d'=' -f2)
@@ -22,14 +22,14 @@ variables:
             | tee /etc/apt/sources.list.d/mender.list
     - apt-get update --assume-yes
 
-# You can install mender-artifact by including this component and calling `!reference [.install_mender_artifact]`
+# You can install mender-artifact by including this component and calling `!reference [.install-mender-artifact]`
 # This will install the latest available mender-artifact version in the workstation-tools repo
-.install_mender_artifact:
-  - *add_workstation_tools_repository
+.install-mender_artifact:
+  - *add-workstation-tools-repository
   - apt-get --assume-yes install mender-artifact
 
-# You can install mender-cli by including this component and calling `!reference [.install_mender_cli]`
+-# You can install mender-cli by including this component and calling `!reference [.install-mender-cli]`
 # This will install the latest available mender-cli version in the workstation-tools repo
-.install_mender_cli:
-  - *add_workstation_tools_repository
+.install-mender-cli:
+  - *add-workstation-tools-repository
   - apt-get --assume-yes install mender-cli
