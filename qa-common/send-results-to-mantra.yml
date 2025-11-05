@@ -4,8 +4,8 @@ variables:
   MANTRA_SCRIPT_URL: https://raw.githubusercontent.com/mendersoftware/mendertesting/${MANTRA_SCRIPT_COMMIT}/utils/mantra_post_test_results
 
 
-# This can also be directly used in files that include this component with '!reference [.mantra_push_results]'
-.mantra_push_results: &mantra_push_results
+# This can also be directly used in files that include this component with '!reference [.mantra-push-results]'
+.mantra-push-results: &mantra-push-results
   - |
     # First setup Mantra script
     echo "Setting up Mantra test results uploader..."
