@@ -9,9 +9,9 @@ variables:
   - |
     # First setup Mantra script
     echo "Setting up Mantra test results uploader..."
-    curl -sSfL \
+    curl --silent --show-error --location --fail \
       ${MANTRA_SCRIPT_URL} \
-      -o /usr/local/bin/mantra_post_test_results
+      --output /usr/local/bin/mantra_post_test_results
     chmod +x /usr/local/bin/mantra_post_test_results
 
     # Mantra project name is a test ID recognized by Mantra

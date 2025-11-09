@@ -62,31 +62,34 @@ AUTH="-u ${MANTRA_USERNAME}:${MANTRA_PASSWORD}"
 
 if [ "$ensure" -eq 1 ]; then
     # Try to find an existing build with that name
-    build_id=$(curl -sSf $AUTH "${API}/builds?name=${build_name}&limit=1" |
+    build_id=$(curl --silent --show-error --fail $AUTH \
+               "${API}/builds?name=${build_name}&limit=1" |
                jq -r '.[0].id // empty')
 
     if [ -z "$build_id" ]; then
         # Not found; attempt to create (ignore errors if a parallel shard wins)
-        build_id=$(curl -sSf -H "Content-Type: application/json" $AUTH \
-                   -d "{\"name\":\"${build_name}\"}" \
+        build_id=$(curl --silent --show-error --fail $AUTH \
+                   --header "Content-Type: application/json" \
+                   --data "{\"name\":\"${build_name}\"}" \
                    "${API}/builds" 2>/dev/null |
                    jq -r .id || true)
 
         # If we lost the race, request again to get the id that now exists
-        [ -z "$build_id" ] && build_id=$(curl -sSf $AUTH \
+        [ -z "$build_id" ] && build_id=$(curl --silent --show-error --fail $AUTH \
              "${API}/builds?name=${build_name}&limit=1" |
              jq -r '.[0].id')
     fi
 else
     # Previous behaviour: always create a fresh build
-    build_id=$(curl -sSf -H "Content-Type: application/json" $AUTH \
-               -d "{\"name\":\"${build_name}\"}" \
+    build_id=$(curl --silent --show-error --fail $AUTH \
+               --header "Content-Type: application/json" \
+               --data "{\"name\":\"${build_name}\"}" \
                "${API}/builds" | jq -r .id)
 fi
 
 [ -z "$build_id" ] && { echo "Could not obtain build id"; exit 1; }
 
-curl -fsS $AUTH \
-     -H "Content-Type: application/xml" \
+curl --silent --show-error --fail $AUTH \
+     --header "Content-Type: application/xml" \
      --data-binary @"${results_file}" \
      "${API}/builds/${build_id}/results"
