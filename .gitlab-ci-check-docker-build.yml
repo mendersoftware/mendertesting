@@ -209,7 +209,7 @@ publish:image-multiplatform:
   rules:
     - if: $MULTIPLATFORM_BUILD != "true"
       when: never
-    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|staging|production|feature-.+|v?\\d+\\.\\d+\\.x)$/'
+    - if: '$CI_COMMIT_BRANCH =~ /^(main|master|staging|production|feature-.+|v?\d+\.\d+\.x)$/'
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
   services:
     - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:20.10.21-dind
