@@ -118,9 +118,9 @@ build:docker:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
       when: never
     - when: on_success
-  image: docker
+  image: docker:28
   services:
-    - docker:20.10.21-dind
+    - docker:28-dind
   before_script:
     - *export_docker_vars
   script:
@@ -153,7 +153,7 @@ build:docker-multiplatform:
     - when: on_success
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
   services:
-    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:20.10.21-dind
+    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:28-dind
       alias: docker
   before_script:
     - *dind-login
@@ -181,9 +181,9 @@ publish:image:
   stage: publish
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(master|staging|production|feature-.+)$/'
-  image: docker
+  image: docker:28
   services:
-    - docker:20.10.21-dind
+    - docker:28-dind
   dependencies:
     - build:docker
   before_script:
@@ -212,7 +212,7 @@ publish:image-multiplatform:
     - if: '$CI_COMMIT_BRANCH =~ /^(main|master|staging|production|feature-.+|v?\d+\.\d+\.x)$/'
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
   services:
-    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:20.10.21-dind
+    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:28-dind
       alias: docker
   dependencies:
     - build:docker-multiplatform
@@ -235,9 +235,9 @@ publish:image:mender:
   stage: publish
   rules:
     - if: '$CI_COMMIT_BRANCH =~ /^(master|[0-9]+\.[0-9]+\.x)$/'
-  image: docker
+  image: docker:28
   services:
-    - docker:20.10.21-dind
+    - docker:28-dind
   dependencies:
     - build:docker
   before_script:
@@ -285,7 +285,7 @@ publish:image-multiplatform:mender:
     - if: '$CI_COMMIT_BRANCH =~ /^(master|[0-9]+\.[0-9]+\.x)$/'
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
   services:
-    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:20.10.21-dind
+    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:28-dind
       alias: docker
   dependencies:
     - build:docker-multiplatform
@@ -326,9 +326,9 @@ publish:image:saas:
   stage: publish
   rules:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
-  image: docker
+  image: docker:28
   services:
-    - docker:20.10.21-dind
+    - docker:28-dind
   before_script:
     - SOURCE_TAG=staging_${CI_COMMIT_SHA}
     - DOCKER_PUBLISH_TAG=${CI_COMMIT_REF_NAME}
@@ -349,7 +349,7 @@ publish:image-multiplatform:saas:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:docker-multiplatform-buildx-v1-master"
   services:
-    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:20.10.21-dind
+    - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:28-dind
       alias: docker
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
