@@ -38,13 +38,13 @@ test:prepare_acceptance:
     - mender-qa-worker-generic-light
   stage: test_prep
   needs: []
-  image: docker
+  image: docker:28
   rules:
     - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
       when: never
     - when: on_success
   services:
-    - docker:20.10.21-dind
+    - docker:28-dind
   script:
     - docker build -f Dockerfile.acceptance-testing -t $DOCKER_REPOSITORY:prtest .
     - docker save $DOCKER_REPOSITORY:prtest > tests_image.tar
@@ -79,7 +79,7 @@ test:acceptance_tests:
     - when: on_success
   image: tiangolo/docker-with-compose
   services:
-    - docker:20.10.21-dind
+    - docker:28-dind
   before_script:
     - apk add git bash
     - git clone -b ${INTEGRATION_REV:-master} --depth=1 https://github.com/mendersoftware/integration.git mender-integration
