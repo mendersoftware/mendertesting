@@ -25,6 +25,7 @@ usage() {
     echo "  backend_integration_enterprise"
     echo "  full_integration"
     echo "  client_accep_cross_platform"
+    echo "  orchestrator_integration"
     exit 1
 }
 
@@ -54,6 +55,7 @@ case "$project_key" in
     backend_integration_enterprise)             project_id=8  ;;
     full_integration)                           project_id=9  ;;
     client_accep_cross_platform)                project_id=11 ;;
+    orchestrator_integration)                   project_id=12 ;;
     *)  echo "FATAL: unknown Mantra project key '$project_key'" >&2; exit 2 ;;
 esac
 
