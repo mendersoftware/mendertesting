@@ -2,6 +2,8 @@ spec:
   inputs:
     component:
       description: The component name to update versions for (e.g., "mender-artifact")
+    ignore_autoversion_absence:
+      description: The component probably does not have versions in the docs, ignore the errors from autoversion
     stage:
       description: The pipeline stage where to perform the docs release
       default: publish
@@ -53,9 +55,17 @@ release:mender-docs:
     - git clone https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/${GITHUB_DOCS_REPO_URL}
     - cd ${GITHUB_DOCS_REPO_URL#*/}
     - git checkout -b autoversion-${CI_JOB_ID}
-    - python3 ./autoversion.py --update --component $[[ inputs.component ]] --version ${CI_COMMIT_TAG}
-    - git add .
     - |
-      git commit -s -m "chore: update $[[ inputs.component ]] versions with autoversion"
-    - git push origin autoversion-${CI_JOB_ID}
-    - gh pr create --title "${CI_COMMIT_TAG} Release - update versions for $[[ inputs.component ]]" --body "Automated change to the $[[ inputs.component ]] versions during ${CI_COMMIT_TAG} release" --base master --head autoversion-${CI_JOB_ID}
+      if [[ "$[[ inputs.ignore_autoversion_absence ]]" == "true" ]]; then
+       python3 ./autoversion.py --update --component $[[ inputs.component ]] --version ${CI_COMMIT_TAG} || true
+       git add . || true
+       git commit -s -m "chore: update $[[ inputs.component ]] versions with autoversion" || true
+       git push origin autoversion-${CI_JOB_ID} || true
+       gh pr create --title "${CI_COMMIT_TAG} Release - update versions for $[[ inputs.component ]]" --body "Automated change to the $[[ inputs.component ]] versions during ${CI_COMMIT_TAG} release" --base master --head autoversion-${CI_JOB_ID} || true
+      else
+       python3 ./autoversion.py --update --component $[[ inputs.component ]] --version ${CI_COMMIT_TAG}
+       git add .
+       git commit -s -m "chore: update $[[ inputs.component ]] versions with autoversion"
+       git push origin autoversion-${CI_JOB_ID}
+       gh pr create --title "${CI_COMMIT_TAG} Release - update versions for $[[ inputs.component ]]" --body "Automated change to the $[[ inputs.component ]] versions during ${CI_COMMIT_TAG} release" --base master --head autoversion-${CI_JOB_ID}
+      fi
