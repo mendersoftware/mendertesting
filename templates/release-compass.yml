@@ -63,7 +63,7 @@ release:compass:
               "url": "'$CI_PIPELINE_URL'",
               "description": "Release of '$RELEASE_VERSION'",
               "lastUpdated": "'$THIS_DATE'",
-              "externalEventSourceId": "none",
+              "externalEventSourceId": "$CI_PROJECT_NAME",
               "deploymentProperties": {
                 "sequenceNumber": "'$SEQ_NUM'",
                 "state": "SUCCESSFUL",
