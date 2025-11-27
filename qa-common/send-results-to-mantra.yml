@@ -31,7 +31,7 @@ variables:
 
     # Find and upload all test results files
     results_found=false
-    for results_file in $(find . -type f -name "results_*.xml" 2>/dev/null); do
+    for results_file in $(find . -type f -name "results*.xml" 2>/dev/null); do
       if [ -f "$results_file" ]; then
         echo "Posting $results_file to Mantra"
         /usr/local/bin/mantra_post_test_results --ensure \
