@@ -36,7 +36,14 @@ body = """
     {% if commit.breaking -%}
         {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
     {% endif -%}
-    {% if commit.body -%}
+
+    {% set_global should_render_body = true %}
+    {% for footer in commit.footers %}
+        {% if footer.token == "Changelog" and footer.value == "Title" -%}
+            {% set_global should_render_body = false %}
+        {% endif -%}
+    {% endfor -%}
+    {% if commit.body and should_render_body -%}
         {% raw %}  \n{% endraw %}
         {% for line in commit.body | split(pat="\n") -%}
             {% raw %}  {% endraw %}{{ line }}
