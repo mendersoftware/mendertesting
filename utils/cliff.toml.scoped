@@ -12,8 +12,6 @@
 
 
 [changelog]
-# template for the changelog footer
-header = """---"""
 # template for the changelog body
 # https://keats.github.io/tera/docs/#introduction
 body = """
@@ -89,8 +87,6 @@ body = """
     No Changelog found.
 {% endif %}"""
 
-# template for the changelog footer
-footer = """---"""
 
 # remove the leading and trailing whitespace from the templates
 trim = true
