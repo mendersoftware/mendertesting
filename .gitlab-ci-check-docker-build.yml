@@ -84,6 +84,7 @@ stages:
     echo "Warning: registry.mender.io credentials unavailable"; \
   fi; \
   if [ -n "$DOCKER_HUB_PASSWORD" ]; then \
+    unset DOCKER_AUTH_CONFIG; \
     echo "${DOCKER_HUB_PASSWORD}" | docker login -u "${DOCKER_HUB_USERNAME}" --password-stdin || \
     echo "Warning: Docker Hub credentials invalid"; \
   else \
