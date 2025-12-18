@@ -27,7 +27,7 @@ stages:
 
 test:check-shell-formatting:
   tags:
-    - k8s
+    - k8s-small
   stage: test
   needs: []
   retry:
