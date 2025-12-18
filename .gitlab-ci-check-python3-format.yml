@@ -49,7 +49,7 @@ stages:
 
 test:check-python3-formatting:
   tags:
-    - k8s
+    - k8s-small
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/python:3.8-alpine
   stage: test
   needs: []

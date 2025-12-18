@@ -37,7 +37,7 @@ stages:
 
 test:check-license:
   tags:
-    - k8s
+    - k8s-small
   stage: test
   needs: []
   retry:
@@ -79,7 +79,7 @@ test:check-license:
 test:check-license:golang:
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/golang:${GOLANG_VERSION}
   tags:
-    - k8s
+    - k8s-small
   stage: test
   retry:
     max: 2
@@ -103,7 +103,7 @@ test:check-license:golang:
 
 test:check-license-source:
   tags:
-    - k8s
+    - k8s-small
   stage: test
   needs: []
   retry:

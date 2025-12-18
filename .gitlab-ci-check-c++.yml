@@ -20,7 +20,7 @@ test:format:
     GIT_SUBMODULE_STRATEGY: recursive
     GIT_SUBMODULE_DEPTH: 1
   tags:
-    - k8s
+    - k8s-small
   stage: test
   needs: []
   retry:
