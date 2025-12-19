@@ -5,7 +5,7 @@ spec:
       default: test
     runner:
       description: GitLab CI runner tag
-      default: k8s
+      default: k8s-small
     registry:
       description: Container images registry
       default: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}

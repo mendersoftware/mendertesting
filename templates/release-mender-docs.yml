@@ -7,7 +7,7 @@ spec:
       default: publish
     runner:
       description: GitLab CI runner tag
-      default: k8s
+      default: k8s-small
     github_user_name:
       description: GitHub user name
       default: mender-test-bot
