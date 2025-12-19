@@ -14,7 +14,7 @@ header = """---"""
 # https://keats.github.io/tera/docs/#introduction
 body = """
 {% if version %}\
-    ## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}
+    ## {{ version | replace(from="v", to="") }} - {{ timestamp | date(format="%Y-%m-%d") }}
 {% else %}\
     ## [unreleased]
 {% endif %}\
