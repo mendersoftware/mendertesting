@@ -3,11 +3,21 @@ spec:
     compass_component_id:
       description: The id suffix for the Atlassian Compass component (e.g., "12345abcd..."). Look for it in the Compass website URL
     stage:
-      description: The pipeline stage where to perform the docs release
+      description: The pipeline stage where to perform sending the release info to Compass
       default: publish
     runner:
       description: GitLab CI runner tag
       default: k8s-small
+    rules:
+      description: Rules for running the job; defaults to running on all release tags (stable, saas)
+      type: array
+      default:
+        - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+(?:-saas(?:\.\d+)?)?$/'
+          allow_failure: true
+    needs:
+      description: Job dependencies
+      type: array
+      default: []
 ---
 
 release:compass:
@@ -22,10 +32,8 @@ release:compass:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-  rules:
-    # Only on production tags (with or without 'v' prefix)
-    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
-      allow_failure: true
+  rules: $[[ inputs.rules ]]
+  needs: $[[ inputs.needs ]]
   variables:
     COMPASS_CLOUD_URL: "https://northerntech.atlassian.net/gateway/api/compass/v1/events"
     COMPASS_CLOUD_ID: "415471ec-5532-42bf-b7dc-acc88186742b"
