@@ -76,7 +76,7 @@ test:unit:commitlint:
 
 test:unit:commitlint:mac:
   tags:
-    - mac-runner
+    - mac-arm-runner
   stage: test
   before_script:
     - brew install gawk
