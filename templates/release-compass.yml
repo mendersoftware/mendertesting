@@ -58,23 +58,23 @@ release:compass:
           "componentId": "'$COMPASS_CLOUD_COMPONENT_FULL_ID'",
           "event": {
             "deployment": {
-              "displayName": "'$RELEASE_VERSION' release",
+              "displayName": "'$CI_PROJECT_NAME' '$RELEASE_VERSION' release",
               "updateSequenceNumber": "'$SEQ_NUM'",
               "url": "'$CI_PIPELINE_URL'",
-              "description": "Release of '$RELEASE_VERSION'",
+              "description": "Release of '$CI_PROJECT_NAME' version '$RELEASE_VERSION'",
               "lastUpdated": "'$THIS_DATE'",
-              "externalEventSourceId": "$CI_PROJECT_NAME",
+              "externalEventSourceId": "'$CI_PROJECT_NAME'-deployment",
               "deploymentProperties": {
                 "sequenceNumber": "'$SEQ_NUM'",
                 "state": "SUCCESSFUL",
                 "pipeline": {
                   "pipelineId": "'$CI_PIPELINE_ID'",
                   "url": "'$CI_PIPELINE_URL'",
-                  "displayName": "unknown"
+                  "displayName": "Pipeline '$CI_PIPELINE_NAME'"
                 },
                 "environment": {
                   "category": "PRODUCTION",
-                  "displayName": "unknown",
+                  "displayName": "GitLab Release Pipeline",
                   "environmentId": "unknown"
                 }
               }
