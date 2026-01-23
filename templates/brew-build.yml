@@ -5,7 +5,7 @@ spec:
       default: test
     runner:
       description: GitLab CI runner tag (must be MacOS with brew available)
-      default: mac-runner
+      default: mac-arm-runner
     formula:
       description: The path of the formula in the homebrew repository (e.g. m/mender-artifact.rb)
     repo:

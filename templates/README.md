@@ -43,7 +43,7 @@ include:
       formula: m/mender-artifact.rb  # required
       repo: mender-artifact  # optional, defaults to formula name
       stage: test  # optional, default: test
-      runner: mac-runner  # optional, default: mac-runner
+      runner: mac-arm-runner  # optional, default: mac-arm-runner
 ```
 
 ### Release Process Components (Click Click Click)
