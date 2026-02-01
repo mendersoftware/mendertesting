@@ -108,6 +108,20 @@ stages:
 .dind-login: &dind-login
   - mkdir -p $HOME/.docker && echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
 
+.requires-docker-common: &requires-docker-common
+  - DOCKER_RETRY_SLEEP_S=2
+  - DOCKER_RUNNING=false
+  - for try in 4 3 2 1; do
+  -  docker ps && DOCKER_RUNNING=true
+  -  if [ "${DOCKER_RUNNING}" == "true" ]; then
+  -   break
+  -  fi
+  -  sleep "${DOCKER_RETRY_SLEEP_S}"
+  - done
+  - if [ "${DOCKER_RUNNING}" != "true" ]; then
+  -  exit 192
+  - fi
+
 build:docker:
   tags:
     - mender-qa-worker-generic-light
@@ -125,6 +139,7 @@ build:docker:
   before_script:
     - *export_docker_vars
   script:
+    - *requires-docker-common
     - echo "building ${CI_PROJECT_NAME} for ${DOCKER_BUILD_SERVICE_IMAGE}"
     - docker build
         --tag $DOCKER_BUILD_SERVICE_IMAGE
@@ -137,6 +152,12 @@ build:docker:
     expire_in: 2w
     paths:
       - ${IMAGE_ARTIFACT_FILENAME:-image.tar}
+  retry:
+    max: 2
+    exit_codes:
+      - 2
+      - 137
+      - 192
 
 build:docker-multiplatform:
   tags:
@@ -175,6 +196,12 @@ build:docker-multiplatform:
       --push
       ${EXTRA_DOCKER_ARGS}
       ${DOCKER_DIR:-.}
+  retry:
+    max: 2
+    exit_codes:
+      - 2
+      - 137
+      - 192
 
 publish:image:
   tags:
