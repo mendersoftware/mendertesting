@@ -22,7 +22,7 @@ variables:
 
     # Scheduled builds in our case are nightly builds
     if [ "$CI_PIPELINE_SOURCE" = "schedule" ]; then
-      MANTRA_BUILD_NAME="nightly-$(date +%Y-%m-%d)"
+      MANTRA_BUILD_NAME="nightly-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}"
     else
       MANTRA_BUILD_NAME="pullreq-$(date +%Y-%m-%d)-${CI_PIPELINE_ID}"
     fi
