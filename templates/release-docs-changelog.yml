@@ -17,6 +17,12 @@ spec:
     github_user_email:
       description: GitHub user e-mail address
       default: mender@northern.tech
+    rules:
+      description: Rules for running the job; defaults to running on stable tags (v1.2.3 or 1.2.3)
+      type: array
+      default:
+        - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
+          allow_failure: true
 ---
 
 
@@ -33,10 +39,7 @@ release:mender-docs-changelog:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-  rules:
-    # Only make available for stable tags
-    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
-      allow_failure: true
+  rules: $[[ inputs.rules ]]
   variables:
     GITHUB_CHANGELOG_REPO_NAME: "mender-docs-changelog"
   before_script:
