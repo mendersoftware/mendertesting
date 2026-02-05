@@ -27,7 +27,7 @@ spec:
   - NETWORK_RUNNING=false
   - TEST_GO_PACKAGE="golang.org/x/example/hello@latest"
   - for try in 4 3 2 1; do
-  -  go list -m "${TEST_GO_PACKAGE}" && NETWORK_RUNNING=true
+  -  go list -mod=readonly -m "${TEST_GO_PACKAGE}" && NETWORK_RUNNING=true
   -  if [ "${NETWORK_RUNNING}" == "true" ]; then
   -   break
   -  fi
