@@ -76,6 +76,9 @@ release:golanglicenses:generate:
       - 2
       - 137
       - 192
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
 
 release:golanglicenses:publish:
   stage: $[[ inputs.stage ]]
