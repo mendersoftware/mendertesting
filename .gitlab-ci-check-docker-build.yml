@@ -158,6 +158,9 @@ build:docker:
       - 2
       - 137
       - 192
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
 
 build:docker-multiplatform:
   tags:
@@ -202,6 +205,9 @@ build:docker-multiplatform:
       - 2
       - 137
       - 192
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
 
 publish:image:
   tags:
