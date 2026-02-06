@@ -47,6 +47,12 @@ github:start:
   stage: .pre
   script:
     - send_status pending "Pipeline running on Gitlab"
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - script_failure
 
 github:success:
   extends: .github_status_template
@@ -57,6 +63,12 @@ github:success:
   when: on_success
   script:
     - send_status success "Pipeline passed on Gitlab"
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - script_failure
 
 github:failure:
   extends: .github_status_template
@@ -67,3 +79,10 @@ github:failure:
   when: on_failure
   script:
     - send_status failure "Pipeline failed on Gitlab"
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - script_failure
+
