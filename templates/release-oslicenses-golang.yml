@@ -4,7 +4,7 @@ spec:
       description: Remote license file to be used (e.g., "302.Release-information/03.Open-source-licenses/30.mender-artifact/docs.md")
     golang_version:
       description: Golang version image to be used
-      default: 1.24
+      default: "1.24"
     golang_flags:
       description: Golang flags to be used
       default: ""
