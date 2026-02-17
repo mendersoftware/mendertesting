@@ -3,3 +3,32 @@ shared across multiple CI jobs in multiple repos.
 
 Those templates can be self contained or use helper scripts located
 in the `utils` directory.
+
+## retry-network-go-common.yml
+
+Provides the `.requires-network-go-common` anchor: a before_script
+snippet that verifies Go network access is available. It retries up
+to 4 times before exiting with code 192 (network unavailable), which
+can then be used to trigger a GitLab job retry.
+
+**Usage in an upstream pipeline:**
+
+```yaml
+include:
+  - project: Northern.tech/Mender/mendertesting
+    file: qa-common/retry-network-go-common.yml
+
+my-job:
+  image: golang:1.24
+  before_script:
+    - !reference [.requires-network-go-common, before_script]
+  retry:
+    max: 2
+    exit_codes:
+      - 192
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  script:
+    - go build ./...
+```

@@ -1,0 +1,30 @@
+# Verifies Go network access is available before a job proceeds.
+# Retries up to 4 times, then exits with code 192 (network unavailable).
+#
+# Use in before_script with:
+#   before_script:
+#     - !reference [.requires-network-go-common, before_script]
+#
+# To have GitLab retry the job on network failure, add to your job definition:
+#   retry:
+#     max: 2
+#     exit_codes:
+#       - 192
+#     when:
+#       - runner_system_failure
+#       - stuck_or_timeout_failure
+.requires-network-go-common:
+  before_script:
+    - NETWORK_RETRY_SLEEP_S=2
+    - NETWORK_RUNNING=false
+    - TEST_GO_PACKAGE="golang.org/x/example/hello@latest"
+    - for try in 4 3 2 1; do
+    -  go list -mod=readonly -m "${TEST_GO_PACKAGE}" && NETWORK_RUNNING=true
+    -  if [ "${NETWORK_RUNNING}" == "true" ]; then
+    -   break
+    -  fi
+    -  sleep "${NETWORK_RETRY_SLEEP_S}"
+    - done
+    - if [ "${NETWORK_RUNNING}" != "true" ]; then
+    -  exit 192
+    - fi
