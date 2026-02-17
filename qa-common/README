@@ -32,3 +32,32 @@ my-job:
   script:
     - go build ./...
 ```
+
+## retry-network-apt-common.yml
+
+Provides the `.requires-network-apt-common` anchor: a before_script
+snippet that verifies apt network access is available by running
+`apt-get update`. Retries up to 4 times before exiting with code 192
+(network unavailable), which can then be used to trigger a GitLab job retry.
+
+**Usage in an upstream pipeline:**
+
+```yaml
+include:
+  - project: Northern.tech/Mender/mendertesting
+    file: qa-common/retry-network-apt-common.yml
+
+my-job:
+  before_script:
+    - !reference [.requires-network-apt-common, before_script]
+    - apt-get install --assume-yes my-package
+  retry:
+    max: 2
+    exit_codes:
+      - 192
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  script:
+    - my-package --do-thing
+```

@@ -1,0 +1,29 @@
+# Verifies apt network access is available before a job proceeds.
+# Retries apt-get update up to 4 times, then exits with code 192 (network unavailable).
+#
+# Use in before_script with:
+#   before_script:
+#     - !reference [.requires-network-apt-common, before_script]
+#
+# To have GitLab retry the job on network failure, add to your job definition:
+#   retry:
+#     max: 2
+#     exit_codes:
+#       - 192
+#     when:
+#       - runner_system_failure
+#       - stuck_or_timeout_failure
+.requires-network-apt-common:
+  before_script:
+    - NETWORK_RETRY_SLEEP_S=10
+    - APT_UPDATED=false
+    - for try in 4 3 2 1; do
+    -  apt-get update --assume-yes && APT_UPDATED=true
+    -  if [ "${APT_UPDATED}" == "true" ]; then
+    -   break
+    -  fi
+    -  sleep "${NETWORK_RETRY_SLEEP_S}"
+    - done
+    - if [ "${APT_UPDATED}" != "true" ]; then
+    -  exit 192
+    - fi
