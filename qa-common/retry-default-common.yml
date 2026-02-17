@@ -1,0 +1,15 @@
+# Default retry policy for jobs affected by transient network or runner failures.
+# Exit code 137 (OOM kill) and 192 (network unavailable, set by retry-network-*
+# anchors) are included alongside the standard GitLab failure conditions.
+#
+# Use with extends:
+#   extends: .retry-default-common
+.retry-default-common:
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+    exit_codes:
+      - 137
+      - 192

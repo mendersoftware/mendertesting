@@ -4,6 +4,43 @@ shared across multiple CI jobs in multiple repos.
 Those templates can be self contained or use helper scripts located
 in the `utils` directory.
 
+## retry-default-common.yml
+
+Provides the `.retry-default-common` hidden job: a baseline `retry:`
+policy covering transient runner failures and network-related exit codes.
+Intended to be used via `extends:` in any job, optionally combined with
+the network check anchors below.
+
+**Usage in an upstream pipeline:**
+
+```yaml
+include:
+  - project: Northern.tech/Mender/mendertesting
+    file: qa-common/retry-default-common.yml
+
+my-job:
+  extends: .retry-default-common
+  script:
+    - go build ./...
+```
+
+Combined with a network check:
+
+```yaml
+include:
+  - project: Northern.tech/Mender/mendertesting
+    file: qa-common/retry-default-common.yml
+  - project: Northern.tech/Mender/mendertesting
+    file: qa-common/retry-network-go-common.yml
+
+my-job:
+  extends: .retry-default-common
+  before_script:
+    - !reference [.requires-network-go-common, before_script]
+  script:
+    - go build ./...
+```
+
 ## retry-network-go-common.yml
 
 Provides the `.requires-network-go-common` anchor: a before_script
