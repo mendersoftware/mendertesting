@@ -1,0 +1,12 @@
+# Default runner tag for GitLab CI pipelines.
+#
+#   include:
+#     - project: Northern.tech/Mender/mendertesting
+#       file: qa-common/runner.yml
+#
+# Pipeline-wide:
+#   default:
+#     tags: !reference [.qa-common-default-runner, tags]
+.qa-common-default-runner:
+  tags:
+    - k8s-small

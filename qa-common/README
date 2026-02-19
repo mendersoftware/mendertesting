@@ -1,5 +1,116 @@
-This directory has been created to contain common CI templates
-shared across multiple CI jobs in multiple repos.
+This directory contains common CI templates shared across multiple repos.
+Templates can be self contained or use helper scripts in the `utils` directory.
 
-Those templates can be self contained or use helper scripts located
-in the `utils` directory.
+- `runner.yml` — default runner tag (`k8s-small`)
+- `retry.yml` — retry policies and network probes (see anchors below)
+- `device-components-repository.yml` — apt repository and package install helpers for Mender device components
+- `workstation-tools-repository.yml` — apt repository and package install helpers for Mender workstation tools
+- `send-results-to-mantra.yml` — post test results to Mantra
+
+## runner.yml anchors
+
+| Anchor                      | Purpose                  |
+|-----------------------------|--------------------------|
+| `.qa-common-default-runner` | Runner tag (`k8s-small`) |
+
+## retry.yml anchors
+
+| Anchor                               | Purpose                                                 |
+|--------------------------------------|---------------------------------------------------------|
+| `.qa-common-default-retry`           | Retry policy: runner failures, OOM (137), network (192) |
+| `.qa-common-network-apt-retry`       | before_script probe for apt network availability        |
+| `.qa-common-network-go-retry`        | before_script probe for Go module network availability  |
+| `.qa-common-network-git-clone-retry` | before_script probe for GitHub git-clone availability   |
+
+Network probes exit with code 192 when connectivity is absent. Paired with
+`.qa-common-default-retry`, the job is retried automatically on that exit code.
+
+
+## Usage examples
+
+### Set a pipeline-wide default runner and retry policy
+
+Applies `k8s-small` tag and transient-failure retry to every job in the pipeline.
+
+  include:
+    - project: Northern.tech/Mender/mendertesting
+      file: 
+        - qa-common/runner.yml
+        - qa-common/retry.yml
+
+  default:
+    tags: !reference [.qa-common-default-runner, tags]
+    retry: !reference [.qa-common-default-retry, retry]
+
+
+### Add a retry policy to a single job
+
+  include:
+    - project: Northern.tech/Mender/mendertesting
+      file: qa-common/retry.yml
+
+  my-job:
+    extends: .qa-common-default-retry
+    script:
+      - make test
+
+
+### Guard a Go job against transient network failures
+
+  include:
+    - project: Northern.tech/Mender/mendertesting
+      file: qa-common/retry.yml
+
+  go-build:
+    extends: .qa-common-default-retry
+    before_script:
+      - !reference [.qa-common-network-go-retry, before_script]
+    script:
+      - go build ./...
+
+
+### Guard an apt-get job against transient network failures
+
+  include:
+    - project: Northern.tech/Mender/mendertesting
+      file: qa-common/retry.yml
+
+  install-deps:
+    extends: .qa-common-default-retry
+    before_script:
+      - !reference [.qa-common-network-apt-retry, before_script]
+    script:
+      - apt-get install -y --no-install-recommends build-essential
+
+
+### Guard a git clone job against transient network failures
+
+  include:
+    - project: Northern.tech/Mender/mendertesting
+      file: qa-common/retry.yml
+
+  clone-external:
+    extends: .qa-common-default-retry
+    before_script:
+      - !reference [.qa-common-network-git-clone-retry, before_script]
+    script:
+      - git clone https://github.com/example/repo.git
+
+
+### Combine multiple network probes in one job
+
+before_script entries are appended in order; both probes run before the
+script. The job retries on exit code 192 from either probe.
+
+  include:
+    - project: Northern.tech/Mender/mendertesting
+      file: qa-common/retry.yml
+
+  build-with-deps:
+    extends: .qa-common-default-retry
+    before_script:
+      - !reference [.qa-common-network-apt-retry, before_script]
+      - !reference [.qa-common-network-go-retry, before_script]
+    script:
+      - apt-get install -y --no-install-recommends gcc
+      - go build ./...
