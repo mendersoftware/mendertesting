@@ -1,0 +1,99 @@
+# Runner tag and retry policies for GitLab CI pipelines.
+# Include this file once and reference whichever anchors you need.
+#
+#   include:
+#     - project: Northern.tech/Mender/mendertesting
+#       file: qa-common/retry.yml
+
+# ── Retry policy ──────────────────────────────────────────────────────────────
+
+# Retry on runner failures, OOM (exit 137), and network unavailability (exit 192).
+# Exit code 192 is set by the network probes below when connectivity is absent.
+#
+# Pipeline-wide:
+#   default:
+#     retry: !reference [.qa-common-default-retry, retry]
+#
+# Per job:
+#   my-job:
+#     extends: .qa-common-default-retry
+.qa-common-default-retry:
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+    exit_codes:
+      - 137
+      - 192
+
+# ── Network probes ────────────────────────────────────────────────────────────
+#
+# Each probe retries its connectivity check up to 4 times, then exits with
+# code 192 if the network is still unavailable.  Use them in before_script so
+# the job is retried (via .qa-common-default-retry) instead of failing hard.
+#
+# Example combining retry policy with a network probe:
+#   my-job:
+#     extends: .qa-common-default-retry
+#     before_script:
+#       - !reference [.qa-common-network-apt-retry, before_script]
+
+# Verify apt network access.
+#
+#   before_script:
+#     - !reference [.qa-common-network-apt-retry, before_script]
+.qa-common-network-apt-retry:
+  before_script:
+    - NETWORK_RETRY_SLEEP_S=10
+    - APT_UPDATED=false
+    - for try in 4 3 2 1; do
+    -  apt-get update --assume-yes && APT_UPDATED=true
+    -  if [ "${APT_UPDATED}" == "true" ]; then
+    -   break
+    -  fi
+    -  sleep "${NETWORK_RETRY_SLEEP_S}"
+    - done
+    - if [ "${APT_UPDATED}" != "true" ]; then
+    -  exit 192
+    - fi
+
+# Verify Go module network access.
+#
+#   before_script:
+#     - !reference [.qa-common-network-go-retry, before_script]
+.qa-common-network-go-retry:
+  before_script:
+    - NETWORK_RETRY_SLEEP_S=2
+    - NETWORK_RUNNING=false
+    - TEST_GO_PACKAGE="golang.org/x/example/hello@latest"
+    - for try in 4 3 2 1; do
+    -  go list -mod=readonly -m "${TEST_GO_PACKAGE}" && NETWORK_RUNNING=true
+    -  if [ "${NETWORK_RUNNING}" == "true" ]; then
+    -   break
+    -  fi
+    -  sleep "${NETWORK_RETRY_SLEEP_S}"
+    - done
+    - if [ "${NETWORK_RUNNING}" != "true" ]; then
+    -  exit 192
+    - fi
+
+# Verify GitHub git-clone network access.
+#
+#   before_script:
+#     - !reference [.qa-common-network-git-clone-retry, before_script]
+.qa-common-network-git-clone-retry:
+  before_script:
+    - NETWORK_RETRY_SLEEP_S=10
+    - NETWORK_RUNNING=false
+    - TEST_GIT_REPO="https://github.com/octocat/Hello-World.git"
+    - for try in 4 3 2 1; do
+    -  git ls-remote --exit-code "${TEST_GIT_REPO}" HEAD && NETWORK_RUNNING=true
+    -  if [ "${NETWORK_RUNNING}" == "true" ]; then
+    -   break
+    -  fi
+    -  sleep "${NETWORK_RETRY_SLEEP_S}"
+    - done
+    - if [ "${NETWORK_RUNNING}" != "true" ]; then
+    -  exit 192
+    - fi
