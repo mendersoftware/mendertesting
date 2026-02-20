@@ -23,6 +23,9 @@ spec:
       default:
         - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
           allow_failure: true
+    when:
+      description: Condition for when to run the job
+      default: on_success
 ---
 
 
@@ -39,6 +42,7 @@ release:mender-docs-changelog:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
+  when: $[[ inputs.when ]]
   rules: $[[ inputs.rules ]]
   variables:
     GITHUB_CHANGELOG_REPO_NAME: "mender-docs-changelog"

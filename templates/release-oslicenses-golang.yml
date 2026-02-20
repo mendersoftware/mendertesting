@@ -85,8 +85,8 @@ release:golanglicenses:publish:
   tags:
     - $[[ inputs.runner ]]
   rules:
-    # Only make available for stable tags
-    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
+    # Only make available for stable and protected tags
+    - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/ && $CI_COMMIT_REF_PROTECTED == "true"'
       allow_failure: true
   image: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
   needs:
