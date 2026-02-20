@@ -59,6 +59,8 @@ sync:image:
   stage: sync
   image: debian:bookworm
   before_script:
+    - !reference [.qa-common-network-apt-retry, before_script]
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     - apt update && apt install -yyq git
     # Prepare SSH key
     - eval $(ssh-agent -s)

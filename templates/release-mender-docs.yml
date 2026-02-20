@@ -36,6 +36,7 @@ release:mender-docs:
   variables:
     GITHUB_DOCS_REPO_URL: "mendersoftware/mender-docs"
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Check required environment variables
     - |
       if [ -z "$GITHUB_CLI_TOKEN" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
