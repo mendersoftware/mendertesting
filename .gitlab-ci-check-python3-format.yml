@@ -61,6 +61,7 @@ test:check-python3-formatting:
   variables:
       BLACK_FORMATTER_VERSION: "19.10b0" # Hard-coded and unconfigurable
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Install dependencies
     - apk add --no-cache git curl bash gcc musl-dev
     - pip3 install click==8.0.4

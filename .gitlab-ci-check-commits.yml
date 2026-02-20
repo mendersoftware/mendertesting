@@ -19,6 +19,7 @@ test:check-commits:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Install dependencies
     - apk add --no-cache git bash gawk
     # Rename the branch we're on, so that it's not in the way for the

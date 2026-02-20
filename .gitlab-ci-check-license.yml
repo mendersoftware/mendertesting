@@ -55,6 +55,7 @@ test:check-license:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Install dependencies
     - apk add --no-cache git bash perl-utils
     # Rename the branch we're on, so that it's not in the way for the
@@ -95,6 +96,8 @@ test:check-license:golang:
       when: never
   needs: []
   before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     - go install github.com/google/go-licenses@latest
     - git clone --no-tags --depth=1 --single-branch https://github.com/mendersoftware/mendertesting /tmp/mendertesting
   script:
@@ -116,6 +119,7 @@ test:check-license-source:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Install dependencies
     - apk add --no-cache git bash perl-utils grep
     # Rename the branch we're on, so that it's not in the way for the

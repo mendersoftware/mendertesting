@@ -43,6 +43,7 @@ release:mender-docs-changelog:
   variables:
     GITHUB_CHANGELOG_REPO_NAME: "mender-docs-changelog"
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Check required environment variables
     - |
       if [ -z "$GITHUB_CLI_TOKEN" ] || [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then

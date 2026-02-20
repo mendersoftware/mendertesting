@@ -29,6 +29,8 @@ test:static:
     - /^saas-[a-zA-Z0-9.]+$/
   image: golang:1.20
   before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
+    - !reference [.qa-common-network-apt-retry, before_script]
     # Install cyclomatic dependency analysis tool
     - GO111MODULE=off go get -u github.com/fzipp/gocyclo/...
     # Install compile dependencies
