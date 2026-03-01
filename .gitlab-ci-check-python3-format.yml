@@ -12,7 +12,7 @@
 #
 # Some things to consider before including this file. The Black code formatter
 # accepts a project-local configuration file
-# (https://github.com/psf/black#pyprojecttoml). This enables project specific
+# (https://github.com/psf/black#pyprojecttoml). This enables project-specific
 # configuration of the Black tool. This is especially handy for ignoring, and/or
 # excluding specific directories from being evaluated.
 #
@@ -54,7 +54,7 @@ stages:
 test:check-python3-formatting:
   tags:
     - k8s-small
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/python:3.8-alpine
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/python:3.14-alpine
   stage: test
   needs: []
   retry:
@@ -63,7 +63,7 @@ test:check-python3-formatting:
       - runner_system_failure
       - stuck_or_timeout_failure
   variables:
-      BLACK_FORMATTER_VERSION: "19.10b0" # Hard-coded and unconfigurable
+      BLACK_FORMATTER_VERSION: "26.1.0" # Hard-coded and unconfigurable
   before_script:
     # Install dependencies
     - apk add --no-cache git curl bash gcc musl-dev
