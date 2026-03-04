@@ -35,13 +35,11 @@ test:check-shell-formatting:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine:3.13
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-alpine-master
   before_script:
     - SHELL_SCRIPTS=$(find . -type f -name "*.sh")
   script:
-    - apk update
-    - apk upgrade
-    - apk add --update bash git shfmt
+    - apk add --no-cache shfmt
     - shfmt -version
     - /bin/bash
     - 'echo -e "Checking shell formatting for the following files:\n${SHELL_SCRIPTS}"'
