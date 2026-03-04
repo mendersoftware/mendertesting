@@ -84,7 +84,7 @@ lint:commit:signoffs:
   tags:
     - $[[ inputs.runner ]]
   needs: []
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-alpine-master
   retry:
     max: 2
     when:
@@ -107,8 +107,6 @@ lint:commit:signoffs:
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
     - !reference [.qa-common-network-git-clone-retry, before_script]
-    # Install dependencies
-    - apk add --no-cache git bash
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
     # branch.
