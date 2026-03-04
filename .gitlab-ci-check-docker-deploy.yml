@@ -59,7 +59,7 @@ sync:image:
   dependencies:
     - publish:image
   stage: sync
-  image: debian:bookworm
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-debian-master
   before_script:
     - !reference [.qa-common-network-apt-retry, before_script]
     - !reference [.qa-common-network-git-clone-retry, before_script]
