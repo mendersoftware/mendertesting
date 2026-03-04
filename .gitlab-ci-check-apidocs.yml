@@ -92,15 +92,14 @@ trigger:apidocs:rebuild-mender-api-docs:
       - docs/*
       if: '$CI_COMMIT_BRANCH =~ /^(master|staging|[0-9]+\.[0-9]+\.x)$/'
     - if: '$REBUILD_MENDER_API_DOCS == "true"'
-  image: alpine
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-alpine-master
   before_script:
     - !reference [.qa-common-network-git-clone-retry, before_script]
-    - apk add git python3 py3-pip
+    - apk add --no-cache python3 py3-pip
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt --break-system-packages
     - git clone https://github.com/mendersoftware/integration.git mender-integration
     - alias release_tool=$(realpath mender-integration/extra/release_tool.py)
-    - apk add --no-cache curl
   script:
     # Enable the build of the mender-api-docs site versions where this branch is in use
     - BUILD_MASTER="false"
