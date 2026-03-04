@@ -51,6 +51,8 @@ test:unit:
     MONGODB_VERSION: "8.0"
     TEST_MONGO_URL: "mongodb://mongo"
   before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
+    - !reference [.qa-common-network-apt-retry, before_script]
     # Install JUnit test reporting formatter
     - go install github.com/jstemmer/go-junit-report@v1.0.0
 
@@ -105,6 +107,7 @@ publish:unittests:
   dependencies:
     - test:unit
   before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
     # Install dependencies
     - apk add --no-cache git
     - go install github.com/mattn/goveralls@latest

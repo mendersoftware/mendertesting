@@ -26,6 +26,10 @@
 #     LICENSE_HEADERS_IGNORE_FILES_REGEXP: '\./exclude-this/.*\.py'
 #
 
+include:
+  - project: 'Northern.tech/Mender/mendertesting'
+    file: 'qa-common/retry.yml'
+
 variables:
   # Variables defined here are fallbacks if not defined elsewhere.
   GOLANG_VERSION:
@@ -50,13 +54,14 @@ test:check-license:
       - licenses.csv
       when: never
     - when: always
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-alpine-master
   variables:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Install dependencies
-    - apk add --no-cache git bash perl-utils
+    - apk add --no-cache bash perl-utils
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
     # branch.
@@ -95,6 +100,8 @@ test:check-license:golang:
       when: never
   needs: []
   before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     - go install github.com/google/go-licenses@latest
     - git clone --no-tags --depth=1 --single-branch https://github.com/mendersoftware/mendertesting /tmp/mendertesting
   script:
@@ -111,13 +118,14 @@ test:check-license-source:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-alpine-master
   variables:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Install dependencies
-    - apk add --no-cache git bash perl-utils grep
+    - apk add --no-cache bash perl-utils grep
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
     # branch.

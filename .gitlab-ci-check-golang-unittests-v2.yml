@@ -37,6 +37,8 @@ test:unit:
   services:
     - "mongo:${MONGO_VERSION}"
   before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
+    - !reference [.qa-common-network-apt-retry, before_script]
     # Install compile dependencies
     - if [ -f deb-requirements.txt ]; then
     -   apt-get -qq update && apt-get install -yq $(cat deb-requirements.txt)
@@ -72,6 +74,7 @@ publish:unittests:
   dependencies:
     - test:unit
   before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
     # Install dependencies
     - go install github.com/mattn/goveralls@v0.0.12
     # Coveralls env variables:

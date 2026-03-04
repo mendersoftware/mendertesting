@@ -25,6 +25,17 @@ Templates can be self contained or use helper scripts in the `utils` directory.
 Network probes exit with code 192 when connectivity is absent. Paired with
 `.qa-common-default-retry`, the job is retried automatically on that exit code.
 
+**Note for GitLab CI component consumers**: GitLab components (files under `templates/`)
+cannot embed `include:` statements. If you use a component from `templates/` that internally
+uses a network probe (`!reference [.qa-common-network-*-retry, before_script]`), you must
+also include `qa-common/retry.yml` explicitly in your pipeline:
+
+  include:
+    - component: Northern.tech/Mender/mendertesting/templates/<component>@<version>
+    - project: Northern.tech/Mender/mendertesting
+      file: qa-common/retry.yml
+      ref: <version>
+
 
 ## Usage examples
 

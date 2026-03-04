@@ -17,6 +17,10 @@
 #     file: '.gitlab-ci-check-apidocs.yml'
 #
 
+include:
+  - project: 'Northern.tech/Mender/mendertesting'
+    file: 'qa-common/retry.yml'
+
 stages:
   - test
 
@@ -90,6 +94,7 @@ trigger:apidocs:rebuild-mender-api-docs:
     - if: '$REBUILD_MENDER_API_DOCS == "true"'
   image: alpine
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     - apk add git python3 py3-pip
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt --break-system-packages

@@ -29,7 +29,7 @@ BEGIN {
     BREAKING_CHANGE="BREAKING[- ]CHANGE: .*"
     SIGN_OFF_LINE="Signed-off-by: .*"
     CO_AUTHORED_LINE="Co-authored-by: .*"
-    CHERRY_PICK="(cherry picked from commit .*)"
+    CHERRY_PICK="^\\(cherry picked from commit .*\\)"
     CANCEL_CHANGELOG="Cancel-changelog: *([0-9a-f]+).*"
 
     ## special
@@ -100,6 +100,14 @@ function _advance() {
             return EOF
         }
     }
+    if (match(line, CHERRY_PICK)) {
+        _tok = line
+        debugf("Matched CHERRY_PICK: %s", _tok)
+        VAL = _tok;
+        line = ""
+        _tok_type = "CHERRY_PICK"
+        return _tok
+    }
     if (match(line, COMMIT_TYPE) != 0) {
         _tok = substr(line, 1, RLENGTH)
         debugf("Matched COMMIT_TYPE: %s", _tok)
@@ -168,14 +176,6 @@ function _advance() {
         VAL = _tok;
         line = ""
         _tok_type = "CO_AUTHORED_LINE"
-        return _tok
-    }
-    if (match(line, CHERRY_PICK)) {
-        _tok = line
-        debugf("Matched CHERRY_PICK: %s", _tok)
-        VAL = _tok;
-        line = ""
-        _tok_type = "CHERRY_PICK"
         return _tok
     }
     if (match(line, CANCEL_CHANGELOG)) {

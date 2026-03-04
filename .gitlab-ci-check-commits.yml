@@ -1,4 +1,8 @@
 
+include:
+  - project: 'Northern.tech/Mender/mendertesting'
+    file: 'qa-common/retry.yml'
+
 stages:
   - test
 
@@ -14,13 +18,14 @@ test:check-commits:
       - stuck_or_timeout_failure
   except:
     - /^(master|hosted|staging|production|saas-v[0-9.]+|[0-9]+\.[0-9]+\.x|[0-9]+\.[0-9]+\.[0-9]+)$/
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-alpine-master
   variables:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Install dependencies
-    - apk add --no-cache git bash gawk
+    - apk add --no-cache bash gawk
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
     # branch.
