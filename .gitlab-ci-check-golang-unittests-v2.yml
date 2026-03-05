@@ -63,6 +63,7 @@ publish:unittests:
   tags:
     - mender-qa-worker-generic-light
   stage: publish
+  allow_failure: true
   retry:
     max: 2
     when:
