@@ -7,6 +7,10 @@ variables:
 # This can also be directly used in files that include this component with '!reference [.mantra-push-results]'
 .mantra-push-results: &mantra-push-results
   - |
+    if [ "$CI_COMMIT_REF_PROTECTED" != "true" ]; then
+      echo "Mantra results will be submitted only from protected branches."
+      exit 0
+    fi
     # First setup Mantra script
     echo "Setting up Mantra test results uploader..."
     curl --silent --show-error --location --fail \
