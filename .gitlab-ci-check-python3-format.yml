@@ -54,7 +54,7 @@ stages:
 test:check-python3-formatting:
   tags:
     - k8s-small
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/python:3.8-alpine
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:python-black-master
   stage: test
   needs: []
   retry:
@@ -62,14 +62,9 @@ test:check-python3-formatting:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-  variables:
-      BLACK_FORMATTER_VERSION: "19.10b0" # Hard-coded and unconfigurable
   before_script:
     # Install dependencies
-    - apk add --no-cache git curl bash gcc musl-dev
     - !reference [.qa-common-network-git-clone-retry, before_script] # requires git
-    - pip3 install click==8.0.4
-    - pip3 install black==$BLACK_FORMATTER_VERSION
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
     # branch.
