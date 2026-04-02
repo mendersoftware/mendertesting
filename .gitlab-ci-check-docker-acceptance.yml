@@ -33,6 +33,9 @@ stages:
   - test
   - publish
 
+variables:
+  MENDER_ARTIFACT_VERSION: 4.4.0
+
 test:prepare_acceptance:
   tags:
     - mender-qa-worker-generic-light
@@ -57,8 +60,10 @@ test:prepare_acceptance:
     -   docker build -t testing -f tests/Dockerfile tests
     -   docker save testing > acceptance_testing_image.tar
     - fi
-    - wget https://downloads.mender.io/mender-artifact/master/linux/mender-artifact
-    - chmod +x mender-artifact
+    - apk add --no-cache dpkg zstd
+    - wget "https://downloads.mender.io/repos/workstation-tools/pool/main/m/mender-artifact/mender-artifact_${MENDER_ARTIFACT_VERSION}-1%2bubuntu%2bnoble_amd64.deb"
+      --output-document mender-artifact.deb
+    - dpkg --extract mender-artifact.deb /
   artifacts:
     expire_in: 2w
     paths:
@@ -86,7 +91,7 @@ test:acceptance_tests:
     - mv mender-integration/extra/travis-testing/* tests/
     - mv docs/* tests/
     - mv ${CI_PROJECT_NAME} tests/
-    - mv mender-artifact tests/
+    - ln -s /usr/bin/mender-artifact tests/mender-artifact
     - if [ -f keys/private.pem ]; then
     -   mv keys/private.pem tests/
     - fi
