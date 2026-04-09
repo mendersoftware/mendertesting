@@ -1,3 +1,5 @@
+version: "2"
+
 run:
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
@@ -9,38 +11,51 @@ run:
   # If false (default) - golangci-lint acquires file lock on start.
   allow-parallel-runners: true
 
-issues:
-  # Enables exclude of directories:
-  # vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
-  exclude-dirs-use-default: true
-
 linters:
   enable:
     - bodyclose
     - errcheck
     - gocyclo
-    - gofmt
-    - goimports
-    - gosimple
     - govet
     - ineffassign
     - lll
     - staticcheck
-    - typecheck
     - unused
 
-linters-settings:
-  gocyclo:
-    # default is 30.
-    min-complexity: 20
+  exclusions:
+    # Equivalent to issues.exclude-use-default in v1.
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
 
-  goimports:
-    # to be edited by the template
-    local-prefixes:
-      "github.com/mendersoftware/#CI_PROJECT_NAME#"
+  settings:
+    gocyclo:
+      # default is 30.
+      min-complexity: 20
 
-  lll:
-    # max line length, lines longer will be reported. Default is 120.
-    line-length: 100
-    # tab width in spaces. Default to 1.
-    tab-width: 4
+    staticcheck:
+      checks:
+        - "all"
+        # ST (stylecheck) and QF (quickfix) were not enabled in v1;
+        # exclude them to avoid breaking existing repos on upgrade.
+        - "-ST*"
+        - "-QF*"
+
+    lll:
+      # max line length, lines longer will be reported. Default is 120.
+      line-length: 100
+      # tab width in spaces. Default to 1.
+      tab-width: 4
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+  settings:
+    goimports:
+      # to be edited by the template
+      local-prefixes:
+        - "github.com/mendersoftware/#CI_PROJECT_NAME#"
