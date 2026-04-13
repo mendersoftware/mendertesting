@@ -22,7 +22,7 @@ stages:
 
 test:static:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s-small
   stage: test
   needs: []
   except:
@@ -54,7 +54,7 @@ test:static:
 
 test:govendor-check:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s-small
   stage: test
   needs: []
   rules:
