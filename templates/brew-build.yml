@@ -55,7 +55,7 @@ $[[ inputs.stage ]]:build:brew:
     - wget -O $FORMULA_FILE https://raw.githubusercontent.com/mendersoftware/mendertesting/master/gh_pr_brew_dl_strategy.rb
     - echo >> $FORMULA_FILE # Make sure there's a newline after download strategy class
     # 2. fetch the upstream brew formula
-    - wget -O ${FORMULA_NAME}_upstream.rb "https://github.com/Homebrew/homebrew-core/raw/refs/heads/master/Formula/$[[ inputs.formula ]]"
+    - wget -O ${FORMULA_NAME}_upstream.rb "https://github.com/Homebrew/homebrew-core/raw/refs/heads/main/Formula/$[[ inputs.formula ]]"
     # 3. adapt the formula to use the PR revision instead of a release tarball
     - |
         gsed -e /sha256/d -e "/url /s|\".*\"|\"https://github.com/mendersoftware/${REPO}.git\",|" -e "/url \"https/a\ \ \ \ revision: \"${CI_COMMIT_SHA}\",\n    using: GitHubPRDownloadStrategy\n  version \"1234\"" < ${FORMULA_NAME}_upstream.rb >> $FORMULA_FILE
