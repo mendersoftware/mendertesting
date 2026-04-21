@@ -106,10 +106,10 @@ release:candidate:tag-and-release:
       - runner_system_failure
       - stuck_or_timeout_failure
   rules:
-    # Manual trigger on maintenance branches (1.0.x or v1.0.x format)
+    # Run automatically on maintenance branches (1.0.x or v1.0.x format)
     - if: '$CI_COMMIT_BRANCH =~ "/^v?\d+\.\d+\.x$/"'
       allow_failure: true
-    # Manual trigger on default branch
+    # Run automatically on the default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       allow_failure: true
     # Never run on tags
