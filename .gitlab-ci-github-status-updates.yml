@@ -14,14 +14,18 @@ stages:
 .github_status_template:
   tags:
     - k8s-small
-  # Keep overhead low by using a small image with curl preinstalled.
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/curlimages/curl-base
+  # Keep overhead low by using a small image with curl and git preinstalled.
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-alpine-master
   retry:
     max: 2
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
   before_script:
+    - |
+      _pr_sha=$(git rev-parse HEAD^2 2>/dev/null || true)
+      _sha="${_pr_sha:-${CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_SHA:-$CI_COMMIT_SHA}}"
+      GITHUB_STATUS_API_URL="https://api.github.com/repos/mendersoftware/$CI_PROJECT_NAME/statuses/$_sha"
     - |
       send_status() {
         local status="$1"
