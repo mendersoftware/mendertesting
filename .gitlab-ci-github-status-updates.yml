@@ -12,6 +12,7 @@ stages:
   - .post
 
 
+
 .github_status_template:
   tags:
     - k8s-small
