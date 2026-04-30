@@ -27,6 +27,17 @@
       "extractVersionTemplate": "^v?(?<version>.*)$",
       "versioningTemplate": "semver"
     },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/templates/renovate.yml/"],
+      "matchStrings": [
+        "renovate_runner_version:\\s*\\n\\s*description:[^\\n]*\\n\\s*default:\\s*[\"'](?<currentValue>[^\"']+)[\"']"
+      ],
+      "depNameTemplate": "renovate-bot/renovate-runner",
+      "datasourceTemplate": "gitlab-tags",
+      "registryUrlTemplate": "https://gitlab.com",
+      "versioningTemplate": "semver"
+    },
   ],
 
   "prHourlyLimit": 0
