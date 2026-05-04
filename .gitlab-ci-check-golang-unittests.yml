@@ -112,6 +112,7 @@ publish:unittests:
     - tar -xvf unit-coverage.tar
     - curl -Os https://uploader.codecov.io/latest/linux/codecov
     - chmod +x codecov
+    - unset GITLAB_CI
     - ./codecov --token ${CODECOV_TOKEN} --flag unittests --nonZero
       --file $(find tests/unit-coverage -name 'coverage.txt' | tr '\n' ',' | sed 's/,$//')
       --slug mendersoftware/${CI_PROJECT_NAME}

@@ -81,6 +81,7 @@ publish:unittests:
   script:
     - curl -Os https://uploader.codecov.io/latest/linux/codecov
     - chmod +x codecov
+    - unset GITLAB_CI
     - ./codecov --token ${CODECOV_TOKEN} --file coverage.txt --flag unittests --nonZero
       --slug mendersoftware/${CI_PROJECT_NAME}
       --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
