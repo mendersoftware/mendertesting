@@ -142,6 +142,7 @@ publish:acceptance:
   script:
     - curl -Os https://uploader.codecov.io/latest/linux/codecov
     - chmod +x codecov
+    - unset GITLAB_CI
     - ./codecov --token ${CODECOV_TOKEN} --file ./tests/coverage-acceptance.txt --flag acceptance --nonZero
       --slug mendersoftware/${CI_PROJECT_NAME}
       --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
