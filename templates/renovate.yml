@@ -1,0 +1,46 @@
+spec:
+  inputs:
+    stage:
+      description: Pipeline stage where renovate runs
+      default: test
+    runner:
+      description: GitLab CI runner tag
+      default: k8s-small
+    repositories:
+      description: GitHub repositories renovate scans
+      default: "mendersoftware/$CI_PROJECT_NAME"
+    git_author:
+      description: Git commit author for renovate PRs
+      default: "mender-test-bot <mender@northern.tech>"
+    config_file:
+      description: Path to renovate configuration file in the consuming repo
+      default: "$CI_PROJECT_DIR/renovate.json5"
+    renovate_runner_version:
+      description: Version of the upstream renovate-bot/renovate-runner component
+      default: "v26.0.0"
+---
+
+include:
+  - component: gitlab.com/renovate-bot/renovate-runner/renovate.gitlab-ci@$[[ inputs.renovate_runner_version ]]
+
+renovate:
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  needs: []
+  variables:
+    RENOVATE_PLATFORM: "github"
+    RENOVATE_ENDPOINT: "https://api.github.com"
+    RENOVATE_GIT_AUTHOR: $[[ inputs.git_author ]]
+    RENOVATE_TOKEN: "$GITHUB_BOT_TOKEN_REPO_FULL"
+    RENOVATE_GITHUB_COM_TOKEN: "$GITHUB_BOT_TOKEN_REPO_FULL"
+    RENOVATE_REPOSITORIES: $[[ inputs.repositories ]]
+    RENOVATE_REQUIRE_CONFIG: "optional"
+    RENOVATE_ONBOARDING: "false"
+    RENOVATE_GIT_PRIVATE_KEY: "$SSH_PRIVATE_KEY"
+    RENOVATE_CONFIG_FILE: $[[ inputs.config_file ]]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_REF_PROTECTED == "true"'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
+      when: manual
+      allow_failure: true
