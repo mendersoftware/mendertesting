@@ -110,11 +110,13 @@ publish:unittests:
     - test:unit
   script:
     - tar -xvf unit-coverage.tar
-    - curl -Os https://uploader.codecov.io/latest/linux/codecov
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov
     - chmod +x codecov
-    - unset GITLAB_CI
-    - ./codecov --token ${CODECOV_TOKEN} --flag unittests --nonZero
-      --file $(find tests/unit-coverage -name 'coverage.txt' | tr '\n' ',' | sed 's/,$//')
+    - ./codecov upload-process
+      --fail-on-error
+      --git-service github
       --slug mendersoftware/${CI_PROJECT_NAME}
+      --sha ${CI_COMMIT_SHA}
       --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
-      --service github
+      --file $(find tests/unit-coverage -name 'coverage.txt' | tr '\n' ',' | sed 's/,$//')
+      --flag unittests

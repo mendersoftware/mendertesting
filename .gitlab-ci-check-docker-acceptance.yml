@@ -140,10 +140,13 @@ publish:acceptance:
   image: curlimages/curl-base
   allow_failure: true
   script:
-    - curl -Os https://uploader.codecov.io/latest/linux/codecov
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov
     - chmod +x codecov
-    - unset GITLAB_CI
-    - ./codecov --token ${CODECOV_TOKEN} --file ./tests/coverage-acceptance.txt --flag acceptance --nonZero
+    - ./codecov upload-process
+      --fail-on-error
+      --git-service github
       --slug mendersoftware/${CI_PROJECT_NAME}
+      --sha ${CI_COMMIT_SHA}
       --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
-      --service github
+      --file ./tests/coverage-acceptance.txt
+      --flag acceptance
