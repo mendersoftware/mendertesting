@@ -1,0 +1,35 @@
+spec:
+  inputs:
+    stage:
+      description: Pipeline stage where the job runs
+      default: test
+    runner:
+      description: GitLab CI runner tag
+      default: k8s-small
+    golang_version:
+      description: Yocto Go version to build against
+      default: "1.22.12"
+---
+
+test:yocto-backwards-compatibility:
+  stage: $[[ inputs.stage ]]
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/golang:$[[ inputs.golang_version ]]
+  needs: []
+  tags:
+    - $[[ inputs.runner ]]
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  before_script:
+    - |
+      if [ -f deb-requirements.txt ]; then
+        # From man apt.conf
+        # Retries Number of retries to perform.
+        echo 'Acquire::Retries "3";' > /etc/apt/apt.conf.d/80-retries
+        apt-get update
+        apt-get install --assume-yes --no-install-recommends $(cat deb-requirements.txt)
+      fi
+  script:
+    - go build
