@@ -35,7 +35,7 @@ test:check-shell-formatting:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-alpine-master
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers/base-alpine:master
   before_script:
     - SHELL_SCRIPTS=$(find . -type f -name "*.sh")
   script:

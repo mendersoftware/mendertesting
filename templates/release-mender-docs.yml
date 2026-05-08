@@ -22,7 +22,7 @@ release:mender-docs:
     - $[[ inputs.runner ]]
   needs: []
   image:
-    name: "registry.gitlab.com/northern.tech/mender/mender-test-containers:release-please-v1-master"
+    name: "registry.gitlab.com/northern.tech/mender/mender-test-containers/release-please:master"
     entrypoint: [""]
   retry:
     max: 2

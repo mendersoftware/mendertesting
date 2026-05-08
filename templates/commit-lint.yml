@@ -84,7 +84,7 @@ lint:commit:signoffs:
   tags:
     - $[[ inputs.runner ]]
   needs: []
-  image: registry.gitlab.com/northern.tech/mender/mender-test-containers:base-alpine-master
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers/base-alpine:master
   retry:
     max: 2
     when:
