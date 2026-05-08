@@ -1,0 +1,7 @@
+Vagrant files collected here are helpers for the local CI setup. With this config
+it is possible to recreate CI environment without affecting the host operating system.
+
+
+Config files located here are designed for internal test and development purposes.
+
+
