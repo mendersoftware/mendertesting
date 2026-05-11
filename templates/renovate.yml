@@ -18,6 +18,9 @@ spec:
     renovate_runner_version:
       description: Version of the upstream renovate-bot/renovate-runner component
       default: "v26.0.0"
+    labels:
+      description: Labels to add to Renovate PRs. Multiple labels should be comma-separated.
+      default: "renovate"
 ---
 
 include:
@@ -39,6 +42,7 @@ renovate:
     RENOVATE_ONBOARDING: "false"
     RENOVATE_GIT_PRIVATE_KEY: "$SSH_PRIVATE_KEY"
     RENOVATE_CONFIG_FILE: $[[ inputs.config_file ]]
+    RENOVATE_LABELS: $[[ inputs.labels ]]
   rules:
     - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_REF_PROTECTED == "true"'
     - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
