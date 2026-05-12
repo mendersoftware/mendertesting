@@ -22,7 +22,7 @@ test:unit:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
     TEST_MONGO_URL: "mongodb://mongo"
-    GO_VERSION: "1.24"
+    GO_VERSION: "1.26"
 
   tags:
     - mender-qa-worker-generic-light
