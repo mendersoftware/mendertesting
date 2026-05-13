@@ -141,6 +141,8 @@ publish:acceptance:
   allow_failure: true
   script:
     - curl -Os https://cli.codecov.io/latest/alpine/codecov
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov.SHA256SUM
+    - sha256sum -c codecov.SHA256SUM
     - chmod +x codecov
     - ./codecov upload-process
       --fail-on-error
