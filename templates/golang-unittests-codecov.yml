@@ -1,0 +1,99 @@
+spec:
+  inputs:
+    go_version:
+      description: Go version to use for running tests
+      default: "1.23.4"
+    mongo_version:
+      description: MongoDB service image version
+      default: "8.0"
+    mongodb_debian_release:
+      description: Debian release name for the MongoDB APT repository
+      default: "bookworm"
+    test_stage:
+      description: Pipeline stage for the test job
+      default: test
+    publish_stage:
+      description: Pipeline stage for the publish job
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: mender-qa-worker-generic-light
+    publish_runner:
+      description: GitLab CI runner tag for the publish job
+      default: k8s-small
+---
+
+test:unit:
+  tags:
+    - $[[ inputs.runner ]]
+  stage: $[[ inputs.test_stage ]]
+  needs: []
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
+    - when: on_success
+  image: golang:$[[ inputs.go_version ]]
+  services:
+    - mongo:$[[ inputs.mongo_version ]]
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 0
+    MONGODB_DEBIAN_RELEASE: $[[ inputs.mongodb_debian_release ]]
+    MONGODB_VERSION: $[[ inputs.mongo_version ]]
+    TEST_MONGO_URL: "mongodb://mongo"
+  before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
+    - !reference [.qa-common-network-apt-retry, before_script]
+    - go install github.com/jstemmer/go-junit-report@v1.0.0
+    - ln -s /bin/true /usr/sbin/systemctl
+    - wget -qO - https://www.mongodb.org/static/pgp/server-${MONGODB_VERSION}.asc | apt-key add -
+    - echo "deb http://repo.mongodb.org/apt/debian ${MONGODB_DEBIAN_RELEASE}/mongodb-org/${MONGODB_VERSION} main" | tee /etc/apt/sources.list.d/mongodb-org-${MONGODB_VERSION}.list
+    - apt-get -qq update
+    - apt-get install -qy mongodb-org
+    - if [ -f deb-requirements.txt ]; then
+    -   apt install -yq $(cat deb-requirements.txt)
+    - fi
+    - git branch -m temp-branch || true
+    - git fetch -f origin 'refs/heads/*:refs/heads/*'
+    - git fetch --tags origin
+    - mkdir -p /go/src/github.com/mendersoftware
+    - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
+    - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
+  script:
+    - go list ./... | grep -v vendor | xargs -n1 -I {} go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} 2>&1 | tee /dev/stderr | go-junit-report > ${CI_PROJECT_DIR}/test-results.xml || exit $?
+    - mkdir -p tests/unit-coverage && find . -name 'coverage.txt' -exec cp --parents {} ./tests/unit-coverage \;
+    - tar -cvf ${CI_PROJECT_DIR}/unit-coverage.tar tests/unit-coverage
+  artifacts:
+    expire_in: 2w
+    paths:
+      - unit-coverage.tar
+    reports:
+      junit: test-results.xml
+    when: always
+
+publish:unittests:
+  tags:
+    - $[[ inputs.publish_runner ]]
+  stage: $[[ inputs.publish_stage ]]
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
+    - when: on_success
+  image: curlimages/curl-base
+  allow_failure: true
+  dependencies:
+    - test:unit
+  script:
+    - tar -xvf unit-coverage.tar
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov.SHA256SUM
+    - sha256sum -c codecov.SHA256SUM
+    - chmod +x codecov
+    - ./codecov upload-process
+      --fail-on-error
+      --git-service github
+      --slug mendersoftware/${CI_PROJECT_NAME}
+      --sha ${CI_COMMIT_SHA}
+      --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
+      --file $(find tests/unit-coverage -name 'coverage.txt' | tr '\n' ',' | sed 's/,$//')
+      --flag unittests

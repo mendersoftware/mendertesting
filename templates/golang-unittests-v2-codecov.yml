@@ -1,0 +1,92 @@
+spec:
+  inputs:
+    go_version:
+      description: Go version to use for running tests
+      default: "1.24"
+    mongo_version:
+      description: MongoDB service image version
+      default: "8.0"
+    test_stage:
+      description: Pipeline stage for the test job
+      default: test
+    publish_stage:
+      description: Pipeline stage for the publish job
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: mender-qa-worker-generic-light
+    publish_runner:
+      description: GitLab CI runner tag for the publish job
+      default: k8s-small
+---
+
+test:unit:
+  tags:
+    - $[[ inputs.runner ]]
+  stage: $[[ inputs.test_stage ]]
+  needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
+    - when: on_success
+  image: golang:$[[ inputs.go_version ]]
+  services:
+    - "mongo:$[[ inputs.mongo_version ]]"
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 0
+    TEST_MONGO_URL: "mongodb://mongo"
+  before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
+    - !reference [.qa-common-network-apt-retry, before_script]
+    - if [ -f deb-requirements.txt ]; then
+    -   apt-get -qq update && apt-get install -yq $(cat deb-requirements.txt)
+    - fi
+  script:
+    - go install github.com/jstemmer/go-junit-report@v1.0.0
+    - go test ./... -v -covermode=atomic -coverprofile=coverage.txt 2>&1 |
+      tee /dev/stderr |
+      go-junit-report > test-results.xml || exit $?
+  artifacts:
+    expire_in: 2w
+    paths:
+      - coverage.txt
+    reports:
+      junit: test-results.xml
+    when: always
+
+publish:unittests:
+  tags:
+    - $[[ inputs.publish_runner ]]
+  stage: $[[ inputs.publish_stage ]]
+  allow_failure: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
+    - when: on_success
+  image: curlimages/curl-base
+  dependencies:
+    - test:unit
+  script:
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov.SHA256SUM
+    - sha256sum -c codecov.SHA256SUM
+    - chmod +x codecov
+    - ./codecov upload-process
+      --fail-on-error
+      --git-service github
+      --slug mendersoftware/${CI_PROJECT_NAME}
+      --sha ${CI_COMMIT_SHA}
+      --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
+      --file coverage.txt
+      --flag unittests
