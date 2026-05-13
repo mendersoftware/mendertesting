@@ -1,45 +1,32 @@
-# .gitlab-ci-check-docker-acceptance-codecov.yml
-#
-# This gitlab-ci template builds, runs acceptance tests and publishes
-# code coverage from a Docker based repository using the Codecov CLI uploader.
-#
-# It assumes the following files:
-# * Dockerfile.acceptance-testing: to build the the binary with test coverage.
-# * tests/Dockerfile to build the Python test runner.
-# * tests/docker-compose-acceptance.yml for the tests composition runtime.
-# * tests/docker-compose-acceptance-enterprise.yml (optional) for Enterprise tests.
-#
-# Requires DOCKER_REPOSITORY variable to be set in the calling Pipeline.
-# Add it to the project in hand through Gitlab's include functionality
-#
-# variables:
-#   DOCKER_REPOSITORY: <Image FQN, i.e mendersoftware/reponame>
-#   INTEGRATION_REV: <integration revision> (optional, defaults to master)
-# include:
-#   - project: 'Northern.tech/Mender/mendertesting'
-#     file: '.gitlab-ci-check-docker-acceptance-codecov.yml'
-#
-# Requires the following variables set in the project CI/CD settings:
-#   CODECOV_TOKEN: Token from codecov.io for this repository
-#
-# If the tests require access to Mender Registry hosted images, it
-# will require also the following variables:
-#   REGISTRY_MENDER_IO_USERNAME: Username for registry.mender.io
-#   REGISTRY_MENDER_IO_PASSWORD: Password for registry.mender.io
-#
-
-stages:
-  - test_prep
-  - test
-  - publish
-
-variables:
-  MENDER_ARTIFACT_VERSION: 4.4.0
+spec:
+  inputs:
+    mender_artifact_version:
+      description: Version of mender-artifact to install in the test preparation job
+      default: "4.4.0"
+    integration_rev:
+      description: Revision of the integration repository to clone (defaults to master)
+      default: "master"
+    prep_stage:
+      description: Pipeline stage for the test preparation job
+      default: test_prep
+    test_stage:
+      description: Pipeline stage for the acceptance test job
+      default: test
+    publish_stage:
+      description: Pipeline stage for the publish job
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: mender-qa-worker-generic-light
+    publish_runner:
+      description: GitLab CI runner tag for the publish job
+      default: k8s-small
+---
 
 test:prepare_acceptance:
   tags:
-    - mender-qa-worker-generic-light
-  stage: test_prep
+    - $[[ inputs.runner ]]
+  stage: $[[ inputs.prep_stage ]]
   needs: []
   image: docker:28
   rules:
@@ -48,6 +35,8 @@ test:prepare_acceptance:
     - when: on_success
   services:
     - docker:28-dind
+  variables:
+    MENDER_ARTIFACT_VERSION: $[[ inputs.mender_artifact_version ]]
   script:
     - docker build -f Dockerfile.acceptance-testing -t $DOCKER_REPOSITORY:prtest .
     - docker save $DOCKER_REPOSITORY:prtest > tests_image.tar
@@ -55,7 +44,6 @@ test:prepare_acceptance:
     - CONTAINER_ID=$(docker create "$DOCKER_REPOSITORY:pr")
     - docker cp "$CONTAINER_ID:/usr/bin/${CI_PROJECT_NAME}" "$(pwd)"
     - docker rm "$CONTAINER_ID"
-    # Repos using common tester image might not have the Dockerfile
     - if [ -f tests/Dockerfile ]; then
     -   docker build -t testing -f tests/Dockerfile tests
     -   docker save testing > acceptance_testing_image.tar
@@ -73,8 +61,8 @@ test:prepare_acceptance:
 
 test:acceptance_tests:
   tags:
-    - mender-qa-worker-generic-light
-  stage: test
+    - $[[ inputs.runner ]]
+  stage: $[[ inputs.test_stage ]]
   needs:
     - job: test:prepare_acceptance
       artifacts: true
@@ -85,9 +73,11 @@ test:acceptance_tests:
   image: tiangolo/docker-with-compose
   services:
     - docker:28-dind
+  variables:
+    INTEGRATION_REV: $[[ inputs.integration_rev ]]
   before_script:
     - apk add git bash
-    - git clone -b ${INTEGRATION_REV:-master} --depth=1 https://github.com/mendersoftware/integration.git mender-integration
+    - git clone -b ${INTEGRATION_REV} --depth=1 https://github.com/mendersoftware/integration.git mender-integration
     - mv mender-integration/extra/travis-testing/* tests/
     - mv docs/* tests/
     - mv ${CI_PROJECT_NAME} tests/
@@ -96,7 +86,6 @@ test:acceptance_tests:
     -   mv keys/private.pem tests/
     - fi
     - docker load -i tests_image.tar
-    # Repos using common tester image might not have the Dockerfile
     - if [ -f tests/Dockerfile ]; then
     -   docker load -i acceptance_testing_image.tar
     - fi
@@ -113,7 +102,6 @@ test:acceptance_tests:
     - if [ -f $(pwd)/tests/docker-compose-acceptance-enterprise.yml ]; then
     -   mv tests/coverage-acceptance.txt cover.prof
     -   TESTS_DIR=$(pwd)/tests $(pwd)/tests/run-test-environment acceptance $(pwd)/mender-integration $(pwd)/tests/docker-compose-acceptance-enterprise.yml
-      # Merge the test coverage from open-source and enterprise runs
     -   mv tests/coverage-acceptance.txt cover-ent.prof
     -   tail -n +2 cover-ent.prof | cat cover.prof - > tests/coverage-acceptance.txt
     - fi
@@ -128,8 +116,8 @@ test:acceptance_tests:
 
 publish:acceptance:
   tags:
-    - k8s-small
-  stage: publish
+    - $[[ inputs.publish_runner ]]
+  stage: $[[ inputs.publish_stage ]]
   needs:
     - job: test:acceptance_tests
       artifacts: true
