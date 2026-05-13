@@ -1,0 +1,95 @@
+# .gitlab-ci-check-golang-unittests-v2-codecov.yml
+#
+# This gitlab-ci template runs unit tests and publishes code coverage
+# from a Go repository using the Codecov CLI uploader.
+#
+# Add it to the project in hand through Gitlab's include functionality
+#
+# include:
+#   - project: 'Northern.tech/Mender/mendertesting'
+#     file: '.gitlab-ci-check-golang-unittests-v2-codecov.yml'
+#
+# Requires the following variables set in the project CI/CD settings:
+#   CODECOV_TOKEN: Token from codecov.io for this repository
+#
+stages:
+  - test
+  - publish
+
+test:unit:
+  variables:
+    MONGO_VERSION: "8.0"
+    GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
+    GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
+    TEST_MONGO_URL: "mongodb://mongo"
+    GO_VERSION: "1.24"
+
+  tags:
+    - mender-qa-worker-generic-light
+  stage: test
+  needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
+    - when: on_success
+  image: golang:${GO_VERSION}
+  services:
+    - "mongo:${MONGO_VERSION}"
+  before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
+    - !reference [.qa-common-network-apt-retry, before_script]
+    # Install compile dependencies
+    - if [ -f deb-requirements.txt ]; then
+    -   apt-get -qq update && apt-get install -yq $(cat deb-requirements.txt)
+    - fi
+  script:
+    # Install JUnit test reporting formatter
+    - go install github.com/jstemmer/go-junit-report@v1.0.0
+    # Run tests
+    - go test ./... -v -covermode=atomic -coverprofile=coverage.txt 2>&1 |
+      tee /dev/stderr |
+      go-junit-report > test-results.xml || exit $?
+
+  artifacts:
+    expire_in: 2w
+    paths:
+      - coverage.txt
+    reports:
+      junit: test-results.xml
+    when: always
+
+publish:unittests:
+  tags:
+    - k8s-small
+  stage: publish
+  allow_failure: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
+    - when: on_success
+  image: curlimages/curl-base
+  dependencies:
+    - test:unit
+  script:
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov.SHA256SUM
+    - sha256sum -c codecov.SHA256SUM
+    - chmod +x codecov
+    - ./codecov upload-process
+      --fail-on-error
+      --git-service github
+      --slug mendersoftware/${CI_PROJECT_NAME}
+      --sha ${CI_COMMIT_SHA}
+      --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
+      --file coverage.txt
+      --flag unittests

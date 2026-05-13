@@ -1,0 +1,126 @@
+# .gitlab-ci-check-golang-unittests-codecov.yml
+#
+# This gitlab-ci template runs unit tests and publishes code coverage
+# from a Go repository using the Codecov CLI uploader.
+#
+# Add it to the project in hand through Gitlab's include functionality
+#
+# include:
+#   - project: 'Northern.tech/Mender/mendertesting'
+#     file: '.gitlab-ci-check-golang-unittests-codecov.yml'
+#
+# If the repo has some compile time dependencies, the template expect to
+# exist a deb-requirements.txt file with the Debian OS required packages
+#
+# The template uses latest Mender supported golang version.
+# To override the version to use, append to your .gitlab-ci.yml:
+# test:unit:
+#   image: golang:1.11.4
+#
+# Requires the following variables set in the project CI/CD settings:
+#   CODECOV_TOKEN: Token from codecov.io for this repository
+#
+# By default, it installs MongoDB version 8.0 for Debian bookworm. You can
+# specify the Debian release name for the upstream APT repository and
+# the MongoDB version overriding the variables below:
+#
+# test:unit:
+#   variables:
+#     MONGODB_DEBIAN_RELEASE: "stretch"
+#     MONGODB_VERSION: "3.6"
+#
+
+stages:
+  - test
+  - publish
+
+test:unit:
+  tags:
+    - mender-qa-worker-generic-light
+  stage: test
+  needs: []
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
+    - when: on_success
+  image: golang:1.23.4
+  services:
+    - mongo:8.0
+  variables:
+    GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
+    GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
+    MONGODB_DEBIAN_RELEASE: "bookworm"
+    MONGODB_VERSION: "8.0"
+    TEST_MONGO_URL: "mongodb://mongo"
+  before_script:
+    - !reference [.qa-common-network-go-retry, before_script]
+    - !reference [.qa-common-network-apt-retry, before_script]
+    # Install JUnit test reporting formatter
+    - go install github.com/jstemmer/go-junit-report@v1.0.0
+
+    # mongodb-org package needs systemd, this circumnavigates the issue providing a fake systemctl command
+    - ln -s /bin/true /usr/sbin/systemctl
+
+    # Install mongodb for the tests that use it locally
+    - wget -qO - https://www.mongodb.org/static/pgp/server-${MONGODB_VERSION}.asc | apt-key add -
+    - echo "deb http://repo.mongodb.org/apt/debian ${MONGODB_DEBIAN_RELEASE}/mongodb-org/${MONGODB_VERSION} main" | tee /etc/apt/sources.list.d/mongodb-org-${MONGODB_VERSION}.list
+    - apt-get -qq update
+    - apt-get install -qy mongodb-org
+
+    # Install compile dependencies
+    - if [ -f deb-requirements.txt ]; then
+    -   apt install -yq $(cat deb-requirements.txt)
+    - fi
+
+    # Rename the branch we're on, so that it's not in the way for the
+    # subsequent fetch. It's ok if this fails, it just means we're not on any
+    # branch.
+    - git branch -m temp-branch || true
+    # Git trick: Fetch directly into our local branches instead of remote
+    # branches.
+    - git fetch -f origin 'refs/heads/*:refs/heads/*'
+    # Get last remaining tags, if any.
+    - git fetch --tags origin
+
+    # Prepare GOPATH
+    - mkdir -p /go/src/github.com/mendersoftware
+    - cp -r ${CI_PROJECT_DIR} /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
+    - cd /go/src/github.com/mendersoftware/${CI_PROJECT_NAME}
+  script:
+    - go list ./... | grep -v vendor | xargs -n1 -I {} go test -v -covermode=atomic -coverprofile=../../../{}/coverage.txt {} 2>&1 | tee /dev/stderr | go-junit-report > ${CI_PROJECT_DIR}/test-results.xml || exit $?
+    - mkdir -p tests/unit-coverage && find . -name 'coverage.txt' -exec cp --parents {} ./tests/unit-coverage \;
+    - tar -cvf ${CI_PROJECT_DIR}/unit-coverage.tar tests/unit-coverage
+  artifacts:
+    expire_in: 2w
+    paths:
+      - unit-coverage.tar
+    reports:
+      junit: test-results.xml
+    when: always
+
+publish:unittests:
+  tags:
+    - k8s-small
+  stage: publish
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
+    - when: on_success
+  image: curlimages/curl-base
+  allow_failure: true
+  dependencies:
+    - test:unit
+  script:
+    - tar -xvf unit-coverage.tar
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov.SHA256SUM
+    - sha256sum -c codecov.SHA256SUM
+    - chmod +x codecov
+    - ./codecov upload-process
+      --fail-on-error
+      --git-service github
+      --slug mendersoftware/${CI_PROJECT_NAME}
+      --sha ${CI_COMMIT_SHA}
+      --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
+      --file $(find tests/unit-coverage -name 'coverage.txt' | tr '\n' ',' | sed 's/,$//')
+      --flag unittests
