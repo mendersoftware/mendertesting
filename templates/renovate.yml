@@ -17,7 +17,7 @@ spec:
       default: "$CI_PROJECT_DIR/renovate.json5"
     renovate_runner_version:
       description: Version of the upstream renovate-bot/renovate-runner component
-      default: "v26.0.0"
+      default: "v26.0.1"
     labels:
       description: Labels to add to Renovate PRs. Multiple labels should be comma-separated.
       default: "renovate"
