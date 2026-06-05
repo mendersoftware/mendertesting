@@ -1,0 +1,39 @@
+spec:
+  inputs:
+    coverage_file:
+      description: Path to the coverage file to upload
+      default: "coverage.txt"
+    flag:
+      description: Codecov flag name for the upload
+      default: "unittests"
+    stage:
+      description: Pipeline stage for the publish job
+      default: "publish"
+    runner:
+      description: GitLab CI runner tag
+      default: "k8s-small"
+---
+
+publish:tests:
+  tags:
+    - $[[ inputs.runner ]]
+  stage: $[[ inputs.stage ]]
+  allow_failure: true
+  image: curlimages/curl-base
+  needs:
+    - job: test:unit
+      artifacts: true
+  script:
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov.SHA256SUM
+    - sha256sum -c codecov.SHA256SUM
+    - chmod +x codecov
+    - PR_FLAG=$(echo "${CI_COMMIT_BRANCH}" | grep -q '^pr_' && echo "--pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')" || echo "")
+    - ./codecov upload-process
+      --fail-on-error
+      --git-service github
+      --slug mendersoftware/${CI_PROJECT_NAME}
+      --sha ${CI_COMMIT_SHA}
+      ${PR_FLAG}
+      --file $[[ inputs.coverage_file ]]
+      --flag $[[ inputs.flag ]]

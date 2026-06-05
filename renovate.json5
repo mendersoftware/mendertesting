@@ -29,6 +29,17 @@
     },
     {
       "customType": "regex",
+      "managerFilePatterns": ["/templates/docker-acceptance-codecov.yml/"],
+      "matchStrings": [
+        "mender_artifact_version:\\s*\\n\\s*description:[^\\n]*\\n\\s*default:\\s*[\"'](?<currentValue>[^\"']+)[\"']"
+      ],
+      "depNameTemplate": "mendersoftware/mender-artifact",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
       "managerFilePatterns": ["/templates/renovate.yml/"],
       "matchStrings": [
         "renovate_runner_version:\\s*\\n\\s*description:[^\\n]*\\n\\s*default:\\s*[\"'](?<currentValue>[^\"']+)[\"']"
