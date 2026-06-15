@@ -1,0 +1,86 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# This Vagrantfile defines 1 or more test-runner-N machines which can be used
+# for running mender-gateway integration tests locally. They are supposed to be
+# ephemeral/short-lived machines and as such, they don't perform any updates of
+# things (except for the shared folders). If updates need to be done, machines
+# should be destroyed and created from scratch.
+
+N_MACHINES = 1
+BOX_NAME = "debian/bookworm64"  # make sure to adjust repos (and packages) below
+COMPILE_GATEWAY = false  # it's better to do this step interactively after running 'vagrant ssh test-runner-N'
+RUN_TESTS       = false  # same here
+
+MACHINE_MEMORY = 8192 # at least 8 GiB required for 4-6 pytest workers
+MACHINE_CPUS   = 4    # tweak to tune the level of overload/stress
+N_TEST_WORKERS = 4
+
+Vagrant.configure("2") do |config|
+  config.vm.box = BOX_NAME
+
+  (1..N_MACHINES).each do |machine_num|
+    machine_name = "tests-runner-" + machine_num.to_s
+    config.vm.define machine_name.to_sym do |test_machine|
+      test_machine.vm.provider :libvirt do |lv|
+        lv.memory = MACHINE_MEMORY
+        lv.cpus = MACHINE_CPUS
+        lv.disk_driver cache: "unsafe"
+      end
+
+      test_machine.vm.synced_folder "../../../", "/mender-gateway"
+
+      test_machine.vm.provision "shell", inline: <<-SHELL
+      if ! test -f /mender-gateway/tests/integration/mender_server/docker-compose.yml; then
+        echo "mender_server submodule not populated, make sure to fetch it"
+      fi
+      SHELL
+
+      test_machine.vm.provision "shell", args: ["-e"], name: "Install test dependencies", inline: <<-SHELL
+      if ! test -f /.test_deps_installed; then
+        apt-get update
+        apt-get -y install passwd ca-certificates curl git make python3 python-is-python3 python3-pip golang-go
+        pip install --ignore-installed -r /mender-gateway/tests/integration/mender_server/backend/tests/requirements-integration.txt --break-system-packages
+        curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+        curl -fsSL https://downloads.mender.io/repos/debian/gpg -o /etc/apt/trusted.gpg.d/mender.asc
+        cat > /etc/apt/sources.list.d/docker.sources <<EOF
+Types: deb
+URIs: https://download.docker.com/linux/debian
+Suites: $(. /etc/os-release && echo "$VERSION_CODENAME")
+Components: stable
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+        echo "deb [arch=$(dpkg --print-architecture)] https://downloads.mender.io/repos/workstation-tools debian/bookworm/stable main" > /etc/apt/sources.list.d/mender.list
+        apt-get update
+        apt-get -y install mender-artifact docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        usermod -G docker -a vagrant
+        touch /.test_deps_installed  # so that this part can be skipped when re-provisioning (running tests)
+      else
+        echo "Test dependencies already installed"
+      fi
+      SHELL
+
+      if COMPILE_GATEWAY
+        test_machine.vm.provision "shell", name: "Compile mender-gateway", inline: <<-SHELL
+        cd /mender-gateway
+        make dist-package
+        cp -lf mender-gateway-amd64 tests/integration/mender-gateway
+        SHELL
+      end
+
+      if RUN_TESTS
+        test_machine.vm.provision "shell", name: "Run integration tests", inline: <<-SHELL
+        cd /mender-gateway/tests/integration/
+        echo "Running tests with #{N_TEST_WORKERS} workers..."
+        ./run_tests.sh -- -n #{N_TEST_WORKERS} > tests.out
+        if [ $? = 0 ]; then
+           echo "Tests ran successfully"
+        else
+           echo "Tests failed, check the /mender-gateway/tests/integration/tests.out file for details."
+        fi
+        SHELL
+      end
+    end
+  end
+end
+
