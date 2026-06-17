@@ -27,7 +27,7 @@ variables:
 
 test:static:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s-small
   stage: test
   needs: []
   retry:
@@ -57,7 +57,7 @@ test:static:
 
 test:govendor-check:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s-small
   stage: test
   needs: []
   retry:

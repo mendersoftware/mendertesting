@@ -17,7 +17,7 @@ spec:
       default: publish
     runner:
       description: GitLab CI runner tag
-      default: mender-qa-worker-generic-light
+      default: k8s
     publish_runner:
       description: GitLab CI runner tag for the publish job
       default: k8s-small

@@ -36,7 +36,7 @@ stages:
 
 test:unit:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s
   stage: test
   needs: []
   except:

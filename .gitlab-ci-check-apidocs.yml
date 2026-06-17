@@ -26,7 +26,7 @@ stages:
 
 test:apidocs:verify-yaml:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s-small
   stage: test
   needs: []
   except:
@@ -43,7 +43,7 @@ test:apidocs:verify-yaml:
 
 test:apidocs:verify-swagger:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s-small
   stage: test
   needs: []
   except:
@@ -56,7 +56,7 @@ test:apidocs:verify-swagger:
 
 test:validate-open-api:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s-small
   stage: test
   needs: []
   image:
@@ -83,7 +83,7 @@ test:validate-open-api:
 
 trigger:apidocs:rebuild-mender-api-docs:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s-small
   stage: .post
   variables:
     REBUILD_MENDER_API_DOCS: "false"
