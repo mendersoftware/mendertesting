@@ -164,7 +164,7 @@ build:docker:
 
 build:docker-multiplatform:
   tags:
-    - hetzner-amd-beefy
+    - k8s
   stage: build
   needs: []
   variables:
@@ -224,8 +224,6 @@ publish:image:
       dotenv: publish.env
 
 publish:image-multiplatform:
-  tags:
-    - hetzner-amd-beefy
   stage: publish
   variables:
     GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}'
@@ -296,8 +294,6 @@ publish:image:mender:
       dotenv: publish.env
 
 publish:image-multiplatform:mender:
-  tags:
-    - hetzner-amd-beefy
   stage: publish
   variables:
     GITLAB_REGISTRY_TAG: '${CI_REGISTRY_IMAGE}:${CI_PIPELINE_ID}'
@@ -361,8 +357,6 @@ publish:image:saas:
     - docker push $SERVICE_IMAGE
 
 publish:image-multiplatform:saas:
-  tags:
-    - hetzner-amd-beefy
   stage: publish
   rules:
     - if: $MULTIPLATFORM_BUILD != "true"
