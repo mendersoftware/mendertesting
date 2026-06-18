@@ -19,14 +19,18 @@
 
 include:
   - project: 'Northern.tech/Mender/mendertesting'
-    file: 'qa-common/retry.yml'
+    file:
+      - 'qa-common/retry.yml'
+      - 'qa-common/runner.yml'
+
+default:
+  tags: !reference [.qa-common-default-runner, tags]
+  retry: !reference [.qa-common-default-retry, retry]
 
 stages:
   - test
 
 test:apidocs:verify-yaml:
-  tags:
-    - k8s-small
   stage: test
   needs: []
   except:
@@ -42,8 +46,6 @@ test:apidocs:verify-yaml:
     - python3 verify_docs.py `find docs -name "*.yml"`
 
 test:apidocs:verify-swagger:
-  tags:
-    - k8s-small
   stage: test
   needs: []
   except:
@@ -55,8 +57,6 @@ test:apidocs:verify-swagger:
     - npx @apidevtools/swagger-cli validate docs/*.yml
 
 test:validate-open-api:
-  tags:
-    - k8s-small
   stage: test
   needs: []
   image:
@@ -82,8 +82,6 @@ test:validate-open-api:
       junit: $CI_PROJECT_DIR/spectral-report.xml
 
 trigger:apidocs:rebuild-mender-api-docs:
-  tags:
-    - k8s-small
   stage: .post
   variables:
     REBUILD_MENDER_API_DOCS: "false"
