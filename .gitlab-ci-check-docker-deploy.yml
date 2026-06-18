@@ -53,7 +53,7 @@ variables:
 
 sync:image:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s-small
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
   dependencies:

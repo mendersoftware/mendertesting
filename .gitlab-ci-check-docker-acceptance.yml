@@ -38,7 +38,7 @@ variables:
 
 test:prepare_acceptance:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s
   stage: test_prep
   needs: []
   image: docker:28
@@ -73,7 +73,7 @@ test:prepare_acceptance:
 
 test:acceptance_tests:
   tags:
-    - mender-qa-worker-generic-light
+    - k8s
   stage: test
   needs:
     - job: test:prepare_acceptance
