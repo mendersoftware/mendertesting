@@ -1,0 +1,90 @@
+# .gitlab-ci-check-golang-unittests-v3.yml
+#
+# Same as v2, but runs on the pre-built base-mender-go image so that the Go
+# compile dependencies (deb-requirements.txt) and the JUnit reporter are baked
+# into the image -- no apt or `go install` at job runtime (ticket QA-1637).
+# The mongo service and the Codecov publish are unchanged from v2.
+#
+# Add it to the project in hand through Gitlab's include functionality
+#
+# include:
+#   - project: 'Northern.tech/Mender/mendertesting'
+#     file: '.gitlab-ci-check-golang-unittests-v3.yml'
+#
+# Requires the following variables set in the project CI/CD settings:
+#   CODECOV_TOKEN: Token from codecov.io for this repository
+#
+stages:
+  - test
+  - publish
+
+test:unit:
+  variables:
+    MONGO_VERSION: "8.0"
+    GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
+    GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
+    TEST_MONGO_URL: "mongodb://mongo"
+    # Immutable tag can be pinned per-repo and bumped by Renovate; defaults to master.
+    BASE_MENDER_GO_TAG: "master"
+
+  tags:
+    - mender-qa-worker-generic-light
+  stage: test
+  needs: []
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  except:
+    - /^saas-[a-zA-Z0-9.]+$/
+  image: registry.gitlab.com/northern.tech/mender/mender-test-containers/base-mender-go:${BASE_MENDER_GO_TAG}
+  services:
+    - "mongo:${MONGO_VERSION}"
+  before_script:
+    # Compile deps and go-junit-report are baked into base-mender-go -- no install step.
+    # Keep the Go-proxy pre-flight: `go test` still fetches this repo's modules at runtime.
+    - !reference [.qa-common-network-go-retry, before_script]
+  script:
+    - go test ./... -v -covermode=atomic -coverprofile=coverage.txt 2>&1 |
+      tee /dev/stderr |
+      go-junit-report > test-results.xml || exit $?
+
+  artifacts:
+    expire_in: 2w
+    paths:
+      - coverage.txt
+    reports:
+      junit: test-results.xml
+    when: always
+
+publish:unittests:
+  tags:
+    - k8s-small
+  stage: publish
+  allow_failure: true
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^saas-[a-zA-Z0-9.]+$/'
+      when: never
+    - when: on_success
+  image: curlimages/curl-base
+  dependencies:
+    - test:unit
+  script:
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov
+    - curl -Os https://cli.codecov.io/latest/alpine/codecov.SHA256SUM
+    - sha256sum -c codecov.SHA256SUM
+    - chmod +x codecov
+    - ./codecov upload-process
+      --fail-on-error
+      --git-service github
+      --slug mendersoftware/${CI_PROJECT_NAME}
+      --sha ${CI_COMMIT_SHA}
+      --pr $(echo "${CI_COMMIT_BRANCH}" | sed 's/^pr_//')
+      --file coverage.txt
+      --flag unittests
