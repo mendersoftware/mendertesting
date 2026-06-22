@@ -26,6 +26,16 @@
 # On the downstream, FluxCD is configured to trigger a new Helm deployment every releases and pre-releases on the non-prod envs.
 # At the same way, the production envs are configured to trigger only stable releases.
 
+include:
+  - project: 'Northern.tech/Mender/mendertesting'
+    file:
+      - 'qa-common/retry.yml'
+      - 'qa-common/runner.yml'
+
+default:
+  tags: !reference [.qa-common-default-runner, tags]
+  retry: !reference [.qa-common-default-retry, retry]
+
 stages:
   - version-bump
 
@@ -33,13 +43,6 @@ helm-version-bump:
   rules:
     - if: $CI_PIPELINE_SOURCE == "pipeline"
   stage: version-bump
-  tags:
-    - hetzner-amd-beefy
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - stuck_or_timeout_failure
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers/aws-k8s-toolbox:master
   before_script:
     - |
