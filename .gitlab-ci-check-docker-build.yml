@@ -148,7 +148,7 @@ build:docker:
   before_script:
     - *export_docker_vars
   script:
-    - echo "ERROR: Deprecated Job!"
+    - 'echo "ERROR: Deprecated Job!"'
     - exit 1
   artifacts:
     expire_in: 2w
@@ -207,7 +207,7 @@ publish:image:
     - *export_docker_vars
     - *docker_login_registries
   script:
-    - echo "ERROR: Deprecated Job!"
+    - 'echo "ERROR: Deprecated Job!"'
     - exit 1
   artifacts:
     reports:
@@ -269,7 +269,7 @@ publish:image:mender:
   allow_failure:
     exit_codes: 137
   script:
-    - echo "ERROR: Deprecated Job!"
+    - 'echo "ERROR: Deprecated Job!"'
     - exit 1
   artifacts:
     reports:
@@ -334,7 +334,7 @@ publish:image:saas:
     - SERVICE_IMAGE=${DOCKER_REPOSITORY}:${DOCKER_PUBLISH_TAG}
     - *docker_login_registries
   script:
-    - echo "ERROR: Deprecated Job!"
+    - 'echo "ERROR: Deprecated Job!"'
     - exit 1
 
 publish:image-multiplatform:saas:
