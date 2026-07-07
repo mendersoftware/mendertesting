@@ -58,6 +58,7 @@ sync:image:
     - if: '$CI_COMMIT_BRANCH == "master"'
   dependencies:
     - publish:image
+    - publish:image-multiplatform
   stage: sync
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers/base-debian:master
   before_script:
@@ -74,6 +75,10 @@ sync:image:
     - git config --global user.email "mender@northern.tech"
     - git config --global user.name "Mender Test Bot"
   script:
+    - if [ -z "$PUBLISH_IMAGE_DIGEST" ]; then
+    -   echo "PUBLISH_IMAGE_DIGEST is empty, refusing to sync $TARGET_MANIFEST_FILE"
+    -   exit 1
+    - fi
     # Prepare temporary workspace
     - cd $(mktemp -d)
     - git clone --depth 1 ${INFRA_REPOSITORY} .
