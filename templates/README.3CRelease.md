@@ -1,6 +1,6 @@
 # Click Click Click Release Process
 
-<!-- Last updated: 2025-09-23 -->
+<!-- Last updated: 2026-07-02 -->
 
 ## Introduction
 
@@ -28,7 +28,19 @@ Before initiating a release, verify that all prerequisites are met:
 
 ### 🧨 Second Click: Run the Show
 Execute the release preparation and validation:
-- **Review and merge Release Candidate** Review generated changelog PR `https://github.com/mendersoftware/<repository>/pulls?q=is%3Apr+is%3Aopen+label%3A%22autorelease%3A+pending%22`
+- **Review the Release Candidate** - Review the generated changelog PR `https://github.com/mendersoftware/<repository>/pulls?q=is%3Apr+is%3Aopen+label%3A%22autorelease%3A+pending%22`
+- **Curate the changelog** - Edit the generated changelog in the Release Candidate PR (see
+  [commits-and-release-notes](https://github.com/mendersoftware/mender-qa/blob/master/Documentation/commits-and-release-notes.md)
+  section 4; budget 15-30 minutes):
+  - **Highlights** - Hand-write a `## Highlights` section at the top (release engineer + PO): one short
+    paragraph per notable feature, with a documentation link. This is also the source material for the
+    blog post. Skip if the release has nothing to announce.
+  - **Security** - Add manual entries for coordinated disclosures or CVEs assigned after the commits
+    landed. CVE-flagged dependency bumps are included automatically.
+  - **Improvements** - Optionally promote behavior-affecting `refactor` entries into Improvements, and
+    move any misclassified entry to the right section.
+  - **All tickets resolved** - Verify the appendix table is present and its ticket links resolve.
+- **Merge the Release Candidate** - Merge the PR once the curated changelog looks right
 - **Tag and publish the Release** - Trigger the manual job from `https://gitlab.com/Northern.tech/Mender/<repository>/-/jobs?statuses=MANUAL`
 
 ### 📦 Third Click: Deliver It
