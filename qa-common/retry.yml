@@ -97,3 +97,23 @@
     - if [ "${NETWORK_RUNNING}" != "true" ]; then
     -  exit 192
     - fi
+
+# Verify that docker dind is active and certs are in place
+#
+#   before_script:
+#     - !reference [.qa-common-wait-for-dind, before_script]
+.qa-common-wait-for-dind:
+  before_script:
+    - DIND_ALIVE=false
+    - for try in 4 3 2 1; do
+    -   if docker info >/dev/null 2>&1; then
+    -     DIND_ALIVE=true
+    -     break
+    -   fi
+    -   echo "Waiting for Docker daemon..."
+    -   sleep 5
+    - done
+    - if [ "${DIND_ALIVE}" != "true" ]; then
+    -   echo "Dind service is down
+    -   exit 192
+    - fi

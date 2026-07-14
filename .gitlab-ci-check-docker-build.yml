@@ -228,6 +228,7 @@ publish:image-multiplatform:
   dependencies:
     - build:docker-multiplatform
   before_script:
+    - !reference [.qa-common-wait-for-dind, before_script]
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - *export_docker_vars
     - *docker_login_registries
@@ -251,6 +252,7 @@ publish:image:mender:
     - build:docker
   before_script:
     - !reference [.qa-common-network-git-clone-retry, before_script]
+    - !reference [.qa-common-wait-for-dind, before_script]
     # Use same variables for loading the image, while DOCKER_PUBLISH_COMMIT_TAG will be ignored
     - *export_docker_vars
     - *get_release_tool_alpine
@@ -291,6 +293,7 @@ publish:image-multiplatform:mender:
     - build:docker-multiplatform
   before_script:
     - !reference [.qa-common-network-git-clone-retry, before_script]
+    - !reference [.qa-common-wait-for-dind, before_script]
     # Use same variables for loading the image, while DOCKER_PUBLISH_COMMIT_TAG will be ignored
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - *export_docker_vars
