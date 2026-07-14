@@ -8,92 +8,114 @@
 
 # Scoped:
 # This cliff file creates a single changelog for multiple
-# scoped projects. The main grouping is still by group, followed by scoped.
+# scoped projects. The main grouping is still by group, followed by scope.
 
 
 [changelog]
-# template for the changelog footer
+# template for the changelog header
 header = """---"""
 # template for the changelog body
 # https://keats.github.io/tera/docs/#introduction
 body = """
-{% if version %}\
-    ## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}
-{% else %}\
-    ## [unreleased]
-{% endif %}\
+{% if version %}## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}{% else %}## [unreleased]{% endif %}
+{# Highlights are curated manually at release prep (grammar doc section 4.2). Insert a "## Highlights" block above this line in the release PR. #}
+{%- macro entry(commit) -%}
+{%- set_global c_line = commit.message | upper_first -%}
+{%- set_global c_render_body = false -%}
+{%- set_global c_ticket = "" -%}
+{%- for f in commit.footers -%}
+{# Exact-match keywords only. "All" is a legacy synonym for "Commit". Miscased values
+   (e.g. "commit") are silently ignored per the grammar -> subject only, no body. #}
+{%- if f.token == "Changelog" and (f.value == "Commit" or f.value == "All") -%}{%- set_global c_render_body = true -%}{%- endif -%}
+{# A Changelog value that is not a (case-insensitive) known keyword is a free-text sentence override. #}
+{%- set kw = f.value | lower -%}
+{%- if f.token == "Changelog" and kw != "commit" and kw != "none" and kw != "title" and kw != "all" -%}{%- set_global c_line = f.value -%}{%- endif -%}
+{%- if f.token == "Ticket" and f.value != "None" -%}{%- set_global c_ticket = f.value -%}{%- endif -%}
+{%- endfor -%}
+{{ c_line }}{% if c_ticket %} ([{{ c_ticket }}](https://northerntech.atlassian.net/browse/{{ c_ticket }})){% endif %}
+{%- if commit.body and c_render_body %}
+{% for l in commit.body | split(pat="\n") %}{% if "(cherry picked from commit" not in l %}  {{ l }}
+{% endif %}{% endfor %}{%- endif -%}
+{%- endmacro entry -%}
+{# Scope is shown as the #### sub-header, so lines here omit the *(scope)* prefix. #}
+{# Entries that would render identically (same scope, subject and tickets — e.g. recurring
+   dependabot bumps) are listed once. Distinct commits sharing a subject still render,
+   since their scope or ticket differs. #}
+{%- macro list(commits) -%}
+{%- set_global seen = [] -%}
+{%- for commit in commits | unique(attribute="id") %}
+{%- set_global tks = "" -%}
+{%- for f in commit.footers %}{% if f.token == "Ticket" %}{% set_global tks = tks ~ f.value %}{% endif %}{% endfor -%}
+{%- set sc = commit.scope | default(value="") -%}
+{%- set key = sc ~ "|" ~ commit.message ~ "|" ~ tks -%}
+{%- if key not in seen %}
+{%- set_global seen = seen | concat(with=key) %}
+- {{ self::entry(commit=commit) }}
+{%- endif -%}
+{%- endfor -%}
+{%- endmacro list -%}
+{# 1. Breaking changes #}
+{%- set breaking = commits | filter(attribute="breaking", value=true) -%}
+{%- if breaking | length > 0 %}
 
-{% macro render_commit_body(commit) %}
-    {% if commit.links %}\
-        ({% for link in commit.links | unique(attribute="text") %}\
-            [{{ link.text }}]({{ link.href }})\
-        {% endfor -%})\
-    {% endif %} \
-    ([{{ commit.id | truncate(length=7, end="") }}]\
-    (https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/commit/{{ commit.id }})) \
-    {% if commit.remote.username %} by @{{ commit.remote.username }}{%- endif %}\
-    {% if commit.remote.pr_number %} in #{{ commit.remote.pr_number }}{%- endif %}
-    {% if commit.breaking -%}
-        {% raw %}  {% endraw %}- **BREAKING**: {{commit.breaking_description}}
-    {% endif -%}
+### Breaking changes
+{% for commit in breaking %}
+- {% if commit.scope %}*({{ commit.scope }})* {% endif %}{{ self::entry(commit=commit) }}
+{%- if commit.breaking_description and commit.breaking_description != commit.message %}
+{% raw %}  {% endraw %}- **BREAKING**: {{ commit.breaking_description }}
+{%- endif -%}
+{% endfor -%}
+{% endif -%}
+{# 2. Deprecations #}
+{%- set_global has_dep = false -%}
+{%- for commit in commits %}{% for f in commit.footers %}{% if f.token == "Deprecation" %}{% set_global has_dep = true %}{% endif %}{% endfor %}{% endfor -%}
+{%- if has_dep %}
 
-    {% set_global should_render_body = true %}
-    {% for footer in commit.footers %}
-        {% if footer.token == "Changelog" and footer.value == "Title" -%}
-            {% set_global should_render_body = false %}
-        {% endif -%}
-    {% endfor -%}
-    {% if commit.body and should_render_body -%}
-        {% raw %}  \n{% endraw %}
-        {% for line in commit.body | split(pat="\n") -%}
-            {% raw %}  {% endraw %}{{ line }}
-        {% endfor -%}
-    {% endif -%}
-{% endmacro render_commit_body %}\
+### Deprecations
+{% for commit in commits %}{% for f in commit.footers %}{% if f.token == "Deprecation" %}
+- {{ f.value }}
+{%- endif %}{% endfor %}{% endfor -%}
+{% endif -%}
+{# 3. Ordered type groups, sub-grouped by scope (breaking excluded above; Deprecations group rendered above) #}
+{%- for group, gc in commits | filter(attribute="breaking", value=false) | group_by(attribute="group") %}
+{%- set name = group | split(pat="-->") | last -%}
+{%- if name != "Deprecations" %}
 
-{% macro render_commits(commits) %}
-    {% for commit in commits
-    | filter(attribute="scope")
-    | unique(attribute="message")
-    | sort(attribute="scope") %}
-        - *({{commit.scope}})* {{ commit.message | upper_first }}
-            {{ self::render_commit_body(commit=commit) }}\
-    {%- endfor -%}
-    {% raw %}\n{% endraw %}\
-    {%- for commit in commits | unique(attribute="message") %}
-        {%- if commit.scope -%}
-        {% else -%}
-            - {{ commit.message | upper_first }}\
-                {{ self::render_commit_body(commit=commit) }}\
-        {% endif -%}
-    {% endfor -%}
-{% endmacro input %}\
+### {{ name }}
+{% for scope, sc in gc | group_by(attribute="scope") %}
+#### {{ scope }}
+{{ self::list(commits=sc) }}
+{%- endfor %}
+{%- set_global noscope = [] -%}
+{%- for commit in gc %}{%- if not commit.scope %}{%- set_global noscope = noscope | concat(with=commit) -%}{%- endif -%}{%- endfor %}
+{%- if noscope | length > 0 %}
+{{ self::list(commits=noscope) }}
+{%- endif -%}
+{%- endif -%}
+{%- endfor -%}
+{# 4. All tickets resolved appendix #}
+{%- set_global tickets = [] -%}
+{%- for commit in commits %}{% for f in commit.footers %}{% if f.token == "Ticket" and f.value != "None" %}{% set_global tickets = tickets | concat(with=f.value) %}{% endif %}{% endfor %}{% endfor -%}
+{%- if tickets | length > 0 %}
 
-{% for group, commits in commits | group_by(attribute="group")  %}
-    {% if group is starting_with("Dependabot") %}
-        {% set_global dependencies = commits %}
-        {% continue %}
-    {% endif %}
-    ### {{ group | upper_first }}
-    {% for group, commits in commits | group_by(attribute="scope") %}
-        #### {{ group | upper_first }}
-        {{ self::render_commits(commits=commits) }}
-        {% raw %}\n{% endraw %}\
-    {% endfor %}\
-{% endfor %}\n
-{% if dependencies is defined %}
-    ### Dependabot bumps
-    {{ self::render_commits(commits=dependencies) }}
+---
+### All tickets resolved in this release
+
+| Ticket |
+|---|
+{% for t in tickets | unique %}| [{{ t }}](https://northerntech.atlassian.net/browse/{{ t }}) |
+{% endfor -%}
+{% endif -%}
+{%- if not commits %}
+
+No Changelog found.
 {% endif %}
-{% if not commits %}
-    No Changelog found.
-{% endif %}"""
-
+"""
 # template for the changelog footer
 footer = """---"""
-
 # remove the leading and trailing whitespace from the templates
 trim = true
+
 
 [git]
 # parse the commits based on https://www.conventionalcommits.org
@@ -104,19 +126,30 @@ filter_unconventional = true
 split_commits = false
 # regex for parsing and grouping commits
 commit_parsers = [
+    # NOTE: git-cliff evaluates parsers first-match-wins and combines a single parser's
+    # fields with OR. Order therefore matters: type rules come first so a feat/fix that
+    # merely mentions a CVE, or carries a Deprecation trailer, keeps its own type group.
     { message = "^[^:]+\\(internal\\):", skip = true }, # Skip "internal" scope
-    { message = ".*Changelog: None", skip = true },
-    { message = "^chore: bump", group = "Security" },
-    { message = "^chore(deps): update", group = "Security" },
-    { message = "^test", group = "Testing", skip = true },
-    { message = "^feat", group = "Features" },
-    { message = "^fix", group = "Bug fixes" },
-    { message = "^doc", group = "Documentation" },
-    { message = "^perf", group = "Performance" },
-    { message = "^refactor", group = "Refactor" },
-    { message = "^style", group = "Styling" },
-    { body = ".*security", group = "Security" },
-    { message = "^chore|^ci", skip = true },
+    { message = "(?m)^Changelog: None$", skip = true }, # exact footer line only; a sentence starting with "None" is a valid override
+    # Type groups
+    { message = "^feat", group = "<!-- 4 -->New features" },
+    { message = "^fix", group = "<!-- 6 -->Bug fixes" },
+    { message = "^perf", group = "<!-- 5 -->Improvements" },
+    { message = "^refactor", group = "<!-- 5 -->Improvements" },
+    # CVE-flagged commits that fell through the type rules (i.e. dependency bumps and
+    # chores) route to Security. This keeps CVE-Security scoped to bumps/chores per the
+    # grammar, not to any commit that happens to mention a CVE.
+    { message = "CVE-\\d{4}-\\d+", group = "<!-- 3 -->Security" },
+    { body = "CVE-\\d{4}-\\d+", group = "<!-- 3 -->Security" },
+    { footer = "CVE-\\d{4}-\\d+", group = "<!-- 3 -->Security" },
+    # Non-CVE dependency bumps route to Dependency updates (any deps* scope, plus scopeless bump)
+    { message = "^chore: bump", group = "<!-- 7 -->Dependency updates" },
+    { message = "^chore\\(deps", group = "<!-- 7 -->Dependency updates" },
+    # Deprecation-only commits (e.g. a plain chore) are kept out of the skip bucket so the
+    # template can surface their Deprecation trailer. feat/fix carrying one already matched above.
+    { footer = "^Deprecation:", group = "<!-- 2 -->Deprecations" },
+    # Everything else (docs, style, test, ci, non-bump chore) is skipped
+    { message = "^.*", skip = true },
 ]
 link_parsers = [
     { pattern = "MEN-(\\d+)", href = "https://northerntech.atlassian.net/browse/MEN-$1" },
