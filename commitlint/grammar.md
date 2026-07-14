@@ -60,7 +60,8 @@ Signed-off-by: Jane Developer <jane.developer@northern.tech>
 
 ## Trailers
 
-All trailers are optional except `Signed-off-by:`. None of them are CI-gated.
+All trailers are optional and never CI-gated, except `Signed-off-by:`, which is
+required on every commit and enforced in CI.
 
 | Trailer | Purpose |
 |---|---|
@@ -76,9 +77,10 @@ Notes:
 
 - By default (no `Changelog:` trailer) the changelog renders the **subject only**;
   the body stays in `git log`. Opt the body in with `Changelog: Commit`.
-- Trailer keywords are case-sensitive: use `Changelog: None`, `Changelog: Commit`.
-  Miscased forms are ignored (treated as no trailer). Free-text `Changelog:`
-  sentences are not case-sensitive.
+- Trailer values are capitalized: keyword values exactly as written (`Changelog: None`,
+  `Changelog: Commit` — miscased forms are ignored, treated as no trailer), and free-text
+  sentences start with an uppercase letter, since they are rendered to users as-is.
+- A trailer value may span multiple lines; parsing stops at the next `Token:` line.
 - `Deprecation:` announces an upcoming removal (the thing still works today). Use
   `!` / `BREAKING CHANGE:` only when behavior actually changes now.
 
