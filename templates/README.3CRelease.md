@@ -28,8 +28,8 @@ Before initiating a release, verify that all prerequisites are met:
 
 ### 🧨 Second Click: Run the Show
 Execute the release preparation and validation:
-- **Review and merge Release Candidate** Review generated changelog PR `https://github.com/mendersoftware/<repository>/pulls?q=is%3Apr+is%3Aopen+label%3A%22autorelease%3A+pending%22`
-- **Curate the changelog** - Edit the generated changelog in the Release Candidate PR before merging (see
+- **Review the Release Candidate** - Review the generated changelog PR `https://github.com/mendersoftware/<repository>/pulls?q=is%3Apr+is%3Aopen+label%3A%22autorelease%3A+pending%22`
+- **Curate the changelog** - Edit the generated changelog in the Release Candidate PR (see
   [commits-and-release-notes](https://github.com/mendersoftware/mender-qa/blob/master/Documentation/commits-and-release-notes.md)
   section 4; budget 15-30 minutes):
   - **Highlights** - Hand-write a `## Highlights` section at the top (release engineer + PO): one short
@@ -40,6 +40,7 @@ Execute the release preparation and validation:
   - **Improvements** - Optionally promote behavior-affecting `refactor` entries into Improvements, and
     move any misclassified entry to the right section.
   - **All tickets resolved** - Verify the appendix table is present and its ticket links resolve.
+- **Merge the Release Candidate** - Merge the PR once the curated changelog looks right
 - **Tag and publish the Release** - Trigger the manual job from `https://gitlab.com/Northern.tech/Mender/<repository>/-/jobs?statuses=MANUAL`
 
 ### 📦 Third Click: Deliver It
