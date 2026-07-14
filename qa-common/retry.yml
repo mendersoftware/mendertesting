@@ -114,6 +114,6 @@
     -   sleep 5
     - done
     - if [ "${DIND_ALIVE}" != "true" ]; then
-    -   echo "Dind service is down
+    -   echo "Dind service is down"
     -   exit 192
     - fi
