@@ -97,6 +97,8 @@ body = """
 
 No Changelog found.
 {% endif %}
+{%- raw %}
+{% endraw -%}
 """
 # template for the changelog footer
 footer = """---"""
