@@ -114,7 +114,7 @@ stages:
   pip3 install -r mender-integration/extra/requirements.txt
   alias release_tool=$(realpath mender-integration/extra/release_tool.py)
 
-.dind-login: &dind-login
+.dind-config-create: &dind-config-create
   - mkdir -p $HOME/.docker && echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
 
 .requires-docker-common: &requires-docker-common
@@ -174,7 +174,8 @@ build:docker-multiplatform:
     - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:28-dind
       alias: docker
   before_script:
-    - *dind-login
+    - *dind-config-create
+    - !reference [.qa-common-wait-for-dind, before_script]
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - *export_docker_vars
   script:
@@ -228,7 +229,6 @@ publish:image-multiplatform:
   dependencies:
     - build:docker-multiplatform
   before_script:
-    - !reference [.qa-common-wait-for-dind, before_script]
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - *export_docker_vars
     - *docker_login_registries
@@ -351,6 +351,7 @@ publish:image-multiplatform:saas:
     - name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/docker:28-dind
       alias: docker
   before_script:
+    - !reference [.qa-common-wait-for-dind, before_script]
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - *export_docker_vars
     - *docker_login_registries
