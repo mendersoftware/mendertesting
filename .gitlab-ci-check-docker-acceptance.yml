@@ -34,7 +34,7 @@ stages:
   - publish
 
 variables:
-  MENDER_ARTIFACT_VERSION: 4.4.0
+  MENDER_ARTIFACT_VERSION: 4.4.1
 
 test:prepare_acceptance:
   tags:
