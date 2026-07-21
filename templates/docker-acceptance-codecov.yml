@@ -2,7 +2,7 @@ spec:
   inputs:
     mender_artifact_version:
       description: Version of mender-artifact to install in the test preparation job
-      default: "4.4.0"
+      default: "4.4.1"
     integration_rev:
       description: Revision of the integration repository to clone (defaults to master)
       default: "master"
