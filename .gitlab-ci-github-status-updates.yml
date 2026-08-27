@@ -1,7 +1,6 @@
 variables:
   GITHUB_AUTH: "Authorization: bearer $GITHUB_BOT_TOKEN_REPO_STATUS"
 
-  GITHUB_STATUS_API_URL: "https://api.github.com/repos/mendersoftware/$CI_PROJECT_NAME/statuses/$CI_COMMIT_SHA"
   GITHUB_STATUS_API_JSON_F: '{"state": "%s", "context": "ci/gitlab", "target_url": "%s", "description": "%s"}'
 
 stages:
@@ -23,6 +22,16 @@ stages:
       - stuck_or_timeout_failure
       - script_failure
   before_script:
+    - |
+      # GitLab groups do not always match the GitHub org they mirror.
+      if [ -z "$GITHUB_ORG" ]; then
+        case "$(printf '%s' "${CI_PROJECT_NAMESPACE##*/}" | tr 'A-Z' 'a-z')" in
+          northerntechhq) GITHUB_ORG="NorthernTechHQ" ;;
+          cfengine)       GITHUB_ORG="cfengine" ;;
+          *)              GITHUB_ORG="mendersoftware" ;;
+        esac
+      fi
+      : "${GITHUB_STATUS_API_URL:=https://api.github.com/repos/$GITHUB_ORG/$CI_PROJECT_NAME/statuses/$CI_COMMIT_SHA}"
     - |
       send_status() {
         local status="$1"
@@ -58,7 +67,7 @@ stages:
               # over, such as mender-api-docs.
               :
             else
-              echo "msg=github_status_update result=failed code=$code" 1>&2
+              echo "msg=github_status_update result=failed code=$code url=$GITHUB_STATUS_API_URL" 1>&2
               cat "$body_f" 1>&2
               ret=1
             fi
