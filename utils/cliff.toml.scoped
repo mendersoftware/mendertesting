@@ -32,7 +32,7 @@ body = """
 {%- if f.token == "Changelog" and kw != "commit" and kw != "none" and kw != "title" and kw != "all" -%}{%- set_global c_line = f.value -%}{%- endif -%}
 {%- if f.token == "Ticket" and f.value != "None" -%}{%- set_global c_ticket = f.value -%}{%- endif -%}
 {%- endfor -%}
-{{ c_line }}{% if c_ticket %} ([{{ c_ticket }}](https://northerntech.atlassian.net/browse/{{ c_ticket }})){% endif %}
+{{ c_line }}{% if c_ticket %} ([{{ c_ticket }}](https://northerntech.atlassian.net/browse/{{ c_ticket }})){% endif %} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/commit/{{ commit.id }})){% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}
 {%- if commit.body and c_render_body %}
 {% for l in commit.body | split(pat="\n") %}{% if "(cherry picked from commit" not in l %}  {{ l }}
 {% endif %}{% endfor %}{%- endif -%}
