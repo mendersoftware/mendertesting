@@ -146,7 +146,7 @@ commit_parsers = [
     { footer = "CVE-\\d{4}-\\d+", group = "<!-- 3 -->Security" },
     # Non-CVE dependency bumps route to Dependency updates (any deps* scope, plus scopeless bump)
     { message = "^chore: bump", group = "<!-- 7 -->Dependency updates" },
-    { message = "^chore\\(deps", group = "<!-- 7 -->Dependency updates" },
+    { message = "^fix\\(deps", group = "<!-- 7 -->Dependency updates" },
     # Deprecation-only commits (e.g. a plain chore) are kept out of the skip bucket so the
     # template can surface their Deprecation trailer. feat/fix carrying one already matched above.
     { footer = "^Deprecation:", group = "<!-- 2 -->Deprecations" },
