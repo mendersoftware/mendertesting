@@ -28,10 +28,10 @@ test:format:
     when:
       - runner_system_failure
       - stuck_or_timeout_failure
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine:3.17
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/alpine:latest
   before_script:
     # Install compile dependencies
-    - apk add git curl clang15-extra-tools
+    - apk add git curl clang-extra-tools
     # Copy .clang-format
     - if [ ! -f .clang-format ]; then
     -   curl -f
