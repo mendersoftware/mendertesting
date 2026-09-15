@@ -117,3 +117,42 @@
     -   echo "Dind service is down"
     -   exit 192
     - fi
+
+# ── Command retries ───────────────────────────────────────────────────────────
+#
+# The probes above check connectivity once, up front, then rely on the job
+# retrying from scratch (via .qa-common-default-retry) if it wasn't there.
+# That doesn't help when the thing that can fail runs more than once over the
+# life of a job (e.g. cloning several repos in a loop) - connectivity can be
+# fine when the job starts and still fail three repos in. Use this instead to
+# retry the actual flaky command, in place, every time it runs.
+#
+# Source it once per script, then wrap any command:
+#
+#   script:
+#     - !reference [.qa-common-retry-command, script]
+#     - retry_command 5 -- git clone https://github.com/foo/bar
+#     - retry_command 3 -- curl -fsSL https://example.com/install.sh -o install.sh
+#
+# Exits non-zero (does not exit the job outright) after the command has
+# failed `max` times, so callers can decide what to do next - e.g. treat it
+# as fatal, or exit 192 to fall back on a whole-job retry via
+# .qa-common-default-retry.
+.qa-common-retry-command:
+  script:
+    - |
+      retry_command() {
+        local max="$1"; shift
+        [ "$1" = "--" ] && shift
+        local attempt=1
+        while true; do
+          "$@" && return 0
+          if [ "${attempt}" -ge "${max}" ]; then
+            echo "ERROR: command failed after ${max} attempts: $*" >&2
+            return 1
+          fi
+          echo "WARN: attempt ${attempt}/${max} failed: $*; retrying in ${attempt}s" >&2
+          sleep "${attempt}"
+          attempt=$((attempt + 1))
+        done
+      }
