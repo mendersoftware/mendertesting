@@ -93,6 +93,11 @@ sync:image:
     -   'sed -i -E "s#image:\s+[-_./@:a-zA-Z0-9]+#image: $PUBLISH_IMAGE_DIGEST#g" $file'
     -   git add $file
     - done
+    # Nothing to do if the digest is already deployed
+    - if git diff --cached --quiet; then
+    -   echo "No changes to sync, $PUBLISH_IMAGE_DIGEST is already deployed"
+    -   exit 0
+    - fi
     # Commit
     - git commit -sm "[Mender CI/CD] Sync $CI_PROJECT_NAME" -m "Update $CI_PROJECT_NAME with tag $PUBLISH_IMAGE_DIGEST"
     - git show
