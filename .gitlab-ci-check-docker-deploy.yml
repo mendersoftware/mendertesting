@@ -93,7 +93,8 @@ sync:image:
     -   'sed -i -E "s#image:\s+[-_./@:a-zA-Z0-9]+#image: $PUBLISH_IMAGE_DIGEST#g" $file'
     -   git add $file
     - done
-    # Commit
+    # Commit (nothing to do if the manifest already has this digest)
+    - git diff --cached --quiet && exit 0
     - git commit -sm "[Mender CI/CD] Sync $CI_PROJECT_NAME" -m "Update $CI_PROJECT_NAME with tag $PUBLISH_IMAGE_DIGEST"
     - git show
     # Push (5 retries)
