@@ -29,6 +29,11 @@
 #   REGISTRY_MENDER_IO_USERNAME: Username for registry.mender.io
 #   REGISTRY_MENDER_IO_PASSWORD: Password for registry.mender.io
 #
+# GITHUB_SIMPLE_AUTH_TOKEN: (optional) GitHub token used to authenticate the
+# clone of mendersoftware/integration, to avoid GitHub's anonymous HTTPS
+# clone rate limiting (401, "could not read Username for 'https://github.com'").
+# Falls back to an anonymous clone if unset.
+#
 # Passes the following variables to the build:
 #   * GIT_COMMIT_TAG
 #     * SHA of git commit at which build ocurred
@@ -108,6 +113,12 @@ stages:
 
 .get_release_tool_alpine: &get_release_tool_alpine |
   apk add git python3 py3-virtualenv py3-pip
+  if [ -n "${GITHUB_SIMPLE_AUTH_TOKEN}" ]; then
+    set +x
+    git config --global "url.https://x-access-token:${GITHUB_SIMPLE_AUTH_TOKEN}@github.com/".insteadOf "https://github.com/"
+    git config --global "http.https://x-access-token@github.com/.extraHeader" "Authorization: Basic $(printf '%s:%s' 'x-access-token' "${GITHUB_SIMPLE_AUTH_TOKEN}" | base64 -w0)"
+    set -x
+  fi
   git clone https://github.com/mendersoftware/integration.git mender-integration
   python3 -m virtualenv .venv
   source .venv/bin/activate

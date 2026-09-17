@@ -1,3 +1,8 @@
+# GITHUB_SIMPLE_AUTH_TOKEN: (optional) GitHub token used to authenticate the
+# clone of mendersoftware/integration, to avoid GitHub's anonymous HTTPS
+# clone rate limiting (401, "could not read Username for 'https://github.com'").
+# Falls back to an anonymous clone if unset. Set as a CI/CD variable, not a
+# component input, since it's a credential.
 spec:
   inputs:
     mender_artifact_version:
@@ -77,6 +82,12 @@ test:acceptance_tests:
     INTEGRATION_REV: $[[ inputs.integration_rev ]]
   before_script:
     - apk add git bash
+    - if [ -n "${GITHUB_SIMPLE_AUTH_TOKEN}" ]; then
+    -   set +x
+    -   git config --global "url.https://x-access-token:${GITHUB_SIMPLE_AUTH_TOKEN}@github.com/".insteadOf "https://github.com/"
+    -   git config --global "http.https://x-access-token@github.com/.extraHeader" "Authorization: Basic $(printf '%s:%s' 'x-access-token' "${GITHUB_SIMPLE_AUTH_TOKEN}" | base64 -w0)"
+    -   set -x
+    - fi
     - git clone -b ${INTEGRATION_REV} --depth=1 https://github.com/mendersoftware/integration.git mender-integration
     - mv mender-integration/extra/travis-testing/* tests/
     - mv docs/* tests/

@@ -16,6 +16,10 @@
 #   - project: 'Northern.tech/Mender/mendertesting'
 #     file: '.gitlab-ci-check-apidocs.yml'
 #
+# GITHUB_SIMPLE_AUTH_TOKEN: (optional) GitHub token used to authenticate the
+# clone of mendersoftware/integration, to avoid GitHub's anonymous HTTPS
+# clone rate limiting (401, "could not read Username for 'https://github.com'").
+# Falls back to an anonymous clone if unset.
 
 include:
   - project: 'Northern.tech/Mender/mendertesting'
@@ -98,6 +102,12 @@ trigger:apidocs:rebuild-mender-api-docs:
     - apk add --no-cache python3 py3-pip
     - wget https://raw.githubusercontent.com/mendersoftware/integration/master/extra/requirements.txt
     - pip3 install -r requirements.txt --break-system-packages
+    - if [ -n "${GITHUB_SIMPLE_AUTH_TOKEN}" ]; then
+    -   set +x
+    -   git config --global "url.https://x-access-token:${GITHUB_SIMPLE_AUTH_TOKEN}@github.com/".insteadOf "https://github.com/"
+    -   git config --global "http.https://x-access-token@github.com/.extraHeader" "Authorization: Basic $(printf '%s:%s' 'x-access-token' "${GITHUB_SIMPLE_AUTH_TOKEN}" | base64 -w0)"
+    -   set -x
+    - fi
     - git clone https://github.com/mendersoftware/integration.git mender-integration
     - alias release_tool=$(realpath mender-integration/extra/release_tool.py)
   script:
