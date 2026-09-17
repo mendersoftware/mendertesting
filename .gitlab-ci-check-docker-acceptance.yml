@@ -22,11 +22,6 @@
 # Requires the following variables set in the project CI/CD settings:
 #   CODECOV_TOKEN: Token from codecov.io for this repository
 #
-# GITHUB_SIMPLE_AUTH_TOKEN: (optional) GitHub token used to authenticate the
-# clone of mendersoftware/integration, to avoid GitHub's anonymous HTTPS
-# clone rate limiting (401, "could not read Username for 'https://github.com'").
-# Falls back to an anonymous clone if unset.
-#
 # If the tests require access to Mender Registry hosted images, it
 # will require also the following vabiables:
 #   REGISTRY_MENDER_IO_USERNAME: Username for registry.mender.io

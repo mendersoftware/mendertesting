@@ -29,11 +29,6 @@
 #   REGISTRY_MENDER_IO_USERNAME: Username for registry.mender.io
 #   REGISTRY_MENDER_IO_PASSWORD: Password for registry.mender.io
 #
-# GITHUB_SIMPLE_AUTH_TOKEN: (optional) GitHub token used to authenticate the
-# clone of mendersoftware/integration, to avoid GitHub's anonymous HTTPS
-# clone rate limiting (401, "could not read Username for 'https://github.com'").
-# Falls back to an anonymous clone if unset.
-#
 # Passes the following variables to the build:
 #   * GIT_COMMIT_TAG
 #     * SHA of git commit at which build ocurred
