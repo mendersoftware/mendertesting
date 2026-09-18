@@ -98,14 +98,6 @@
     -  exit 192
     - fi
 
-# Authenticate github.com git clones over HTTPS using GITHUB_SIMPLE_AUTH_TOKEN,
-# to avoid GitHub's anonymous-clone rate limiting (401, surfaced as either
-# "could not read Username for 'https://github.com'" or a DNS resolution
-# failure under load). Falls back to an anonymous clone if the variable is
-# unset.
-#
-#   before_script:
-#     - !reference [.qa-common-github-auth, before_script]
 .qa-common-github-auth:
   before_script:
     - if [ -n "${GITHUB_SIMPLE_AUTH_TOKEN}" ]; then
