@@ -98,6 +98,23 @@
     -  exit 192
     - fi
 
+# Authenticate github.com git clones over HTTPS using GITHUB_SIMPLE_AUTH_TOKEN,
+# to avoid GitHub's anonymous-clone rate limiting (401, surfaced as either
+# "could not read Username for 'https://github.com'" or a DNS resolution
+# failure under load). Falls back to an anonymous clone if the variable is
+# unset.
+#
+#   before_script:
+#     - !reference [.qa-common-github-auth, before_script]
+.qa-common-github-auth:
+  before_script:
+    - if [ -n "${GITHUB_SIMPLE_AUTH_TOKEN}" ]; then
+    -   set +x
+    -   git config --global "url.https://x-access-token:${GITHUB_SIMPLE_AUTH_TOKEN}@github.com/.insteadOf" "https://github.com/"
+    -   'git config --global "http.https://x-access-token@github.com/.extraHeader" "Authorization: Basic $(printf "%s:%s" "x-access-token" "${GITHUB_SIMPLE_AUTH_TOKEN}" | base64 -w0)"'
+    -   set -x
+    - fi
+
 # Verify that docker dind is active and certs are in place
 #
 #   before_script:
