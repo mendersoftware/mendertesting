@@ -49,7 +49,8 @@ test:prepare_acceptance:
     -   docker save testing > acceptance_testing_image.tar
     - fi
     - apk add --no-cache dpkg zstd
-    - wget "https://downloads.mender.io/repos/workstation-tools/pool/main/m/mender-artifact/mender-artifact_${MENDER_ARTIFACT_VERSION}-1%2bubuntu%2bnoble_amd64.deb"
+    - wget --tries=4 --waitretry=10 --retry-connrefused
+      "https://downloads.mender.io/repos/workstation-tools/pool/main/m/mender-artifact/mender-artifact_${MENDER_ARTIFACT_VERSION}-1%2bubuntu%2bnoble_amd64.deb"
       --output-document mender-artifact.deb
     - dpkg --extract mender-artifact.deb /
   artifacts:
