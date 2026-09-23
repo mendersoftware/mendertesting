@@ -3,6 +3,9 @@ spec:
     mender_artifact_version:
       description: Version of mender-artifact to install in the test preparation job
       default: "4.4.2"
+    mender_artifact_os_release:
+      description: OS/release flavor of the mender-artifact .deb package to download. URL-encoded ("+" as "%2b"), e.g. ubuntu%2bnoble, debian%2bbookworm
+      default: "ubuntu%2bnoble"
     integration_rev:
       description: Revision of the integration repository to clone (defaults to master)
       default: "master"
@@ -37,6 +40,7 @@ test:prepare_acceptance:
     - docker:28-dind
   variables:
     MENDER_ARTIFACT_VERSION: $[[ inputs.mender_artifact_version ]]
+    MENDER_ARTIFACT_OS_RELEASE: $[[ inputs.mender_artifact_os_release ]]
   script:
     - docker build -f Dockerfile.acceptance-testing -t $DOCKER_REPOSITORY:prtest .
     - docker save $DOCKER_REPOSITORY:prtest > tests_image.tar
@@ -49,7 +53,8 @@ test:prepare_acceptance:
     -   docker save testing > acceptance_testing_image.tar
     - fi
     - apk add --no-cache dpkg zstd
-    - wget "https://downloads.mender.io/repos/workstation-tools/pool/main/m/mender-artifact/mender-artifact_${MENDER_ARTIFACT_VERSION}-1%2bubuntu%2bnoble_amd64.deb"
+    - wget --tries=4 --waitretry=10 --retry-connrefused
+      "https://downloads.mender.io/repos/workstation-tools/pool/main/m/mender-artifact/mender-artifact_${MENDER_ARTIFACT_VERSION}-1%2b${MENDER_ARTIFACT_OS_RELEASE}_amd64.deb"
       --output-document mender-artifact.deb
     - dpkg --extract mender-artifact.deb /
   artifacts:
