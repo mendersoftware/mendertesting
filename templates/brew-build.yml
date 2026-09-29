@@ -24,6 +24,8 @@ $[[ inputs.stage ]]:build:brew:
     max: 2
     when:
       - runner_system_failure
+      - runner_external_dependency_failure
+      - runner_interrupted
       - stuck_or_timeout_failure
   rules:
     # Manually run job. Note that this variable is not shown by default
