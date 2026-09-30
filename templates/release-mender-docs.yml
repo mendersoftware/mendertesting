@@ -28,6 +28,8 @@ release:mender-docs:
     max: 2
     when:
       - runner_system_failure
+      - runner_external_dependency_failure
+      - runner_interrupted
       - stuck_or_timeout_failure
   rules:
     # Only on production tags (with or without 'v' prefix)
