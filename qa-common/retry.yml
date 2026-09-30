@@ -109,6 +109,25 @@
     -   set -x
     - fi
 
+# Clone mendertesting into /tmp/mendertesting, retrying transient failures.
+#
+#   before_script:
+#     - !reference [.qa-common-clone-mendertesting, before_script]
+.qa-common-clone-mendertesting:
+  before_script:
+    - CLONE_RETRY_SLEEP_S=10
+    - MENDERTESTING_CLONED=false
+    - for try in 4 3 2 1; do
+    -  git clone --depth=1 https://gitlab.com/Northern.tech/Mender/mendertesting.git /tmp/mendertesting && MENDERTESTING_CLONED=true
+    -  if [ "${MENDERTESTING_CLONED}" == "true" ]; then
+    -   break
+    -  fi
+    -  sleep "${CLONE_RETRY_SLEEP_S}"
+    - done
+    - if [ "${MENDERTESTING_CLONED}" != "true" ]; then
+    -  exit 192
+    - fi
+
 # Verify that docker dind is active and certs are in place
 #
 #   before_script:

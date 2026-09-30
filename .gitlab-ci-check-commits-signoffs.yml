@@ -32,7 +32,7 @@ test:check-commits:
     - git fetch -f origin 'refs/heads/*:refs/heads/*'
     # Get last remaining tags, if any.
     - git fetch --tags origin
-    - git clone --depth=1 https://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - !reference [.qa-common-clone-mendertesting, before_script]
   script:
     # Verify that the commits have signoffs.
     - /tmp/mendertesting/check_commits.sh --signoffs

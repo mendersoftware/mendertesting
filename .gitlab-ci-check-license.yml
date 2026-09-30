@@ -73,7 +73,7 @@ test:check-license:
     - if [ "$CI_PROJECT_NAME" = "mendertesting" ]; then
     -   SCRIPT_PATH=$PWD
     - else
-    -   git clone --depth=1 https://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    -   !reference [.qa-common-clone-mendertesting, before_script]
     -   SCRIPT_PATH=/tmp/mendertesting
     - fi
   script:
@@ -95,7 +95,7 @@ test:check-license:golang:
     - !reference [.qa-common-network-go-retry, before_script]
     - !reference [.qa-common-network-git-clone-retry, before_script]
     - go install github.com/google/go-licenses@latest
-    - git clone --no-tags --depth=1 --single-branch https://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - !reference [.qa-common-clone-mendertesting, before_script]
   script:
     - go-licenses report . --ignore github.com/mendersoftware --template /tmp/mendertesting/go_licenses_format.tpl > licenses.csv
     - git diff --exit-code
@@ -123,7 +123,7 @@ test:check-license-source:
     - if [ "$CI_PROJECT_NAME" = "mendertesting" ]; then
     - SCRIPT_PATH=$PWD
     - else
-    - git clone --depth=1 https://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - !reference [.qa-common-clone-mendertesting, before_script]
     - SCRIPT_PATH=/tmp/mendertesting
     - fi
   script:
