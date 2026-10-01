@@ -181,14 +181,14 @@ build:docker-multiplatform:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - *export_docker_vars
   script:
-    - echo "building ${CI_PROJECT_NAME} with tags ${GITLAB_REGISTRY_TAG} and ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}"
+    - echo "building ${CI_PROJECT_NAME} with tags ${GITLAB_REGISTRY_TAG} and ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
     - docker context create builder
     - docker buildx create builder --use --driver-opt network=host --buildkitd-flags '--debug --allow-insecure-entitlement network.host'
     - docker buildx build
       --cache-to type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache,mode=max
       --cache-from type=registry,ref=${CI_REGISTRY_IMAGE}:ci_cache
       --tag ${GITLAB_REGISTRY_TAG}
-      --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_NAME}
+      --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
       --file ${DOCKER_DIR:-.}/${DOCKERFILE:-Dockerfile}
       --build-arg GIT_COMMIT_TAG="${DOCKER_PUBLISH_COMMIT_TAG}"
       --platform $MULTIPLATFORM_PLATFORMS
