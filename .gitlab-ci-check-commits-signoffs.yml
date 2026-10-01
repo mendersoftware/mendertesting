@@ -13,6 +13,7 @@ stages:
   - test
 
 test:check-commits:
+  extends: .qa-common-default-retry
   stage: test
   needs: []
   except:

@@ -40,6 +40,7 @@ stages:
   - version-bump
 
 helm-version-bump:
+  extends: .qa-common-default-retry
   rules:
     - if: $CI_PIPELINE_SOURCE == "pipeline"
   stage: version-bump

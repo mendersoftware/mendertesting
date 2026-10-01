@@ -31,6 +31,7 @@ stages:
   - test
 
 test:apidocs:verify-yaml:
+  extends: .qa-common-default-retry
   stage: test
   needs: []
   except:
@@ -46,6 +47,7 @@ test:apidocs:verify-yaml:
     - python3 verify_docs.py `find docs -name "*.yml"`
 
 test:apidocs:verify-swagger:
+  extends: .qa-common-default-retry
   stage: test
   needs: []
   except:
@@ -57,6 +59,7 @@ test:apidocs:verify-swagger:
     - npx @apidevtools/swagger-cli validate docs/*.yml
 
 test:validate-open-api:
+  extends: .qa-common-default-retry
   stage: test
   needs: []
   image:
@@ -84,6 +87,7 @@ test:validate-open-api:
       junit: $CI_PROJECT_DIR/spectral-report.xml
 
 trigger:apidocs:rebuild-mender-api-docs:
+  extends: .qa-common-default-retry
   stage: .post
   variables:
     REBUILD_MENDER_API_DOCS: "false"
