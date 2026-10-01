@@ -13,6 +13,7 @@ stages:
   - test
 
 test:check-commits:
+  extends: .qa-common-default-retry
   stage: test
   needs: []
   except:
@@ -22,7 +23,6 @@ test:check-commits:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
-    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Rename the branch we're on, so that it's not in the way for the
     # subsequent fetch. It's ok if this fails, it just means we're not on any
     # branch.
@@ -32,7 +32,7 @@ test:check-commits:
     - git fetch -f origin 'refs/heads/*:refs/heads/*'
     # Get last remaining tags, if any.
     - git fetch --tags origin
-    - git clone --depth=1 https://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - !reference [.qa-common-clone-mendertesting, before_script]
   script:
     # Verify that the commits have signoffs.
     - /tmp/mendertesting/check_commits.sh --signoffs

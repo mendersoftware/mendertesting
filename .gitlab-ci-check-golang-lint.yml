@@ -36,6 +36,7 @@ variables:
     value: "v2.11.4"
 
 test:static:
+  extends: .qa-common-default-retry
   stage: test
   needs: []
   except:
@@ -59,6 +60,7 @@ test:static:
     - golangci-lint run -v
 
 test:govendor-check:
+  extends: .qa-common-default-retry
   stage: test
   needs: []
   rules:

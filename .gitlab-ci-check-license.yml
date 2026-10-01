@@ -46,6 +46,7 @@ stages:
   - test
 
 test:check-license:
+  extends: .qa-common-default-retry
   stage: test
   needs: []
   rules:
@@ -58,7 +59,6 @@ test:check-license:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
-    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Install dependencies
     - apk add --no-cache bash perl-utils
     # Rename the branch we're on, so that it's not in the way for the
@@ -73,7 +73,7 @@ test:check-license:
     - if [ "$CI_PROJECT_NAME" = "mendertesting" ]; then
     -   SCRIPT_PATH=$PWD
     - else
-    -   git clone --depth=1 https://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    -   !reference [.qa-common-clone-mendertesting, before_script]
     -   SCRIPT_PATH=/tmp/mendertesting
     - fi
   script:
@@ -81,6 +81,7 @@ test:check-license:
     - $SCRIPT_PATH/check_license.sh
 
 test:check-license:golang:
+  extends: .qa-common-default-retry
   image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/golang:${GOLANG_VERSION}
   stage: test
   rules:
@@ -93,14 +94,14 @@ test:check-license:golang:
   needs: []
   before_script:
     - !reference [.qa-common-network-go-retry, before_script]
-    - !reference [.qa-common-network-git-clone-retry, before_script]
     - go install github.com/google/go-licenses@latest
-    - git clone --no-tags --depth=1 --single-branch https://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - !reference [.qa-common-clone-mendertesting, before_script]
   script:
     - go-licenses report . --ignore github.com/mendersoftware --template /tmp/mendertesting/go_licenses_format.tpl > licenses.csv
     - git diff --exit-code
 
 test:check-license-source:
+  extends: .qa-common-default-retry
   stage: test
   needs: []
   image: registry.gitlab.com/northern.tech/mender/mender-test-containers/base-alpine:master
@@ -108,7 +109,6 @@ test:check-license-source:
     GIT_STRATEGY: clone # clone entire repo instead of reusing workspace
     GIT_DEPTH: 0 # avoid shallow clone, this test requires full git history
   before_script:
-    - !reference [.qa-common-network-git-clone-retry, before_script]
     # Install dependencies
     - apk add --no-cache bash perl-utils grep
     # Rename the branch we're on, so that it's not in the way for the
@@ -123,7 +123,7 @@ test:check-license-source:
     - if [ "$CI_PROJECT_NAME" = "mendertesting" ]; then
     - SCRIPT_PATH=$PWD
     - else
-    - git clone --depth=1 https://github.com/mendersoftware/mendertesting /tmp/mendertesting
+    - !reference [.qa-common-clone-mendertesting, before_script]
     - SCRIPT_PATH=/tmp/mendertesting
     - fi
   script:
