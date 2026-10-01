@@ -30,6 +30,7 @@ spec:
 
 
 release:mender-docs-changelog:
+  extends: .qa-common-default-retry
   stage: $[[ inputs.stage ]]
   tags:
     - $[[ inputs.runner ]]
@@ -37,13 +38,6 @@ release:mender-docs-changelog:
   image:
     name: alpine/git:$[[ inputs.alpine-git-tag ]]
     entrypoint: [""]
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - runner_external_dependency_failure
-      - runner_interrupted
-      - stuck_or_timeout_failure
   when: $[[ inputs.when ]]
   rules: $[[ inputs.rules ]]
   variables:

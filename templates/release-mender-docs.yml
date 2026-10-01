@@ -17,6 +17,7 @@ spec:
 ---
 
 release:mender-docs:
+  extends: .qa-common-default-retry
   stage: $[[ inputs.stage ]]
   tags:
     - $[[ inputs.runner ]]
@@ -24,13 +25,6 @@ release:mender-docs:
   image:
     name: "registry.gitlab.com/northern.tech/mender/mender-test-containers/release-please:master"
     entrypoint: [""]
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
-      - runner_external_dependency_failure
-      - runner_interrupted
-      - stuck_or_timeout_failure
   rules:
     # Only on production tags (with or without 'v' prefix)
     - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.\d+$/'
