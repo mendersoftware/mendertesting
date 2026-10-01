@@ -44,7 +44,7 @@ $[[ inputs.stage ]]:build:brew:
     # Run for every other case
     - when: always
   before_script:
-    - brew install gnu-sed
+    - brew install gnu-sed wget
   script:
     - FORMULA_FILE="$(basename $[[ inputs.formula ]])"
     - FORMULA_NAME="${FORMULA_FILE%%.*}"
