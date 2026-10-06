@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
+  "packageRules": [
+    // Go: one PR for all modules. The commit body lists them, and Changelog: Commit
+    // puts that list in the changelog, which then looks like:
+    //   - *(deps)* Update golang-dependencies (abc1234)
+    //     - github.com/sirupsen/logrus v1.9.4 -> v1.10.2
+    //     - golang.org/x/term v0.45.0 -> v0.46.0
+    {
+      "matchManagers": ["gomod"],
+      "groupName": "golang-dependencies",
+      "groupSlug": "golang-dependencies",
+      "semanticCommitType": "fix",
+      "commitBody": "{{#each upgrades}}- {{{depName}}} {{{currentVersion}}} -> {{{newVersion}}}\n{{/each}}",
+      "commitTrailers": ["Changelog: Commit"]
+    }
+  ]
+}
