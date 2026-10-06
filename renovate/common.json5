@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
+  "extends": [
+    "config:recommended",
+    ":gitSignOff",
+    ":rebaseStalePrs",
+    ":semanticCommitTypeAll(chore)"
+  ],
+
+  // CODEOWNERS drives reviewer assignment
+  "reviewersFromCodeOwners": true,
+
+  // chore(deps): <desc>
+  "semanticCommits": "enabled",
+  "semanticCommitScope": "deps",
+
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+
+  // Security PRs bypass the schedule
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"],
+    "labels": ["security"]
+  },
+
+  "packageRules": [
+    {
+      "matchManagers": ["gitlabci", "gitlabci-include"],
+      "semanticCommitType": "ci",
+      "semanticCommitScope": ""
+    }
+  ]
+}

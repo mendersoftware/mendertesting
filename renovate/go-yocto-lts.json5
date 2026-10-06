@@ -1,0 +1,16 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+
+  // Only propose Go modules with go directive <= 1.22 (Go in our oldest
+  // supported Yocto LTS). Explicit because the ~1.22.x Renovate derives from
+  // go.mod is same-minor and would also filter out older go directives.
+  "constraints": {
+    "%goMod": "<=1.22"
+  },
+  "constraintsFiltering": "strict",
+
+  // Security fixes ignore the constraint.
+  "vulnerabilityAlerts": {
+    "constraintsFiltering": "none"
+  }
+}
