@@ -90,7 +90,7 @@ lint:renovate:
   tags:
     - k8s-small
   image:
-    name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/renovate/renovate:43
+    name: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/renovate/renovate:44
     entrypoint: [""]
   stage: test
   script:
