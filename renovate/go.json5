@@ -12,8 +12,7 @@
       "groupName": "golang-dependencies",
       "groupSlug": "golang-dependencies",
       "semanticCommitType": "fix",
-      "commitBody": "{{#each upgrades}}- {{{depName}}} {{{currentVersion}}} -> {{{newVersion}}}\n{{/each}}",
-      "commitTrailers": ["Changelog: Commit"]
+      "commitBody": "{{#each upgrades}}- {{{depName}}} {{{currentVersion}}} -> {{{newVersion}}}\n{{/each}}\n\nChangelog: Commit"
     }
   ]
 }
