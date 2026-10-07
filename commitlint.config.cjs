@@ -3,6 +3,9 @@ module.exports = {
 
   rules: {
     'body-max-line-length': [1, 'always', 100],
+    // GitHub App bots sign off with "<app>[bot] <id+<app>[bot]@users.noreply.github.com>",
+    // the App name twice. App names are up to 34 characters, which gives 132.
+    'footer-max-line-length': [2, 'always', 150],
     'subject-case': [1, 'always', ['lower-case', 'sentence-case']],
     'signed-off-by': [2, 'always', 'Signed-off-by'],
     'body-leading-blank': [2, 'always'], // body must be preceded by a blank line
