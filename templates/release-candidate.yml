@@ -88,7 +88,7 @@ release:candidate:update-changelog:
     -   git commit --amend -s --no-edit
     -   git push github-${CI_JOB_ID} --force
         # Update the PR body
-    -   git cliff --unreleased --bump -o tmp_pr_body.md --github-repo $[[ inputs.github_repo ]] --use-branch-tags
+    -   git cliff --unreleased --tag ${RELEASE_VERSION} -o tmp_pr_body.md --github-repo $[[ inputs.github_repo ]] --use-branch-tags
     -   gh pr edit $RELEASE_PLEASE_PR --body-file tmp_pr_body.md
     -   rm tmp_pr_body.md
     - else
