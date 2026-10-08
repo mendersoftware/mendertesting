@@ -107,6 +107,9 @@ Review that all the Git-tag triggered actions complete successfully:
                                          ║   Yocto recipe                 ║──→ PR in meta-mender
                                          ║   TODO QA-1213                 ║
                                          ║   release-yocto-recipe.yml     ║
+                                         ╟────────────────────────────────╢
+                                         ║   Maintenance branch           ║──→ 1.2.x branch created for a 1.2.0 tag
+                                         ║   release-maintenance-branch.yml ║
                                          ╚════════════════════════════════╝
                                                   │
                                                   ▼
@@ -132,6 +135,7 @@ Review that all the Git-tag triggered actions complete successfully:
 - **release-dist-packages.yml** - Triggers distribution package builds
 - **release-compass.yml** - Updates Atlassian Compass deployment tracking
 - **release-oslicenses-golang.yml** - Generates and publishes Open Source license manifest for Go projects
+- **release-maintenance-branch.yml** - Creates the maintenance branch for minor release tags
 
 ### TODO Components
 - **release-oslicenses-generic.yml** - Generic license manifest generation (TODO QA-1212)
