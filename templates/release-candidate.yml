@@ -32,15 +32,15 @@ release:candidate:update-changelog:
       - runner_interrupted
       - stuck_or_timeout_failure
   rules:
+    # Don't run on schedules, when there are no new commits
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
     # Run on maintenance branches (1.0.x or v1.0.x format)
     - if: '$CI_COMMIT_BRANCH =~ "/^v?\d+\.\d+\.x$/"'
     # Run on default branch
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
     # Never run on tags
     - if: $CI_COMMIT_TAG
-      when: never
-    # Don't run on schedules, when there are no new commits
-    - if: $CI_PIPELINE_SOURCE == "schedule"
       when: never
   variables:
     GIT_DEPTH: 0
@@ -110,6 +110,9 @@ release:candidate:tag-and-release:
       - runner_interrupted
       - stuck_or_timeout_failure
   rules:
+    # Don't run on schedules, when there are no new commits
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
     # Run automatically on maintenance branches (1.0.x or v1.0.x format)
     - if: '$CI_COMMIT_BRANCH =~ "/^v?\d+\.\d+\.x$/"'
       allow_failure: true
