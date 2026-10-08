@@ -41,7 +41,7 @@ Execute the release preparation and validation:
     move any misclassified entry to the right section.
   - **All tickets resolved** - Verify the appendix table is present and its ticket links resolve.
 - **Merge the Release Candidate** - Merge the PR once the curated changelog looks right
-- **Tag and publish the Release** - Trigger the manual job from `https://gitlab.com/Northern.tech/Mender/<repository>/-/jobs?statuses=MANUAL`
+- **Tag and publish the Release** - Merging the Release Candidate PR tags the release and creates the GitHub Release automatically; follow it at `https://gitlab.com/Northern.tech/Mender/<repository>/-/pipelines`
 
 ### 📦 Third Click: Deliver It
 Review that all the Git-tag triggered actions complete successfully:
