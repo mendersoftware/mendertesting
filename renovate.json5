@@ -11,9 +11,9 @@
   // CODEOWNERS drives reviewer assignment - keep its dependency file entries current.
   "reviewersFromCodeOwners": true,
 
-  // fix(deps): <desc>, per renovate.json5.sample in mender-qa.
+  // chore(deps): <desc>
   "semanticCommits": "enabled",
-  "semanticCommitType": "fix",
+  "semanticCommitType": "chore",
   "semanticCommitScope": "deps",
 
   // Only rebase open PRs when they actually conflict. Rebasing every time the
