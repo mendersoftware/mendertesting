@@ -11,7 +11,7 @@
       "matchManagers": ["gomod"],
       "groupName": "golang-dependencies",
       "groupSlug": "golang-dependencies",
-      "semanticCommitType": "fix",
+      "semanticCommitType": "chore",
       "commitBody": "{{#each upgrades}}- {{{depName}}} {{{currentVersion}}} -> {{{newVersion}}}\n{{/each}}\n\nChangelog: Commit"
     }
   ]
