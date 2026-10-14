@@ -25,6 +25,12 @@
     "labels": ["security"]
   },
 
+  // Off by default upstream (still "beta"), but dependabot bumped submodules
+  // monthly in every repo that has them, so keep that going.
+  "git-submodules": {
+    "enabled": true
+  },
+
   "packageRules": [
     {
       "matchManagers": ["gitlabci", "gitlabci-include"],
