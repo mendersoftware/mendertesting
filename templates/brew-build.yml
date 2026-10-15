@@ -44,7 +44,40 @@ $[[ inputs.stage ]]:build:brew:
     # Run for every other case
     - when: always
   before_script:
+    # This job runs with HOMEBREW_NO_INSTALL_FROM_API=1 (see the build step below),
+    # which makes brew full-clone the homebrew/core tap. Since ~2026-10-08 that clone
+    # fails on the ~1.2 GB pack with "curl 56 Recv failure: Connection reset by peer"
+    # / "early EOF" / "fetch-pack: invalid index-pack output", killing the job.
+    # Do a shallow clone first. Brew then finds the tap present and skips its own full
+    # clone.
+    # We run `brew install gnu-sed wget` FIRST so brew's one-time auto-update happens
+    # while no git tap exists yet so that brew does not do a full clone during
+    # auto update.
     - brew install gnu-sed wget
+    - |
+        CORE_TAP="$(brew --repository)/Library/Taps/homebrew/homebrew-core"
+        if [ -d "${CORE_TAP}/.git" ]; then
+          echo "homebrew/core tap already present; skipping clone."
+        elif [ -e "${CORE_TAP}" ]; then
+          echo "ERROR: ${CORE_TAP} exists but is not a git repository; aborting." >&2
+          exit 1
+        else
+          cloned=false
+          for attempt in 1 2 3; do
+            echo "Cloning homebrew/core (shallow, depth=1), attempt ${attempt}..."
+            if git clone --depth=1 https://github.com/Homebrew/homebrew-core "${CORE_TAP}"; then
+              cloned=true
+              break
+            fi
+            echo "homebrew/core clone attempt ${attempt} failed; retrying..."
+            rm -rf "${CORE_TAP}"
+            sleep 5
+          done
+          if [ "${cloned}" != true ]; then
+            echo "ERROR: failed to clone homebrew/core after 3 attempts; aborting." >&2
+            exit 1
+          fi
+        fi
   script:
     - FORMULA_FILE="$(basename $[[ inputs.formula ]])"
     - FORMULA_NAME="${FORMULA_FILE%%.*}"
