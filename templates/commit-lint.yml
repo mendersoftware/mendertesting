@@ -54,14 +54,10 @@ lint:commit:
   script:
     # We are running GitLab CI from our custom pr_XXX branches, not associated
     # to GitLab Merge Requests. Reconstruct the correct range from the current
-    # branch by excluding all other branches.
-    - EXCLUDE_LIST=$(mktemp)
-    - EXCLUDE_LIST_REMOVE=$(mktemp)
-    - git for-each-ref --format='%(refname)' | sort > $EXCLUDE_LIST
-    - git for-each-ref --format='%(refname)' --points-at $CI_COMMIT_REF_NAME | sort > $EXCLUDE_LIST_REMOVE
-    - TO_EXCLUDE="$(comm -23 $EXCLUDE_LIST $EXCLUDE_LIST_REMOVE | tr '\n' ' ')"
+    # branch by excluding only the base branches. Excluding every other branch
+    # would hide commits from PRs that have other branches stacked on top.
+    - TO_EXCLUDE="$(git for-each-ref --format='%(refname)' | grep -E '^refs/(heads|remotes/origin)/(master|main|hosted|staging|production|v?[0-9]+\.[0-9]+\.x)$' | tr '\n' ' ')"
     - COMMIT_RANGE="$CI_COMMIT_REF_NAME --not $TO_EXCLUDE"
-    - rm -f $EXCLUDE_LIST $EXCLUDE_LIST_REMOVE
     # Ready to lint \o/
     - 'echo "Checking range ${COMMIT_RANGE}:"'
     - git --no-pager log $COMMIT_RANGE

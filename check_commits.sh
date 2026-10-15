@@ -78,17 +78,13 @@ if [ -z "$COMMIT_RANGE" ] && [ -n "$CI_COMMIT_REF_NAME" ]
 then
     # Gitlab unfortunately doesn't record base branches of commits when the PR
     # comes from Github, so we need to detect branch names of PRs manually, and
-    # then reconstruct the correct range from that, by excluding all other
-    # branches.
+    # then reconstruct the correct range from that, by excluding the base
+    # branches. Other branches are not excluded, as they may be stacked on top
+    # of the PR and would hide its commits.
     case "$CI_COMMIT_REF_NAME" in
         pr_[0-9]*)
-            EXCLUDE_LIST=$(mktemp)
-            EXCLUDE_LIST_REMOVE=$(mktemp)
-            git for-each-ref --format='%(refname)' | sort > $EXCLUDE_LIST
-            git for-each-ref --format='%(refname)' --points-at $CI_COMMIT_REF_NAME | sort > $EXCLUDE_LIST_REMOVE
-            TO_EXCLUDE="$(comm -23 $EXCLUDE_LIST $EXCLUDE_LIST_REMOVE | tr '\n' ' ')"
+            TO_EXCLUDE="$(git for-each-ref --format='%(refname)' | grep -E '^refs/(heads|remotes/origin)/(master|main|hosted|staging|production|v?[0-9]+\.[0-9]+\.x)$' | tr '\n' ' ')"
             COMMIT_RANGE="$CI_COMMIT_REF_NAME --not $TO_EXCLUDE"
-            rm -f $EXCLUDE_LIST $EXCLUDE_LIST_REMOVE
             ;;
     esac
 fi
