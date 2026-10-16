@@ -123,6 +123,21 @@ include:
       github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
 ```
 
+#### release-maintenance-branch
+Creates the maintenance branch (e.g. `1.2.x`) from a minor release tag (e.g. `1.2.0`), for components that keep maintenance branches. Skips an existing branch that already contains the tag.
+
+**Usage:**
+```yaml
+include:
+  - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/release-maintenance-branch@~latest
+    inputs:
+      github_repo: mendersoftware/mender-gateway  # required
+      stage: publish  # optional, default: publish
+      runner: hetzner-amd-beefy  # optional, default: k8s-small
+      alpine-git-tag: latest  # optional, default: latest
+      github_user_name: mender-test-bot  # optional, default: mender-test-bot
+```
+
 #### release-mender-docs
 Updates component versions in the mender-docs repository using the autoversion.py script.
 

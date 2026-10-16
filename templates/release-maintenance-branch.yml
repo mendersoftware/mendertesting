@@ -1,0 +1,61 @@
+spec:
+  inputs:
+    github_repo:
+      description: GitHub repository where to create the maintenance branch (e.g., "mendersoftware/mender-gateway")
+    stage:
+      description: The pipeline stage where to create the maintenance branch
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: k8s-small
+    alpine-git-tag:
+      description: Tag for alpine/git container image
+      default: latest
+    github_user_name:
+      description: GitHub user name
+      default: mender-test-bot
+    rules:
+      description: Rules for running the job; defaults to running on minor release tags (v1.2.0 or 1.2.0)
+      type: array
+      default:
+        - if: '$CI_COMMIT_TAG =~ /^v?\d+\.\d+\.0$/'
+          allow_failure: true
+    when:
+      description: Condition for when to run the job
+      default: on_success
+---
+
+
+release:maintenance-branch:
+  extends: .qa-common-default-retry
+  stage: $[[ inputs.stage ]]
+  tags:
+    - $[[ inputs.runner ]]
+  needs: []
+  image:
+    name: alpine/git:$[[ inputs.alpine-git-tag ]]
+    entrypoint: [""]
+  when: $[[ inputs.when ]]
+  rules: $[[ inputs.rules ]]
+  before_script:
+    - !reference [.qa-common-network-git-clone-retry, before_script]
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variable GITHUB_BOT_TOKEN_REPO_FULL"
+        exit 1
+      fi
+  script:
+    - BRANCH="$(echo "${CI_COMMIT_TAG#v}" | cut -d. -f1,2).x"
+    - REMOTE="https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/$[[ inputs.github_repo ]]"
+    - |
+      if git fetch "${REMOTE}" "refs/heads/${BRANCH}"; then
+        if git merge-base --is-ancestor "${CI_COMMIT_SHA}" FETCH_HEAD; then
+          echo "Branch ${BRANCH} already contains ${CI_COMMIT_TAG}"
+          exit 0
+        fi
+        echo "ERROR: Branch ${BRANCH} already exists but does not contain ${CI_COMMIT_TAG}"
+        exit 1
+      fi
+    - git push "${REMOTE}" "${CI_COMMIT_SHA}:refs/heads/${BRANCH}"
+    - echo "Created branch ${BRANCH} from ${CI_COMMIT_TAG}"

@@ -41,7 +41,7 @@ Execute the release preparation and validation:
     move any misclassified entry to the right section.
   - **All tickets resolved** - Verify the appendix table is present and its ticket links resolve.
 - **Merge the Release Candidate** - Merge the PR once the curated changelog looks right
-- **Tag and publish the Release** - Trigger the manual job from `https://gitlab.com/Northern.tech/Mender/<repository>/-/jobs?statuses=MANUAL`
+- **Tag and publish the Release** - Merging the Release Candidate PR tags the release and creates the GitHub Release automatically; follow it at `https://gitlab.com/Northern.tech/Mender/<repository>/-/pipelines`
 
 ### 📦 Third Click: Deliver It
 Review that all the Git-tag triggered actions complete successfully:
@@ -107,6 +107,9 @@ Review that all the Git-tag triggered actions complete successfully:
                                          ║   Yocto recipe                 ║──→ PR in meta-mender
                                          ║   TODO QA-1213                 ║
                                          ║   release-yocto-recipe.yml     ║
+                                         ╟────────────────────────────────╢
+                                         ║   Maintenance branch           ║──→ 1.2.x branch created for a 1.2.0 tag
+                                         ║   release-maintenance-branch.yml ║
                                          ╚════════════════════════════════╝
                                                   │
                                                   ▼
@@ -132,6 +135,7 @@ Review that all the Git-tag triggered actions complete successfully:
 - **release-dist-packages.yml** - Triggers distribution package builds
 - **release-compass.yml** - Updates Atlassian Compass deployment tracking
 - **release-oslicenses-golang.yml** - Generates and publishes Open Source license manifest for Go projects
+- **release-maintenance-branch.yml** - Creates the maintenance branch for minor release tags
 
 ### TODO Components
 - **release-oslicenses-generic.yml** - Generic license manifest generation (TODO QA-1212)
