@@ -33,7 +33,7 @@ $[[ inputs.stage ]]:build:brew:
     - if: $BUILD_BREW == "true"
       when: on_success
     # Run on default branch
-    - if: "$CI_COMMIT_BRANCH = $CI_DEFAULT_BRANCH"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: on_success
     # Exclude production branches
     - if: $CI_COMMIT_BRANCH =~ "/^(master|main|hosted|staging|production)$/"
