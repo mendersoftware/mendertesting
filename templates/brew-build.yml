@@ -31,7 +31,10 @@ $[[ inputs.stage ]]:build:brew:
     # Manually run job. Note that this variable is not shown by default
     # in the pipelines that include this component.
     - if: $BUILD_BREW == "true"
-      when: always
+      when: on_success
+    # Run on default branch
+    - if: "$CI_COMMIT_BRANCH = $CI_DEFAULT_BRANCH"
+      when: on_success
     # Exclude production branches
     - if: $CI_COMMIT_BRANCH =~ "/^(master|main|hosted|staging|production)$/"
       when: never
@@ -42,7 +45,7 @@ $[[ inputs.stage ]]:build:brew:
     - if: $CI_COMMIT_TAG
       when: never
     # Run for every other case
-    - when: always
+    - when: on_success
   before_script:
     - brew install gnu-sed wget
   script:
