@@ -134,6 +134,7 @@ commit_parsers = [
     { message = "^[^:]+\\(internal\\):", skip = true }, # Skip "internal" scope
     { message = "(?m)^Changelog: None$", skip = true }, # exact footer line only; a sentence starting with "None" is a valid override
     # Type groups
+    { message = "^(build|chore|fix)\\(deps\\)", group = "<!-- 99 -->Dependency updates", scope = "" },
     { message = "^feat", group = "<!-- 4 -->New features" },
     { message = "^fix", group = "<!-- 6 -->Bug fixes" },
     { message = "^perf", group = "<!-- 5 -->Improvements" },
