@@ -98,7 +98,7 @@ $[[ inputs.stage ]]:build:brew:
     - |
         gsed -e /sha256/d -e "/url /s|\".*\"|\"https://github.com/mendersoftware/${REPO}.git\",|" -e "/url \"https/a\ \ \ \ revision: \"${CI_COMMIT_SHA}\",\n    using: GitHubPRDownloadStrategy\n  version \"1234\"" < ${FORMULA_NAME}_upstream.rb >> $FORMULA_FILE
     # 4. run brew build and test
-    - HOMEBREW_NO_INSTALL_FROM_API=1 brew reinstall --build-from-source --verbose --debug --formula ./${FORMULA_FILE} < /dev/null
+    - HOMEBREW_NO_INSTALL_FROM_API=1 brew reinstall --build-from-source --verbose --formula ./${FORMULA_FILE} < /dev/null
     - brew test ./${FORMULA_FILE}
   after_script:
     - FORMULA_FILE="$(basename $[[ inputs.formula ]])"
