@@ -29,6 +29,14 @@
       - 137
       - 192
 
+variables:
+  # Retries for internal Gitlab job stages:
+  #   - https://docs.gitlab.com/ci/runners/configure_runners/#job-stages-attempts
+  ARTIFACT_DOWNLOAD_ATTEMPTS: 3
+  EXECUTOR_JOB_SECTION_ATTEMPTS: 3
+  GET_SOURCES_ATTEMPTS: 3
+  RESTORE_CACHE_ATTEMPTS: 3
+
 # ── Network probes ────────────────────────────────────────────────────────────
 #
 # Each probe retries its connectivity check up to 4 times, then exits with
