@@ -1,0 +1,85 @@
+spec:
+  inputs:
+    github_repo:
+      description: GitHub repository URL (e.g., "mendersoftware/mender-artifact")
+    stage:
+      description: The pipeline stage where to add the v-prefixed tag (should match the release-candidate one)
+      default: publish
+    runner:
+      description: GitLab CI runner tag
+      default: k8s-small
+    github_user_name:
+      description: GitHub user name
+      default: mender-test-bot
+    github_user_email:
+      description: GitHub user e-mail address
+      default: mender@northern.tech
+---
+
+# Extension of the release-candidate template adding a vX.Y.Z tag next to the
+# X.Y.Z tag created by release-please (the format expected by the go toolset
+# for stable versions of go modules). Requires the release-candidate template
+# to be included too.
+
+workflow:
+  rules:
+    # Don't run pipelines for the extra vX.Y.Z tags, they point to the same
+    # commits as the X.Y.Z tags
+    - if: '$CI_COMMIT_TAG =~ "/^v\d+\.\d+\.\d+/"'
+      when: never
+    # Keep the default behavior for everything else
+    - when: always
+
+release:candidate:v-tag:
+  stage: $[[ inputs.stage ]]
+  image: "registry.gitlab.com/northern.tech/mender/mender-test-containers/release-please:master"
+  tags:
+    - $[[ inputs.runner ]]
+  needs:
+    - release:candidate:tag-and-release
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - runner_external_dependency_failure
+      - runner_interrupted
+      - stuck_or_timeout_failure
+  # Same rules as release:candidate:tag-and-release
+  rules:
+    # Don't run on schedules, when there are no new commits
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    # Run automatically on maintenance branches (1.0.x or v1.0.x format)
+    - if: '$CI_COMMIT_BRANCH =~ "/^v?\d+\.\d+\.x$/"'
+      allow_failure: true
+    # Run automatically on the default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      allow_failure: true
+    # Never run on tags
+    - if: $CI_COMMIT_TAG
+      when: never
+  before_script:
+    # Check required environment variables
+    - |
+      if [ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ]; then
+        echo "ERROR: Missing required environment variables:"
+        echo "  - GITHUB_BOT_TOKEN_REPO_FULL: $([ -z "$GITHUB_BOT_TOKEN_REPO_FULL" ] && echo 'NOT SET' || echo 'SET')"
+        exit 1
+      fi
+    # Setup git configuration
+    - git config --global user.email "$[[ inputs.github_user_email ]]"
+    - git config --global user.name "$[[ inputs.github_user_name ]]"
+  script:
+    - |
+      CURRENT_VERSION=$(jq -r '."."' .release-please-manifest.json)
+      V_TAG="v${CURRENT_VERSION}"
+      REMOTE="https://$[[ inputs.github_user_name ]]:${GITHUB_BOT_TOKEN_REPO_FULL}@github.com/$[[ inputs.github_repo ]]"
+      if git ls-remote --exit-code --tags "${REMOTE}" "refs/tags/${V_TAG}" >/dev/null; then
+        echo "Tag ${V_TAG} already exists, skipping"
+      elif ! git fetch "${REMOTE}" "refs/tags/${CURRENT_VERSION}:refs/tags/${CURRENT_VERSION}"; then
+        echo "Tag ${CURRENT_VERSION} not found on GitHub, not adding ${V_TAG}"
+      else
+        echo "Adding an extra ${V_TAG} tag"
+        git tag -a -m "Tag ${CURRENT_VERSION} as ${V_TAG}" -m "Using the format preferred by golang toolset." "${V_TAG}" "${CURRENT_VERSION}^{commit}"
+        git push "${REMOTE}" "refs/tags/${V_TAG}"
+      fi
