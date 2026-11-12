@@ -122,6 +122,7 @@ commit_parsers = [
     { message = "(?m)^Changelog: None$", skip = true }, # exact footer line only; a sentence starting with "None" is a valid override
     # Type groups
     { message = "^feat", group = "<!-- 4 -->New features" },
+    { message = "^fix\\(deps", group = "<!-- 7 -->Dependency updates" },
     { message = "^fix", group = "<!-- 6 -->Bug fixes" },
     { message = "^perf", group = "<!-- 5 -->Improvements" },
     { message = "^refactor", group = "<!-- 5 -->Improvements" },
