@@ -97,11 +97,18 @@ $[[ inputs.stage ]]:build:brew:
     # 3. adapt the formula to use the PR revision instead of a release tarball
     - |
         gsed -e /sha256/d -e "/url /s|\".*\"|\"https://github.com/mendersoftware/${REPO}.git\",|" -e "/url \"https/a\ \ \ \ revision: \"${CI_COMMIT_SHA}\",\n    using: GitHubPRDownloadStrategy\n  version \"1234\"" < ${FORMULA_NAME}_upstream.rb >> $FORMULA_FILE
-    # 4. run brew build and test
-    - HOMEBREW_NO_INSTALL_FROM_API=1 brew reinstall --build-from-source --verbose --formula ./${FORMULA_FILE} < /dev/null
-    - brew test ./${FORMULA_FILE}
+    # 4. build and test from a local, ephemeral tap. brew 7.0 no longer loads
+    #    formulae from a file path (`--formula ./file.rb`), so install by tap name.
+    - TAP="mender/local"
+    - TAP_DIR="$(brew --repository)/Library/Taps/mender/homebrew-local"
+    - brew tap-new --no-git "$TAP"
+    - mkdir -p "$TAP_DIR/Formula"
+    - cp "$FORMULA_FILE" "$TAP_DIR/Formula/$FORMULA_FILE"
+    - HOMEBREW_NO_INSTALL_FROM_API=1 brew reinstall --build-from-source --verbose --formula "${TAP}/${FORMULA_NAME}" < /dev/null
+    - brew test "${TAP}/${FORMULA_NAME}"
   after_script:
     - FORMULA_FILE="$(basename $[[ inputs.formula ]])"
     - FORMULA_NAME="${FORMULA_FILE%%.*}"
     - brew remove $FORMULA_NAME || true
+    - brew untap mender/local || true
     - rm -rf "/tmp/brew_build_${CI_PIPELINE_ID}"
