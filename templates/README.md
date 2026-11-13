@@ -74,6 +74,29 @@ include:
       github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
 ```
 
+#### release-candidate-v-tag
+Extends `release-candidate` by pushing an extra `vX.Y.Z` tag next to the `X.Y.Z`
+tag created by release-please (as expected by the Go toolset for go modules, for
+example). Also adds a `workflow` rule so that no pipelines are run for the
+`vX.Y.Z` tags. **Include it only in projects that need the `v`-prefixed tags
+together with the usual X.Y.Z tags**.
+
+**Requirements:**
+- `release-candidate` component included in the same pipeline (with the same `stage`)
+- No `workflow:rules` in the project's `.gitlab-ci.yml` (they would replace the ones from this component)
+
+**Usage:**
+```yaml
+include:
+  - component: $CI_SERVER_FQDN/Northern.tech/Mender/mendertesting/release-candidate-v-tag@~latest
+    inputs:
+      github_repo: mendersoftware/mender-artifact  # required
+      stage: publish  # optional, default: publish
+      runner: hetzner-amd-beefy  # optional, default: k8s-small
+      github_user_name: mender-test-bot  # optional, default: mender-test-bot
+      github_user_email: mender@northern.tech  # optional, default: mender@northern.tech
+```
+
 #### release-compass
 Updates Atlassian Compass deployment tracking when a release is published.
 

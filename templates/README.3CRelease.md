@@ -130,6 +130,7 @@ Review that all the Git-tag triggered actions complete successfully:
 
 ### Implemented Components
 - **release-candidate.yml** - Creates release using release-please (the "Click Click Click" part)
+- **release-candidate-v-tag.yml** - Adds extra vX.Y.Z tags for go modules on top of release-candidate.yml
 - **release-mender-docs.yml** - Updates component versions in mender-docs
 - **release-docs-changelog.yml** - Updates changelog in mender-docs-changelog
 - **release-dist-packages.yml** - Triggers distribution package builds
